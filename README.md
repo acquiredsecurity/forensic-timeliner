@@ -4,115 +4,12 @@ Forensic Timeliner is a PowerShell-based tool that automates the process of aggr
 
 ## Field Mappings by Artifact Module
 
-📊 Field Mappings by Artifact Module
-<details> <summary><strong>account_tampering</strong> 🔵</summary>
-Field	Description
-TimeCreated	Timestamp of the event
-EventID	Windows Event ID
-TargetUserName	Account being targeted
-CallerUserName	Account making the change
-Computer	Hostname
-SourceFile	Source CSV file
-</details> <details> <summary><strong>antivirus</strong> 🟢</summary>
-Field	Description
-TimeCreated	Detection time
-Threat Name	Detected malware/heuristic
-Action	Action taken (quarantine, etc.)
-Computer	Hostname
-SourceFile	Source CSV file
-</details> <details> <summary><strong>indicator_removal</strong> 🔴</summary>
-Field	Description
-TimeCreated	When the deletion occurred
-Target	File, log, or reg key removed
-User	Who performed the action
-Computer	Hostname
-SourceFile	Source CSV file
-</details> <details> <summary><strong>lateral_movement</strong> 🟠</summary>
-Field	Description
-TimeCreated	Time of movement
-Source IP	Attacker's machine
-Target IP	Remote system
-Computer	Hostname
-SourceFile	Source CSV file
-</details> <details> <summary><strong>login_attacks</strong> 🟡</summary>
-Field	Description
-TimeCreated	Time of attempt
-EventID	Logon success/failure ID
-TargetUserName	Account name
-IP Address	Remote source
-Computer	Hostname
-</details> <details> <summary><strong>MFT - FileNameCreated0x30</strong> 🟣</summary>
-Field	Description
-RecordNumber	MFT record number
-FilePath	Full file path
-Timestamp	File creation date
-Size	File size
-SourceFile	Source MFT CSV
-</details> <details> <summary><strong>microsoft_rds_events_-_user_profile_disk</strong> 🟦</summary>
-Field	Description
-EventID	Related RDS Event ID
-User	Affected user
-UPD Path	Disk mount path
-Computer	Hostname
-</details> <details> <summary><strong>powershell_script / engine_state</strong> 🟤</summary>
-Field	Description
-TimeCreated	Execution time
-ScriptBlockText	Raw PS script contents
-EngineState	PowerShell engine state
-User	Who ran the script
-Computer	Hostname
-</details> <details> <summary><strong>rdp_events</strong> 🟢</summary>
-Field	Description
-TimeCreated	RDP connection time
-User	Remote user account
-Source IP	Originating IP address
-EventID	RDP session event
-</details> <details> <summary><strong>service_installation</strong> 🟦</summary>
-Field	Description
-TimeCreated	When service was added
-ServiceName	Name of the installed service
-Path	Binary or script path
-User	Account that installed it
-</details> <details> <summary><strong>sigma</strong> 💜</summary>
-Field	Description
-TimeCreated	Detection time
-RuleName	Sigma rule name
-RuleID	Sigma rule ID (if included)
-DetectionName	MITRE Technique or tactic
-</details> <details> <summary><strong>Web History</strong> 🔵</summary>
-Field	Description
-VisitTime	Timestamp of page visit
-URL	Visited URL
-Title	Page title
-Browser	Browser used (Chrome, etc.)
-User	Profile owner
-</details> <details> <summary><strong>File Deletion / Registry Update / Shellbags</strong> 🟥🟩🟧</summary>
-Field	Description
-TimeCreated	Timestamp of change
-FilePath/KeyPath	Affected file or registry key
-User	User performing action
-SourceFile	CSV source file
-</details> <details> <summary><strong>Program Execution - Amcache / LNK Files</strong> 🟨</summary>
-Field	Description
-Timestamp	Execution or link opened
-Program	Binary path or name
-User	Associated user
-SourceFile	CSV source file
-</details> <details> <summary><strong>MFT - Created / mft (General)</strong> 🔷</summary>
-Field	Description
-FilePath	Created file or folder path
-Timestamp	When file was created
-Extension	File extension
-User	User (if known)
-</details> <details> <summary><strong>Event Logs</strong> ⚫</summary>
-Field	Description
-TimeCreated	Log timestamp
-EventID	Windows Event ID
-Channel	Event log source
-Computer	Hostname
-PayloadData	Extracted data field
-SourceFile	CSV log file
-</details>
+<img width="1002" alt="image" src="https://github.com/user-attachments/assets/60ab3f12-ab54-4157-8f41-88eb43d9aaef" />
+<img width="992" alt="image" src="https://github.com/user-attachments/assets/49023386-f4cc-4cfc-8915-cc31f7fc28d8" />
+<img width="1002" alt="image" src="https://github.com/user-attachments/assets/1925e215-6fd8-46f6-b8a7-9ba23959f94a" />
+
+
+
 
 
 This tool is designed for forensic analysts who need to quickly timeline and triage using output from Chainsaw mianly focused on event logs, MFT, RDP events, sigma rule and other forensic artifacts efficiently.
