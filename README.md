@@ -1,7 +1,7 @@
 # Forensic Timeliner
 DISCLAIMER: This script is provided as-is, without warranty or guarantee of fitness for a particular purpose. It automates third-party tools that are licensed under their own terms. Ensure you have proper authorization to use and distribute all tools involved.
 
-Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifacts from [Chainsaw](https://github.com/WithSecureLabs/chainsaw) and [KAPE / EZTools(https://github.com/EricZimmerman) into a structured **MINI** **Master Timeline** in Excel. This is obviously not comprehensive but a great way to take some high value artifacts and get a real quick snapshot using powershell!
+Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifacts from [Chainsaw](https://github.com/WithSecureLabs/chainsaw) and KAPE / [EZTools](https://github.com/EricZimmerman) into a structured **MINI** **Master Timeline** in Excel. This is obviously not comprehensive but a great way to take some high value artifacts and get a real quick snapshot using powershell!
 
 ## Field Mappings by Artifact Module
 
