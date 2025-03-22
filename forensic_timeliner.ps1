@@ -1,494 +1,697 @@
-# Parameter Block
-param (
-    [string]$CsvDirectory,   # Directory containing CSV files
-    [string]$OutputFile,      # Output Excel file
-    [string]$WebResultsPath,  # Path to webResults.csv
-    [string]$KapeDirectory    # Directory containing KAPE output
+# ============================================
+# Deploy KAPE Chainsaw and Sigma with SentinelOne RemoteOps or build a local collector Interactively
+# Author: @acquiredsecurity
+# Description: Deploys KAPE (Kroll Artifact Parser and Extractor), BrowsingHistoryView $ Chainsaw + Built in Rules + Sigma Rules on Event Logs & MFT
+# Remote Script Type: Triage Collection, parsing and mini-timeline
+# Required Permissions: RemoteOps execution
+# ============================================
+
+# ============================================
+# Parameters Inputs that this script will take
+# ============================================
+param(
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$Help,
+
+    [Parameter(Mandatory=$false)]
+    [string]$KapePathOverride, # Optional: manually override script default directory
+
+    [Parameter(Mandatory = $false, HelpMessage = "KAPE Targets (default: !SANS_Triage,WebBrowsers)")]
+    [string]$Targets = "!SANS_Triage,WebBrowsers",
+
+    [Parameter(Mandatory = $false, HelpMessage = "KAPE Modules (default: !EZParser)")]
+    [string]$Modules = "!EZParser",
+
+    [Parameter(Mandatory = $false, HelpMessage = "Target source directory (default: C:)")]
+    [string]$TargetSource = "C:",
+
+    [Parameter(Mandatory = $false, HelpMessage = "Root output folder (default: C:\kape)")]
+    [string]$OutputDir = "C:\kape",
+
+    [Parameter(Mandatory = $false, HelpMessage = "Include Volume Shadow Copies in KAPE Collection")]
+    [switch]$VSS,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Overwrite existing output in destination folder")]
+    [switch]$Overwrite,
+    
+    [Parameter(Mandatory = $false, HelpMessage = "Enable Chainsaw analysis on Event Logs and MFT")]
+    [switch]$Chainsaw,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Change Chainsaw analysis rules directory path")]
+    [string]$RulesDirOverride,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Optional path to custom Sigma rules directory. Ideally add your rules inside modules\bin\chainsaw")]
+    [string]$SigmaDir,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Run forensic_timeliner.ps1 after collection")]
+    [switch]$RunTimeliner,
+
+    [Parameter(Mandatory = $false)]
+    [string]$TimelinerPath,  # Optional: custom path to forensic_timeliner.ps1 to timeline your artifact output from eztools and chainsaw
+   
+    [Parameter(Mandatory = $false)]
+    [string]$ZipOutputOverride,
+
+    [Parameter(Mandatory=$false)]
+    [switch]$Use7Zip,
+
+    [Parameter(Mandatory=$false, HelpMessage = "Remove the Source Collection Folder 'c:\kape and it's subfolders'" )]
+    [switch]$CleanupAfterZip,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Interactive
+
 )
 
-# Set Defaults If Not Provided
-if (-not $CsvDirectory) { $CsvDirectory = "C:\kape\chainsaw" }
-if (-not $OutputFile) { $OutputFile = "C:\kape\timeline\Master_Timeline.xlsx" }
-if (-not $WebResultsPath -or $WebResultsPath -eq "") { $WebResultsPath = "C:\kape\browsinghistory\webResults.csv" }
-if (-not $KapeDirectory -or $KapeDirectory -eq "") { $KapeDirectory = "C:\kape\timeline" }
-
-# ASCII Art Banner
-
-Write-Host @"
-  ______     
- |  ____|                     (_)                
- | |__ ___  _ __ ___ _ __  ___ _  ___            
- |  __/ _ \| '__/ _ \ '_ \/ __| |/ __|           
- | | | (_) | | |  __/ | | \__ \ | (__            
- |_________|_|  \___|_| |_|___/_|\___|           
- |__   __(_)              | (_)                  
-    | |   _ _ __ ___   ___| |_ _ __   ___ _ __   
-    | |  | | '_ ` _ \ / _ \ | | '_ \ / _ \ '__|  
-    | |  | | | | | | |  __/ | | | | |  __/ |     
-    |_|  |_|_| |_| |_|\___|_|_|_| |_|\___|_|
-                                                                                           
-Mini Timeline Builder for Kape Output, Chainsaw +Sigma 
-| Made by https://github.com/acquiredsecurity 
-| with help from the robots [o_o] 
-- Build a quick mini-timeline with Kape and Chainsaw run Rules and Sigma! Use my other script Kapesaw 
-to collect your triage and integrate this Module as well!
-Shoutouts:  
-@EricZimmerman https://github.com/EricZimmerman  
-WithSecure Countercept (@FranticTyping, @AlexKornitzer) For making Chainsaw, @ https://github.com/WithSecureLabs/chainsaw 
-Happy Timelining!
-"@ -ForegroundColor Cyan
-
-
-
-# Ensure ImportExcel module is installed
-if (-not (Get-Module -ListAvailable -Name ImportExcel)) {
-    Install-Module ImportExcel -Force -Scope CurrentUser
+# ============================================
+# No-Args Guard: Prevent unintentional execution
+# ============================================
+if ($PSCmdlet.MyInvocation.BoundParameters.Count -eq 0) {
+    Write-Warning "No arguments provided. Please use -Help to see options or -Interactive to build a command."
+    exit 1
 }
 
-# Load ImportExcel module
-Import-Module ImportExcel
+# ============================================
+# Resolve Script Directory & Default Binaries
+# ============================================
 
-# Create an empty DataTable
-$MasterTimeline = @()
-
-# Scan directory for CSV files
-$CsvFiles = Get-ChildItem -Path $CsvDirectory -Recurse | Where-Object { $_.Extension -eq ".csv" -and $_.Name -ne "webResults.csv" }
-
-foreach ($CsvFile in $CsvFiles) {
-    Write-Host "Processing - Chainsaw Data: $($CsvFile.Name)"
-    $ArtifactName = $CsvFile.BaseName
-    $Data = Import-Csv -Path $CsvFile.FullName
-
-    # Normalize fields based on artifact type
-    $Data = $Data | ForEach-Object {
-        $OrderedObject = [ordered]@{}
-
-        # Format Date/Time field
-        $OrderedObject["Date/Time"] = if ($ArtifactName -match "mft") {
-            if ($_.PSObject.Properties.Name -contains "FileNameCreated0x30" -and $_."FileNameCreated0x30" -match "(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})") {
-                "{0:yyyy/MM/dd HH:mm:ss}" -f (Get-Date "$($matches[1]) $($matches[2])")
-            } else { "" }
-        } elseif ($_.PSObject.Properties.Name -contains "timestamp" -and $_.timestamp -match "(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})") {
-            "{0:yyyy/MM/dd HH:mm:ss}" -f (Get-Date "$($matches[1]) $($matches[2])")
-        } else { "" }
-
-        $OrderedObject["Artifact Name"] = $ArtifactName
-        $OrderedObject["Event ID"] = $_."Event ID"
-        $OrderedObject["Channel"] = if ($_.PSObject.Properties.Name -contains "Channel") { $_."Channel" } else { $_."Event.System.Provider" }
-		$OrderedObject["Detections"] = $_."detections"
-        $OrderedObject["Data Path"] = if ($_.PSObject.Properties.Name -contains "Scheduled Task Name" -and $_."Scheduled Task Name" -ne "") { $_."Scheduled Task Name" } elseif ($_.PSObject.Properties.Name -contains "Threat Path" -and $_."Threat Path" -ne "") { $_."Threat Path" } elseif ($_.PSObject.Properties.Name -contains "Information" -and $_."Information" -ne "") { $_."Information" } elseif ($_.PSObject.Properties.Name -contains "HostApplication" -and $_."HostApplication" -ne "") { $_."HostApplication" } elseif ($_.PSObject.Properties.Name -contains "Service File Name" -and $_."Service File Name" -ne "") { $_."Service File Name" } elseif ($_.PSObject.Properties.Name -contains "Event Data" -and $_."Event Data" -ne "") { $_."Event Data" } else { "" }
-        $OrderedObject["Data Details"] = if ($_.PSObject.Properties.Name -contains "Threat Name" -and $_."Threat Name" -ne "") { $_."Threat Name" } elseif ($_.PSObject.Properties.Name -contains "Service Name" -and $_."Service Name" -ne "") { $_."Service Name" } else { "" }
-        $OrderedObject["User"] = if ($_.PSObject.Properties.Name -contains "User Name") { $_."User Name" } else { $_."User" }
-		$OrderedObject["Computer"] = $_."Computer"
-        $OrderedObject["User SID"] = $_."User SID"
-		$OrderedObject["Member SID"] = $_."Member SID"
-        $OrderedObject["Process Name"] = $_."Process Name"
-        $OrderedObject["IP Address"] = $_."IP Address"
-        $OrderedObject["Logon Type"] = $_."Logon Type"
-		$OrderedObject["Count"] = $_."count"
-        $OrderedObject["Source Address"] = $_."Source Address"
-        $OrderedObject["Destination Address"] = $_."Dest Address"
-        $OrderedObject["Service Type"] = $_."Service Type"
-        $OrderedObject["CommandLine"] = $_."CommandLine"
-        $OrderedObject["SHA1"] = $_."SHA1"	
-        $OrderedObject["Evidence Path"] = $_."path"
-
-        [PSCustomObject]$OrderedObject
-    }
-
-    # Append to Master Timeline
-    $MasterTimeline += $Data
+# Try to get script directory intelligently
+if ($KapePathOverride -and (Test-Path $KapePathOverride)) {
+    $scriptDir = Split-Path -Path $KapePathOverride -Parent
+    Write-Host "Using overridden script directory: $scriptDir"
+}
+elseif ($Env:S1_PACKAGE_DIR_PATH -and (Test-Path $Env:S1_PACKAGE_DIR_PATH)) {
+    $scriptDir = $Env:S1_PACKAGE_DIR_PATH
+    Write-Host "Using SentinelOne script directory: $scriptDir"
+}
+else {
+    # Fallback: Use path where script is currently executing
+    $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
+    Write-Host "Using local script execution path: $scriptDir"
 }
 
-# Process webResults.csv separately
-if (Test-Path $WebResultsPath) {
-    Write-Host "Processing - WebHistory View Data: Output WebResults.csv"
-    $WebResults = Import-Csv -Path $WebResultsPath
+# Now continue with binary discovery using this resolved $scriptDir
+$defaultKapePath = ""
+$defaultBrowsingHistoryPath = ""
+$defaultChainsawRulesPath = ""
+$defaultTimelinerPath = ""
+$defaultZipOutput = ""
 
-    $WebResults = $WebResults | ForEach-Object {
-        $WebFormattedDate = try {
-            [datetime]::Parse($_."Visit Time").ToString("yyyy/MM/dd HH:mm:ss")
-        } catch {
-            $_."Visit Time"
-        }
-        [PSCustomObject]@{
-            "Date/Time"     = $WebFormattedDate
-            "Artifact Name" = "Web History"
-            "User"          = $_."User Profile"  # Mapping User Profile to User
-            "Data Path"     = $_."URL"
-            "Data Details"  = $_."Title"
-            "Visit Count"   = $_."Visit Count"
-            "Visit Type"    = $_."Visit Type"
-            "Web Browser"   = $_."Web Browser"
-        }
-    }
+if ($scriptDir) {
+    $defaultKapeExe = Get-ChildItem -Path $scriptDir -Filter "kape.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    $defaultKapePath = if ($defaultKapeExe) { $defaultKapeExe.FullName } else { "" }
 
-    $MasterTimeline += $WebResults
-}
+    $defaultBrowsingHistoryExe = Get-ChildItem -Path $scriptDir -Filter "BrowsingHistoryView.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    $defaultBrowsingHistoryPath = if ($defaultBrowsingHistoryExe) { $defaultBrowsingHistoryExe.FullName } else { "" }
 
-# Process Registry artifacts from KAPE if the folder exists
-$RegistryPath = "$KapeDirectory\Registry"
-if (Test-Path $RegistryPath) {
-    $RegistryFiles = Get-ChildItem -Path $RegistryPath -Filter "*_RECmd_Batch_Kroll_Batch_Output.csv" | Where-Object { -not $_.PSIsContainer }
+# Discover default Chainsaw rules directory
+    $defaultChainsawRulesDir = Get-ChildItem -Path $scriptDir -Directory -Filter "rules" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    $defaultChainsawRulesPath = if ($defaultChainsawRulesDir) { $defaultChainsawRulesDir.FullName } else { "" }
 
-    foreach ($RegistryFile in $RegistryFiles) {
-        Write-Host "Processing - Kape: Batch Registry Data"
-        $RegistryData = Import-Csv -Path $RegistryFile.FullName
+# Discover default Sigma rules directory 
+    $defaultSigmaDir = Get-ChildItem -Path $scriptDir -Directory -Filter "sigma" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 | ForEach-Object { $_.FullName }
 
-        $RegistryData = $RegistryData | ForEach-Object {
-            $OrderedObject = [ordered]@{}
+    # Discover default Sigma rules directory 
+    $defaultTimelinerScript = Get-ChildItem -Path $scriptDir -Filter "forensic_timeliner.ps1" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    $defaultTimelinerPath = if ($defaultTimelinerScript) { $defaultTimelinerScript.FullName } else { "" }
 
-            $RegistryFormattedDate = try {
-                [datetime]::Parse($_."LastWriteTimestamp").ToString("yyyy/MM/dd HH:mm:ss")
-            } catch {
-                $_."LastWriteTimestamp"
-            }
-
-            $OrderedObject["Date/Time"] = $RegistryFormattedDate
-            $OrderedObject["Artifact Name"] = "Registry Update"
-            $OrderedObject["Data Path"] = $_."ValueData"
-            $OrderedObject["Data Details"] = $_."Description"
-
-            [PSCustomObject]$OrderedObject
-        }
-
-        $MasterTimeline += $RegistryData
-    }
-}
-
-
-# Process File Deletion artifacts from KAPE
-$FileDeletionFiles = Get-ChildItem -Path $KapeDirectory -Recurse | Where-Object { $_.Extension -eq ".csv" -and $_.Name -match "RBCmd" }
-
-foreach ($FileDeletionFile in $FileDeletionFiles) {
-    Write-Host "Processing - Kape: File Deletion Data"
-    $FileDeletionData = Import-Csv -Path $FileDeletionFile.FullName
-
-    $FileDeletionData = $FileDeletionData | ForEach-Object {
-        $OrderedObject = [ordered]@{}
-
-        $OrderedObject["Date/Time"] = $_."DeletedOn"
-        $OrderedObject["Artifact Name"] = "File Deletion"
-        $OrderedObject["Data Path"] = $_."FileName"
-        $OrderedObject["Data Details"] = $_."FileSize"
-
-        [PSCustomObject]$OrderedObject
-    }
-
-    $MasterTimeline += $FileDeletionData
-}
-
-# Process Amcache artifacts from KAPE if the folder exists
-$AmCachePath = "$KapeDirectory\ProgramExecution"
-
-if (Test-Path $AmCachePath) {
-    $AmcacheFiles = Get-ChildItem -Path $AmCachePath -Filter "*_Amcache_AssociatedFileEntries.csv" | Where-Object { -not $_.PSIsContainer }
-
-    # Check if any files were found
-    if ($AmcacheFiles.Count -eq 0) {
-        Write-Host "No Amcache files found in $AmCachePath. Skipping..." -ForegroundColor Yellow
+    if ($Env:S1_OUTPUT_DIR_PATH -and (Test-Path $Env:S1_OUTPUT_DIR_PATH)) {
+        $defaultZipOutput = Join-Path -Path $Env:S1_OUTPUT_DIR_PATH -ChildPath "KAPE-Output.zip"
     } else {
-        foreach ($AmCacheFile in $AmcacheFiles) {
-            Write-Host "Processing - Kape: Amcache Data"
+        $defaultZipOutput = "C:\ProgramData\Sentinel\RSO\KAPE-Output.zip"
+    }
+}
 
-            # Ensure file exists before attempting to import
-            if (Test-Path $AmCacheFile.FullName) {
-                $AmcacheData = Import-Csv -Path $AmCacheFile.FullName
 
-                # Check if the file contains data
-                if ($AmcacheData.Count -eq 0) {
-                    Write-Host "Warning: No data found in $($AmCacheFile.Name). Skipping..." -ForegroundColor Red
-                    continue
-                }
+# ============================================
+# ASCII ARt Banner 
+# ============================================
 
-                $AmcacheData = $AmcacheData | ForEach-Object {
-                    $OrderedObject = [ordered]@{}
-                
-                    $AmcacheFormattedDate = try {
-                        [datetime]::Parse($_."FileKeyLastWriteTimestamp").ToString("yyyy/MM/dd HH:mm:ss")
-                    } catch {
-                        $_."FileKeyLastWriteTimestamp"
-                    }        
-                    $OrderedObject["Date/Time"] = $AmcacheFormattedDate
-                    $OrderedObject["Artifact Name"] = "Program Execution - Amcache"
-                    $OrderedObject["Data Path"] = $_."FullPath"
-                    $OrderedObject["Data Details"] = $_."Name"
-                    $OrderedObject["SHA1"] = $_."SHA1"
 
-                    [PSCustomObject]$OrderedObject
-                }
+$bannerLines = @(
+" _  __             									",                                   
+ "| |/ /   ___    _ __     ___   ___    __ _  __      __ ",
+ "| ' /   / _` | | '_ \   / _ \ / __|  / _` | \ \ /\ / /",
+ "| . \  | (_| | | |_) | |  __/ \__ \ | (_| |  \ V  V / ",
+ "|_|\_\  \__,_| | .__/   \___| |___/  \__,_|   \_/\_/",
+  "              |__|									",
+"",  
+"Run Kape, Chainsaw +Sigma Forensic Mini-Timeline Builder, Interactive Parameter Menu to build script command line and more!", 
+"| Made by https://github.com/acquiredsecurity",
+"| with help from the robots [o_o] ",
+"- Build a quick mini-timeline with Kape and Chainsaw run Rules and Sigma!",
+"Shoutouts: ", 
+"@EricZimmerman https://github.com/EricZimmerman  ",
+"WithSecure Countercept (@FranticTyping, @AlexKornitzer) For making Chainsaw, @ https://github.com/WithSecureLabs/chainsaw ",
+"Happy Timelining!"
+)
 
-                # Append data to Master Timeline
-                $MasterTimeline += $AmcacheData
-            } else {
-                Write-Host "Error: File not found - $($AmCacheFile.FullName). Skipping..." -ForegroundColor Red
-            }
+# ============================================
+# Loop through each line and apply conditional formatting
+# ============================================
+
+for ($i = 0; $i -lt $bannerLines.Count; $i++) {
+    if ($i -eq 0 -or $i -eq 4 -or $i -eq 5) {
+        Write-Host $bannerLines[$i] -ForegroundColor Cyan  # Top and bottom lines
+    }
+    elseif ($i -ge 1 -and $i -le 3) {
+        Write-Host $bannerLines[$i] -ForegroundColor White  # Inner lines
+    }
+    else {
+        Write-Host $bannerLines[$i] -ForegroundColor DarkGray  # Tagline or extra info
+    }
+}
+
+# ============================================
+# Help Menu 
+# ============================================
+if ($Help) {
+    Write-Host ""
+    Write-Host "==========================================================================================================" -ForegroundColor Cyan
+    Write-Host "                           KapeSaw.ps1 Help Menu                 " -ForegroundColor Cyan
+    Write-Host "==========================================================================================================" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host ""
+    Write-Host "Description:" -ForegroundColor Yellow
+    Write-Host "  KapeSaw.ps1 is a forensic automation script that runs KAPE," -ForegroundColor Gray
+    Write-Host "  Chainsaw, BrowsingHistoryView, and optionally generates a timeline using forensic_timeliner.ps1." -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "Usage:" -ForegroundColor Yellow
+    Write-Host "  .\KapeSaw.ps1 [-Chainsaw] [-RunTimeliner] [-Targets <targets>]" 
+    Write-Host "                [-SigmaDir <path>] [-VSS] [-Overwrite]"
+    Write-Host "                [-ZipOutputOverride <path>] [-TimelinerPath <path>]"
+    Write-Host ""
+    Write-Host "Examples:" -ForegroundColor Yellow
+    Write-Host '  .\KapeSaw.ps1 -Chainsaw -RunTimeliner'
+    Write-Host '  .\KapeSaw.ps1 -Chainsaw -SigmaDir "C:\rules\sigma"'
+    Write-Host '  .\KapeSaw.ps1 -Targets "!SANS_Triage" -Modules "!EZParser" -VSS'
+    Write-Host '  .\KapeSaw.ps1 -KapePathOverride "C:\Dev\KapeSaw\Files" -ZipOutputOverride "C:\Output\KAPE.zip"'
+    Write-Host '  .\KapeSaw.ps1 -KapePathOverride ".\kape.exe" -Chainsaw -SigmaDir "C:\sigma-master\rules\windows" -RunTimeliner -TimelinerPath "C:\Users\admin0x\Desktop\forensic_timeliner.ps1" -ZipOutputOverride "C:\kapeout.zip"'
+    Write-Host ""
+    Write-Host "" 
+    Write-Host "Parameters:" -ForegroundColor Yellow
+    Write-Host "  -KapePathOverride       " -NoNewline; Write-Host "Override the default path to kape.exe" -ForegroundColor Gray
+    Write-Host "  -Targets                " -NoNewline; Write-Host "Specify KAPE target list (default: '!SANS_Triage,WebBrowsers')" -ForegroundColor Gray
+    Write-Host "  -Modules                " -NoNewline; Write-Host "Specify KAPE module list (default: '!EZParser')" -ForegroundColor Gray
+    Write-Host "  -TargetSource           " -NoNewline; Write-Host "Drive to collect from (default: C:)" -ForegroundColor Gray
+    Write-Host "  -OutputDir              " -NoNewline; Write-Host "Root directory for collection output (default: C:\kape)" -ForegroundColor Gray
+    Write-Host "  -VSS                    " -NoNewline; Write-Host "Include Volume Shadow Copies in KAPE run" -ForegroundColor Gray
+    Write-Host "  -Overwrite              " -NoNewline; Write-Host "Overwrite existing output folders" -ForegroundColor Gray
+    Write-Host "  -Chainsaw               " -NoNewline; Write-Host "Enable Chainsaw event log and MFT analysis" -ForegroundColor Gray
+    Write-Host "  -SigmaDir               " -NoNewline; Write-Host "Custom path to Sigma rules (required if using Chainsaw + Sigma)" -ForegroundColor Gray
+    Write-Host "  -RulesDirOverride       " -NoNewline; Write-Host "Override default Chainsaw rules directory" -ForegroundColor Gray
+    Write-Host "  -RunTimeliner           " -NoNewline; Write-Host "Run forensic_timeliner.ps1 to create Excel timeline" -ForegroundColor Gray
+    Write-Host "  -TimelinerPath          " -NoNewline; Write-Host "Override the path to forensic_timeliner.ps1" -ForegroundColor Gray
+    Write-Host "  -ZipOutputOverride      " -NoNewline; Write-Host "Custom output path for final zipped results" -ForegroundColor Gray
+    Write-Host "  -Use7Zip                " -NoNewline; Write-Host "Use bundled 7-Zip to compress output instead of Compress-Archive" -ForegroundColor Gray
+    Write-Host "  -CleanupAfterZip        " -NoNewline; Write-Host "Delete C:\kape after zipping (local mode only)" -ForegroundColor Gray
+    Write-Host "  -Interactive            " -NoNewline; Write-Host "Launch interactive parameter setup" -ForegroundColor Gray
+    Write-Host "  -Help                   " -NoNewline; Write-Host "Display this help menu" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "==========================================================================================================" -ForegroundColor Cyan
+    exit
+
+}
+
+
+# ============================================
+# Interactive Help Menu 
+# ============================================
+
+
+if ($Interactive) {
+    Write-Host "====== KapeSaw Interactive Configuration ======" -ForegroundColor Cyan
+
+    function Prompt-Path($label, $default) {
+        $input = Read-Host "$label [`Default: $default`]"
+        if ([string]::IsNullOrWhiteSpace($input)) { return $default }
+        while (-not (Test-Path $input)) {
+            Write-Warning "Path does not exist: $input"
+            $input = Read-Host "$label [`Default: $default`]"
+            if ([string]::IsNullOrWhiteSpace($input)) { return $default }
         }
+        return $input
+    }
+
+    function Prompt-String($label, $default) {
+        $input = Read-Host "$label [`Default: $default`]"
+        if ([string]::IsNullOrWhiteSpace($input)) {
+            return $default
+        } else {
+            return $input
+        }
+    }
+
+    function Prompt-YesNo($label, [bool]$default = $false) {
+        $defaultStr = if ($default) { "Y" } else { "N" }
+        $input = Read-Host "$label (Y/N) [`Default: $defaultStr`]"
+        if ([string]::IsNullOrWhiteSpace($input)) { return $default }
+        return $input.ToLower() -eq 'y'
+    }
+
+    function Prompt-Select($label, $options, $defaultIndex = 0) {
+        Write-Host "$label"
+        for ($i = 0; $i -lt $options.Count; $i++) {
+            Write-Host " [$i] $($options[$i])"
+        }
+        $input = Read-Host "Choose number [`Default: $defaultIndex`]"
+        if ([string]::IsNullOrWhiteSpace($input)) { return $options[$defaultIndex] }
+        return $options[[int]$input]
+    }
+
+    # Confirm or override KAPE path
+if ($defaultKapePath) {
+    $useDefaultKape = Prompt-YesNo "KAPE was found at: $defaultKapePath Use this path?" $true
+    if ($useDefaultKape) {
+        $KapePathOverride = $defaultKapePath
+    } else {
+        $KapePathOverride = Prompt-Path "Enter custom path to kape.exe" $defaultKapePath
     }
 } else {
-    Write-Host "Amcache directory not found: $AmCachePath. Skipping..." -ForegroundColor Yellow
+    $KapePathOverride = Prompt-Path "Path to kape.exe" ""
 }
 
+    $Targets = Prompt-Select "Select KAPE Targets" @("!SANS_Triage,WebBrowsers", "!SANS_Triage", "!BasicCollection") 0
+    $Modules = Prompt-Select "Select KAPE Modules" @("!EZParser", "!MFTECmd", "!Amcache", "!LECmd") 0
+    $TargetSource = Prompt-String "Source Drive for Collection" $TargetSource
+    $OutputDir = Prompt-String "Output Directory for Collection" $OutputDir
+    $VSS = Prompt-YesNo "Include Volume Shadow Copies?" $VSS
+    $Overwrite = Prompt-YesNo "Overwrite existing KAPE output?" $Overwrite
 
-# Process LNK Files from KAPE if the folder exists
-$LNKFilePath = "$KapeDirectory\FileFolderAccess"
-
-if (Test-Path $LNKFilePath) {
-    $LNKFiles = Get-ChildItem -Path $LNKFilePath -Filter "*_LECmd_Output.csv" | Where-Object { -not $_.PSIsContainer }
-
-    # Check if any files were found
-    if ($LNKFiles.Count -eq 0) {
-        Write-Host "No LNK files found in $LNKFilePath. Skipping..." -ForegroundColor Yellow
+    $Chainsaw = Prompt-YesNo "Enable Chainsaw analysis?" $Chainsaw
+if ($Chainsaw) {
+    # Confirm or override Chainsaw rules directory
+    if ($defaultChainsawRulesPath) {
+        $useDefaultRules = Prompt-YesNo "Chainsaw rules found at: $defaultChainsawRulesPath Use this path?" $true
+        if ($useDefaultRules) {
+            $RulesDirOverride = $defaultChainsawRulesPath
+        } else {
+            $RulesDirOverride = Prompt-Path "Enter custom path to Chainsaw rules directory" $defaultChainsawRulesPath
+        }
     } else {
-        foreach ($LNKFile in $LNKFiles) {
-            Write-Host "Processing - Kape: LNK Target Created Data"
+        $RulesDirOverride = Prompt-Path "Path to Chainsaw rules directory" ""
+    }
+    
+    # Confirm or override Sigma rules directory
+    if ($defaultSigmaDir) {
+        $useDefaultSigma = Prompt-YesNo "Sigma rules found at: $defaultSigmaDir Use this path?" $true
+        if ($useDefaultSigma) {
+            $SigmaDir = $defaultSigmaDir
+        } else {
+            $SigmaDir = Prompt-Path "Enter custom path to Sigma rules (optional)" $defaultSigmaDir
+        }
+    } else {
+        $SigmaDir = Prompt-Path "Path to Sigma rules (optional)" ""
+    }
+}
 
-            # Ensure file exists before attempting to import
-            if (Test-Path $LNKFile.FullName) {
-                $LNKData = Import-Csv -Path $LNKFile.FullName
-
-                # Check if the file contains data
-                if ($LNKData.Count -eq 0) {
-                    Write-Host "Warning: No data found in $($LNKFile.Name). Skipping..." -ForegroundColor Red
-                    continue
-                }
-
-                $LNKData = $LNKData | ForEach-Object {
-                    $OrderedObject = [ordered]@{}
-
-                    $OrderedObject["Date/Time"] = $_."TargetCreated"
-                    $OrderedObject["Artifact Name"] = "LNK Files"
-                    $OrderedObject["Data Path"] = $_."LocalPath"
-
-                    [PSCustomObject]$OrderedObject
-                }
-
-                # Append data to Master Timeline
-                $MasterTimeline += $LNKData
-            } else {
-                Write-Host "Error: File not found - $($LNKFile.FullName). Skipping..." -ForegroundColor Red
+    $RunTimeliner = Prompt-YesNo "Run forensic_timeliner.ps1 after collection?" $RunTimeliner
+    if ($RunTimeliner) {
+        if ($defaultTimelinerPath -ne "") {
+            $useDefaultTimeliner = Prompt-YesNo "Forensic Timeliner found at: $defaultTimelinerPath. Use this path?" $true
+            if ($useDefaultTimeliner) {
+                $TimelinerPath = $defaultTimelinerPath
+            }
+            else {
+                $TimelinerPath = Prompt-Path "Enter custom path to forensic_timeliner.ps1" $defaultTimelinerPath
             }
         }
-    }
-} else {
-    Write-Host "LNK directory not found: $LNKFilePath. Skipping..." -ForegroundColor Yellow
+        else {
+            $TimelinerPath = Prompt-Path "Path to forensic_timeliner.ps1" ""
+        }
+        if (-not ($TimelinerPath -like "*.ps1")) {
+            Write-Warning "Timeliner path does not point to a .ps1 script. Please verify it's a valid script file."
+        }
 }
 
-# Process Shellbags artifacts from KAPE if the folder exists
-$ShellbagsPath = "$KapeDirectory\FileFolderAccess"
 
-if (Test-Path $ShellbagsPath) {
-    $ShellbagsFiles = Get-ChildItem -Path $ShellbagsPath -Filter "*_UsrClass.csv" | Where-Object { -not $_.PSIsContainer }
+    $ZipOutputOverride = Prompt-String "Path to output zip file" $ZipOutputOverride
+    $Use7Zip = Prompt-YesNo "Use 7-Zip instead of Compress-Archive?" $Use7Zip
+    $CleanupAfterZip = Prompt-YesNo "Delete C:\\kape after zipping?" $CleanupAfterZip
 
-    # Check if any Shellbags files were found
-    if ($ShellbagsFiles.Count -eq 0) {
-        Write-Host "No Shellbags (UsrClass) files found in $ShellbagsPath. Skipping..." -ForegroundColor Yellow
+    Write-Host "Interactive configuration complete." -ForegroundColor Green
+}
+
+
+
+
+# ============================================
+# Directory Cleanup 
+# ============================================
+
+
+# ============================================
+# Remove c:\kape directory if it exists
+# ============================================
+
+$TriagefolderPath = "C:\kape"
+
+if (Test-Path $TriagefolderPath) {
+    Write-Host "Folder $TriagefolderPath exists. Deleting..."
+    Remove-Item -Path $TriagefolderPath -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "Folder deleted successfully."
+} else {
+    Write-Host "Folder $TriagefolderPath does not exist. No action needed."
+}
+
+
+# ============================================
+# Output paths for debugging
+# ============================================
+
+Write-Host "Final script directory set to: $scriptDir"
+Write-Host "Checking for KAPE executable in: $scriptDir"
+
+# ============================================
+# KAPE CHECKER - Check if KAPE exists in the S1 Directory 
+# ============================================
+
+$kapeExe = Get-ChildItem -Path $scriptDir -Filter "kape.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+
+
+if ($kapeExe) {
+    Write-Host "KAPE binary found at: $($kapeExe.FullName)"
+} else {
+    Write-Host "KAPE binary not found in: $scriptDir"
+}
+
+# ============================================
+# Prepare KAPE output directories and set paths
+# ============================================
+$TriageDir = Join-Path -Path $OutputDir -ChildPath "triage"
+$ModuleDestination = Join-Path -Path $OutputDir -ChildPath "timeline"
+$ModuleSource = Join-Path -Path $OutputDir -ChildPath "triage"
+$browsingHistoryOutput = Join-Path -Path $OutputDir -ChildPath "browsinghistory"
+$chainsawOutput = Join-Path -Path $OutputDir -ChildPath "chainsaw"
+
+# ============================================
+# Create and Ensure output directories exist 
+# ============================================
+
+Write-Host "Output Directories being created....."
+New-Item -Path $triageDir -ItemType Directory -Force | Out-Null
+New-Item -Path $ModuleDestination -ItemType Directory -Force | Out-Null
+New-Item -Path $browsingHistoryOutput -ItemType Directory -Force | Out-Null
+New-Item -Path $chainsawOutput -ItemType Directory -Force | Out-Null
+
+Write-Host "KAPE binary found at: $($kapeExe.FullName)"
+Write-Host "KAPE output directories prepared: $triageDir, $ModuleDestination"
+
+if (-not $kapeExe) {
+    Write-Error "ERROR: KAPE executable not found. Exiting."
+    exit 1
+}
+# ============================================
+# Execute KAPE Targets Collection
+# ============================================
+
+Write-Host "Running KAPE Targets Collection..."
+$kapeTargetArgs = @(
+    "--tsource", $TargetSource,
+    "--tdest", $triageDir,
+    "--tflush",
+    "--target", $Targets
+)
+
+$process = Start-Process -FilePath $kapeExe.FullName -ArgumentList $kapeTargetArgs -Wait -NoNewWindow -PassThru
+
+if ($process.ExitCode -ne 0) {
+    Write-Error "KAPE target collection failed with exit code $($process.ExitCode)."
+    exit 2
+}
+
+Write-Host "KAPE Targets Collection Completed Successfully."
+
+# ============================================
+# Execute KAPE Modules Processing
+# ============================================
+
+Write-Host "Running KAPE Module Execution..."
+$kapeModuleArgs = @(
+    "--msource", $triageDir,
+    "--mdest", $ModuleDestination,
+    "--mflush",
+    "--module", $Modules
+)
+
+$process = Start-Process -FilePath $kapeExe.FullName -ArgumentList $kapeModuleArgs -Wait -NoNewWindow -PassThru
+
+if ($process.ExitCode -ne 0) {
+    Write-Error "KAPE module execution failed with exit code $($process.ExitCode)."
+    exit 2
+}
+
+Write-Host "KAPE Module Execution Completed Successfully."
+
+# ============================================
+# Begin Secondary Modules 
+# ============================================
+
+
+# ============================================
+# Dynamically locate BrowsingHistoryView executable
+# ============================================
+
+$browsingHistoryViewExe = Get-ChildItem -Path $scriptDir -Filter "BrowsingHistoryView.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+
+if ($browsingHistoryViewExe) {
+    Write-Host "BrowsingHistoryView binary found at: $($browsingHistoryViewExe.FullName)"
+    
+    # Ensure the output directory exists
+
+    if (-not (Test-Path $browsingHistoryOutput)) {
+        New-Item -Path $browsingHistoryOutput -ItemType Directory -Force | Out-Null
+    }
+
+
+    # Construct Browsing History arguments
+    $browsingHistoryArgs = @(
+        "-h",
+        "/scomma", "$browsingHistoryOutput\WebResults.csv",
+        "/SaveDirect",
+        "/HistorySourceFolder", "C:\kape\triage\C\Users"
+    )
+
+    # Execute the process
+    $process = Start-Process -FilePath $browsingHistoryViewExe.FullName -ArgumentList $browsingHistoryArgs -Wait -NoNewWindow -PassThru
+
+    if ($process.ExitCode -eq 0) {
+        Write-Host "BrowsingHistoryView execution completed successfully."
     } else {
-        foreach ($ShellbagFile in $ShellbagsFiles) {
-            Write-Host "Processing - Kape: Shellbag Data"
+        Write-Error "BrowsingHistoryView execution failed with exit code $($process.ExitCode)."
+    }
+} else {
+    Write-Error "BrowsingHistoryView.exe not found in package directory: $scriptDir"
+}
 
-            # Ensure file exists before attempting to import
-            if (Test-Path $ShellbagFile.FullName) {
-                $ShellbagData = Import-Csv -Path $ShellbagFile.FullName
 
-                # Check if the file contains data
-                if ($ShellbagData.Count -eq 0) {
-                    Write-Host "Warning: No data found in $($ShellbagFile.Name). Skipping..." -ForegroundColor Red
-                    continue
-                }
+## Verify WebResults was collected
+$browsingHistoryResults = Join-Path -Path $browsingHistoryOutput -ChildPath "WebResults.csv"
+if (-not (Test-Path $browsingHistoryResults)) {
+    Write-Warning "BrowsingHistoryView did not produce output file: $browsingHistoryResults"
+}
 
-                $ShellbagData = $ShellbagData | ForEach-Object {
-                    $OrderedObject = [ordered]@{}
 
-                    $OrderedObject["Date/Time"] = $_."LastWriteTime"
-                    $OrderedObject["Artifact Name"] = "File/Folder Access - Shellbags"
-                    $OrderedObject["Data Path"] = $_."AbsolutePath"
-                    $OrderedObject["Data Details"] = $_."Value"
+# ============================================
+#  Begin Chainsaw Module 
+# ============================================
 
-                    [PSCustomObject]$OrderedObject
-                }
+if ($Chainsaw) {
+    Write-Host "Chainsaw flag detected running Chainsaw module..." -ForegroundColor Cyan
 
-                # Append data to Master Timeline
-                $MasterTimeline += $ShellbagData
-            } else {
-                Write-Host "Error: File not found - $($ShellbagFile.FullName). Skipping..." -ForegroundColor Red
-            }
+    # Ensure output directory exists
+    if (-not (Test-Path $chainsawOutput)) {
+        New-Item -Path $chainsawOutput -ItemType Directory -Force | Out-Null
+    }
+
+    # Locate Chainsaw executable
+    $chainsawExe = Get-ChildItem -Path $scriptDir -Filter "chainsaw.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    $mappingsFile = Get-ChildItem -Path $scriptDir -Filter "sigma-event-logs-all.yml" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+
+    # Allow RulesDirOverride if provided
+    if ($RulesDirOverride -and (Test-Path $RulesDirOverride)) {
+        $rulesDir = Get-Item $RulesDirOverride
+        if ($rulesDir -and $rulesDir.PSIsContainer) {
+            Write-Host "Using rules directory override"
+        } else {
+            Write-Warning "Provided RulesDirOverride is not a valid directory: $RulesDirOverride"
+            $rulesDir = $null
+        }
+    } else {
+        $rulesDir = Get-ChildItem -Path $scriptDir -Directory -Filter "rules" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($rulesDir) {
+            Write-Host "Found default Chainsaw rules directory"
         }
     }
-} else {
-    Write-Host "Shellbags directory not found: $ShellbagsPath. Skipping..." -ForegroundColor Yellow
-}
 
-# Process MFT artifacts for executables & archives in C:\Users, and C:\tmp
-$MFTFilePath = "$KapeDirectory\FileSystem"
+    if ($chainsawExe -and $mappingsFile -and $rulesDir) {
+        Write-Host "Running Chainsaw Event Log Hunt..."
 
-if (Test-Path $MFTFilePath) {
-    $MFTFiles = Get-ChildItem -Path $MFTFilePath -Filter "*MFT_Out*.csv" | Where-Object { -not $_.PSIsContainer }
-
-
-    if ($MFTFiles.Count -eq 0) {
-        Write-Host "No MFT output files found. Skipping..." -ForegroundColor Yellow
-    } else {
-        # Define watchlist extensions (you can expand this)
-        $ExtensionWatchlist = @(
-            ".exe", ".dll", ".zip", ".rar", ".7z", ".ps1", ".cmd", ".bat", ".js"
-            # ".docx", ".pdf", ".xlsx", ".csv", "  ## Uncomment to include more file extensions or add your own!
+        $chainsawEVTArgs = @(
+            "hunt",
+            "C:\kape\triage\C\Windows\System32\winevt\Logs",
+            "--mapping", $mappingsFile.FullName,
+            "--rule", $rulesDir.FullName,
+            "--csv",
+            "--output", $chainsawOutput,
+            "--skip-errors"
         )
 
-        foreach ($MFT in $MFTFiles) {
-            Write-Host "Processing - Kape: MFT File Data"
-
-            if (Test-Path $MFT.FullName) {
-                $MFTData = Import-Csv -Path $MFT.FullName
-
-                $MFTFilteredData = $MFTData | Where-Object {
-					($_.Extension -match "^\.(zip|7z|rar|exe|dll)$") -and
-					($_.ParentPath -like "*\Users\*" -or $_.ParentPath -like "*\tmp\*") ## add more folders -or $_.ParentPath -like "*\temp\*
-				} | ForEach-Object {
-					$MFTformattedDate = try {
-						[datetime]::Parse($_."Created0x10").ToString("yyyy/MM/dd HH:mm:ss")
-					} catch {
-						$_."Created0x10"
-					}
-
-					[PSCustomObject]@{
-						"Date/Time"     = $MFTformattedDate
-						"Artifact Name" = "MFT - Created ( Users and TMP EXE, DLL, ZIP RAR etc..)"
-						"Data Path"     = $_."ParentPath"
-						"Data Details"  = $_."FileName"
-					}
-				}
-
-				
-				
-
-                if ($MFTFilteredData.Count -eq 0) {
-                    Write-Host "No matching executables or archives found in $($MFT.Name). Skipping..." -ForegroundColor Yellow
-                } else {
-                    $MasterTimeline += $MFTFilteredData
-                    Write-Host "Added $($MFTFilteredData.Count) entries from $($MFT.Name) to Master Timeline." -ForegroundColor Green
-                }
-            } else {
-                Write-Host "Error: File not found - $($MFT.FullName). Skipping..." -ForegroundColor Red
-            }
+        if ($SigmaDir -and (Test-Path $SigmaDir)) {
+            Write-Host "Adding Sigma rules directory to Chainsaw args: $SigmaDir"
+            $chainsawEVTArgs += @("--sigma", $SigmaDir)
         }
-    }
-} else {
-    Write-Host "MFT directory not found: $MFTFilePath. Skipping..." -ForegroundColor Yellow
-}
 
-# Process EVTX artifacts for Timeline
-$EVTFilePath = "$KapeDirectory\EventLogs"
-
-# Define filtering criteria per channel
-$EventChannelFilters = @{
-    "Application" = @(1000, 1001)
-    "Microsoft-Windows-PowerShell/Operational" = @(4100, 4103, 4104)
-    "Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational" = @(72, 98, 104, 131, 140)
-    "Microsoft-Windows-Sysmon/Operational" = @()
-    "Microsoft-Windows-TaskScheduler/Operational" = @(106, 140, 141, 129, 200, 201)
-    "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational" = @(261, 1149)
-    "Microsoft-Windows-WinRM/Operational" = @(169)
-    "Security" = @(1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756)
-    "SentinelOne/Firewall" = @()
-    "SentinelOne/Operational" = @()
-    "System" = @(7045)
-    "Windows-PowerShell/Operational" = @(400, 403, 600)
-}
-
-if (Test-Path $EVTFilePath) {
-    $EVTFiles = Get-ChildItem -Path $EVTFilePath -Filter "*EvtxECmd*.csv" | Where-Object { -not $_.PSIsContainer }
-
-    foreach ($EVT in $EVTFiles) {
-        Write-Host "Processing - Kape: EVT File Data"
-
-        if (Test-Path $EVT.FullName) {
-            $EVTData = Import-Csv -Path $EVT.FullName
-
-            $EVTFilteredData = $EVTData | Where-Object {
-                $channel = $_.Channel
-                $eventId = [int]$_.EventId
-
-                if ($EventChannelFilters.ContainsKey($channel)) {
-                    $allowedIDs = $EventChannelFilters[$channel]
-                    ($allowedIDs.Count -eq 0) -or ($allowedIDs -contains $eventId)
-                } else {
-                    $false
-                }
-            } | ForEach-Object {
-                $EVTformattedDate = try {
-                    [datetime]::Parse($_."TimeCreated").ToString("yyyy/MM/dd HH:mm:ss")
-                } catch {
-                    $_."TimeCreated"
-                }
-
-                [PSCustomObject]@{
-                    "Date/Time"     = $EVTformattedDate
-                    "Artifact Name" = "Event Logs"
-                    "Event Id"      = $_."EventId"
-                    "Detections"     = $_."MapDescription"
-                    "Data Path"     = $_."PayloadData1"
-                    "Data Details"  = $_."PayloadData2"
-                    "Computer"      = $_."Computer"
-                    "Channel"       = $_."Channel"
-                    "Evidence Path" = $_."SourceFile"
-                }
-            }
-
-            if ($EVTFilteredData.Count -eq 0) {
-                Write-Host "No matching Event IDs found in $($EVT.Name). Skipping..." -ForegroundColor Yellow
-            } else {
-                $MasterTimeline += $EVTFilteredData
-                Write-Host "Added $($EVTFilteredData.Count) entries from $($EVT.Name) to Master Timeline." -ForegroundColor Green
-            }
+        $process = Start-Process -FilePath $chainsawExe.FullName -ArgumentList $chainsawEVTArgs -Wait -NoNewWindow -PassThru
+        if ($process.ExitCode -eq 0) {
+            Write-Host " Chainsaw Event Log Analysis completed successfully."
         } else {
-            Write-Host "Error: File not found - $($EVT.FullName). Skipping..." -ForegroundColor Red
+            Write-Warning "Chainsaw Event Log Analysis failed with exit code $($process.ExitCode)."
         }
+
+        Write-Host "Running Chainsaw on MFT..."
+
+        $chainsawMFTArgs = @(
+            "hunt",
+            "C:\kape\triage\C\$MFT",
+            "--rule", $rulesDir.FullName,
+            "--csv",
+            "--output", $chainsawOutput,
+            "--skip-errors"
+        )
+
+        $process = Start-Process -FilePath $chainsawExe.FullName -ArgumentList $chainsawMFTArgs -Wait -NoNewWindow -PassThru
+        if ($process.ExitCode -eq 0) {
+            Write-Host "Chainsaw MFT Analysis completed successfully."
+        } else {
+            Write-Warning "Chainsaw MFT Analysis failed with exit code $($process.ExitCode)."
+        }
+
+        # Final validation
+        $chainsawResults = Join-Path -Path $chainsawOutput -ChildPath "chainsaw_results.csv"
+        if (-not (Test-Path $chainsawResults)) {
+            Write-Warning "Chainsaw did not produce expected results at: $chainsawResults"
+        } else {
+            Write-Host "Chainsaw results saved to: $chainsawResults"
+        }
+    } else {
+        Write-Warning "One or more Chainsaw dependencies not found. Skipping Chainsaw module."
     }
 } else {
-    Write-Host "Event Log directory not found: $EVTFilePath. Skipping..." -ForegroundColor Yellow
+    Write-Host "Chainsaw flag not set skipping Chainsaw module." -ForegroundColor DarkGray
 }
 
 
-# Split Data into Excel Sheets if Row Count Exceeds Excel Limit
-$MaxRowsPerSheet = 1000000
-$TotalRows = $MasterTimeline.Count
-$SheetNumber = 1
+# ============================================
+# Run Forensic Timeliner if Enabled 
+# ============================================
 
-if ($TotalRows -le $MaxRowsPerSheet) {
-    $MasterTimeline | Export-Excel -Path $OutputFile -WorksheetName "Timeline_1" -AutoSize -BoldTopRow -FreezeTopRow -TableName "MasterTimeline"
-} else {
-    Write-Host "Master Timeline exceeds $MaxRowsPerSheet rows. Splitting into multiple sheets..."
-    
-    for ($i = 0; $i -lt $TotalRows; $i += $MaxRowsPerSheet) {
-        $SheetData = $MasterTimeline[$i..($i + $MaxRowsPerSheet - 1)]
-        $SheetName = "Timeline_$SheetNumber"
+if ($RunTimeliner) {
+    Write-Host "Running Forensic Timeliner..."
 
-        $SheetData | Export-Excel -Path $OutputFile -WorksheetName $SheetName -AutoSize -BoldTopRow -FreezeTopRow -TableName "MasterTimeline" -Append
-        Write-Host "Saved $SheetName with $($SheetData.Count) rows."
-        $SheetNumber++
-    }
-}
-
-Write-Host "Master Timeline created successfully with all required fields."
-
-# Open the Excel file for editing
-$excelPackage = Open-ExcelPackage -Path $OutputFile
-
-# Loop through each worksheet
-foreach ($sheet in $excelPackage.Workbook.Worksheets) {
-    $usedRange = $sheet.Dimension.Address
-    if ($usedRange) {
-        $maxColumn = $sheet.Dimension.End.Column
-        for ($col = 1; $col -le $maxColumn; $col++) {
-            $sheet.Column($col).Width = 30
+    try {
+        if ($TimelinerPath -and (Test-Path $TimelinerPath)) {
+            $resolvedTimeliner = Resolve-Path -Path $TimelinerPath
+            $timelinerScript = $resolvedTimeliner.Path
+            Write-Host "Using overridden timeliner script: $timelinerScript"
+        } else {
+            $timelinerScript = Join-Path -Path $scriptDir -ChildPath "Modules\bin\forensic_timeliner\forensic_timeliner.ps1"
+            Write-Host "Using default timeliner path: $timelinerScript"
         }
+
+        if (Test-Path $timelinerScript) {
+            & $timelinerScript
+            Write-Host "Forensic Timeliner executed successfully."
+        } else {
+            Write-Error "Forensic Timeliner script not found at: $timelinerScript"
+        }
+    } catch {
+        Write-Error "Error while executing forensic_timeliner: $_"
     }
 }
 
-# Save and close
-Close-ExcelPackage $excelPackage
+# ============================================
+# Begin Zipping Function 
+# ============================================
 
-Write-Host "All Fields have been set to Width 30."
+# Determine zip output path
+if ($ZipOutputOverride -and (Test-Path -Path (Split-Path $ZipOutputOverride -Parent))) {
+    $zipOutput = $ZipOutputOverride
+    Write-Host "Using overridden zip output path: $zipOutput"
+} elseif ($Env:S1_OUTPUT_DIR_PATH -and (Test-Path -Path $Env:S1_OUTPUT_DIR_PATH)) {
+    $zipOutput = Join-Path -Path $Env:S1_OUTPUT_DIR_PATH -ChildPath "KAPE-Output.zip"
+    Write-Host "Using SentinelOne output path: $zipOutput"
+} else {
+    $zipOutput = "C:\ProgramData\Sentinel\RSO\KAPE-Output.zip"
+    Write-Host "Using fallback zip output path: $zipOutput"
+}
+
+# Try zipping
+try {
+    if ($Use7Zip) {
+        Write-Host "Using 7-Zip for compression..."
+        $sevenZipPath = Join-Path -Path $scriptDir -ChildPath "Modules\bin\7-Zip\7z.exe"
+        if (-not (Test-Path $sevenZipPath)) {
+            throw "7-Zip executable not found at: $sevenZipPath"
+        }
+
+        $sevenZipArgs = @(
+    "a", "-tzip", "$zipOutput",
+    (Join-Path -Path $OutputDir -ChildPath "*"),
+    "-mx9"
+)
+        $process = Start-Process -FilePath $sevenZipPath -ArgumentList $sevenZipArgs -Wait -NoNewWindow -PassThru
+
+        if ($process.ExitCode -ne 0) {
+            throw "7-Zip failed "
+        }
+
+        Write-Host "Files successfully zipped using 7-Zip to: $zipOutput"
+    }
+    else {
+        Write-Host "Zipping with Compress-Archive..."
+        Compress-Archive -Path "$OutputDir\*" -DestinationPath $zipOutput -Force -ErrorAction Stop
+        Write-Host "Files successfully zipped to: $zipOutput"
+    }
+}
+catch {
+    Write-Error "Zipping failed: $($_.Exception.Message)"
+}
+
+#Waiting
+Write-Host "Waiting for SentinelOne to collect output..... [o_o] We hope you have enjoyd this experience."
+Start-Sleep -Seconds 90
+
+# ============================================
+# Deletion / Cleanup  Block 
+# ============================================
 
 
+# Final Cleanup Logic
+$shouldDelete = $false
+
+if ($Env:S1_OUTPUT_DIR_PATH) {
+    $shouldDelete = $true
+    Write-Host "S1 environment detected - cleanup will run automatically."
+} elseif ($CleanupAfterZip) {
+    $shouldDelete = $true
+    Write-Host "CleanupAfterZip flag set - cleaning up local C:\kape folder."
+}
+
+if ($shouldDelete) {
+    if (Test-Path "C:\kape") {
+        Write-Host "Deleting C:\kape..."
+
+        try {
+            Remove-Item -Path "C:\kape" -Recurse -Force -ErrorAction Stop
+            Write-Host "C:\kape directory deleted successfully."
+        } catch {
+            Write-Warning "Failed to delete C:\kape: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Warning "Cleanup requested but C:\kape not found."
+    }
+} else {
+    Write-Host "Skipping cleanup - neither SentinelOne nor CleanupAfterZip set."
+}
