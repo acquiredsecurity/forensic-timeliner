@@ -1,4 +1,5 @@
 # Forensic Timeliner
+DISCLAIMER: This script is provided as-is, without warranty or guarantee of fitness for a particular purpose. It automates third-party tools that are licensed under their own terms. Ensure you have proper authorization to use and distribute all tools involved.
 
 Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifacts from [Chainsaw](https://github.com/WithSecureLabs/chainsaw) and KAPE / EZTools into a structured **MINI** **Master Timeline** in Excel. This is obviously not comprehensive but a great way to take some high value artifacts and get a real quick snapshot using powershell!
 
@@ -14,8 +15,19 @@ Forensic Timeliner is a PowerShell-based tool that automates the process of aggr
 
 This tool is designed for forensic analysts who need to quickly timeline and triage using output from Chainsaw mianly focused on event logs, MFT, RDP events, sigma rule and other forensic artifacts efficiently.
 
+I have made design decisions on what date fields to use for certain artifacts. You can always for this and add more modules but it is designed as a starting point.
+- MFT Uses Date created Filter and Search for Executables and Compression Extensions in c:\Users and C:\temp edit the script to add more!
+- Shellbags Uses Last Write time only
+- Event logs run both Chainsaw Rules and Sigma as an option and I have also added a filter for EZ Tools event log out based on certian event Ids.
+- LNK files uses the target created time timestamp, this will result in some items with empty date/time
+
+More to come!
+
 ### Special Thanks
-Incoming
+Eric Zimmerman for building and maintaining Kape and all his tools
+Chainsaw Creators
+Nirsoft
+Anybody who uses this!
 
 ---
 sample commandline:
@@ -32,8 +44,8 @@ sample commandline:
 - Preserves **important metadata** like event IDs, source addresses, user information, and service details.
 - Sorts the final timeline by **Date/Time**.
 
----
-
+## Known Issues
+--- date aren't asigned as a value in excel you will have to reformat them as a date. = value (A2) or cut and past them out as values
 
 ## Requirements
 ### Windows:
