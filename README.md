@@ -1,6 +1,9 @@
 # Forensic Timeliner
 DISCLAIMER: This script is provided as-is, without warranty or guarantee of fitness for a particular purpose. It automates third-party tools that are licensed under their own terms. Ensure you have proper authorization to use and distribute all tools involved.
 
+<img width="790" alt="image" src="https://github.com/user-attachments/assets/4276088c-c7cc-4610-85f1-04fb328dc402" />
+
+
 Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifacts from [Chainsaw](https://github.com/WithSecureLabs/chainsaw) and KAPE / [EZTools](https://github.com/EricZimmerman) into a structured **MINI** **Master Timeline** in Excel. This is obviously not comprehensive but a great way to take some high value artifacts and get a real quick snapshot using powershell!
 
 ## Field Mappings by Artifact Module
@@ -20,8 +23,14 @@ I have made design decisions on what date fields to use for certain artifacts. Y
 - Shellbags Uses Last Write time only
 - Event logs run both Chainsaw Rules and Sigma as an option and I have also added a filter for EZ Tools event log out based on certian event Ids.
 - LNK files uses the target created time timestamp, this will result in some items with empty date/time
-
 More to come!
+
+
+<img width="1763" alt="image" src="https://github.com/user-attachments/assets/e2c17563-8400-41b5-ab04-f10edc891598" />
+
+
+
+
 
 ### Special Thanks
 Eric Zimmerman for building and maintaining Kape and all his tools
