@@ -228,6 +228,11 @@ if (Test-Path $RegistryPath) {
             $OrderedObject["Artifact Name"] = "Registry Update"
             $OrderedObject["Data Path"] = $_."ValueData"
             $OrderedObject["Data Details"] = $_."Description"
+            $OrderedObject["Event ID"] = $_."HiveType"
+            $OrderedObject["Channel"] = $_."Description"
+            $OrderedObject["Detections"] = $_."Category"
+
+            $OrderedObject["Evidence Path"] = $_."HivePath"
 
             [PSCustomObject]$OrderedObject
         }
@@ -433,7 +438,7 @@ if (Test-Path $MFTFilePath) {
 
 					[PSCustomObject]@{
 						"Date/Time"     = $MFTformattedDate
-						"Artifact Name" = "MFT - Created ( Users and TMP EXE, DLL, ZIP RAR etc..)"
+						"Artifact Name" = "MFT - Created" 
 						"Data Path"     = $_."ParentPath"
 						"Data Details"  = $_."FileName"
 					}
