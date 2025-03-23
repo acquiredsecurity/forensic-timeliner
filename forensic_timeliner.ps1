@@ -1,35 +1,96 @@
-# Parameter Block
 param (
-    [string]$CsvDirectory,   # Directory containing CSV files
-    [string]$OutputFile,      # Output Excel file
-    [string]$WebResultsPath,  # Path to webResults.csv
-    [string]$KapeDirectory    # Directory containing KAPE output
+    [string]$CsvDirectory,        # Directory containing Chainsaw CSV files
+    [string]$OutputFile,          # Output timeline file
+    [ValidateSet("xlsx", "csv", "json")]
+    [string]$ExportFormat = "csv",  # Format to export (xlsx, csv, or json)
+    [string]$WebResultsPath,      # Path to webResults.csv
+    [string]$KapeDirectory,       # Path to main KAPE timeline folder
+    [switch]$Interactive,         # Launch interactive prompt
+    [switch]$Help                 # Show help menu
 )
-
 # =============================================
-# Argument Validation (Run only with arguments or in S1 environment)
+# Help Menu
 # =============================================
 
-$calledWithArgs = ($PSBoundParameters.Count -gt 0)
-$s1EnvDetected = $Env:S1_PACKAGE_DIR_PATH -and (Test-Path $Env:S1_PACKAGE_DIR_PATH)
-
-if (-not $calledWithArgs -and -not $s1EnvDetected) {
-    Write-Host ""
-    Write-Warning "No parameters were provided and not running in SentinelOne environment."
-    Write-Host ""
-    Write-Host "Usage:"
-    Write-Host '  .\forensic_timeliner.ps1 -CsvDirectory "C:\kape\chainsaw" -OutputFile "C:\kape\timeline\Master_Timeline.xlsx"'
-    Write-Host ""
-    Write-Host "Tip: Use parameters or run this as part of KapeSaw.ps1 via SentinelOne."
-    exit 1
+if ($Help) {
+    Write-Host "" -ForegroundColor Cyan
+    Write-Host "========================= Forensic Timeliner Help =========================" -ForegroundColor Cyan
+    Write-Host "" 
+    Write-Host "Description:" -ForegroundColor Yellow
+    Write-Host "  This script builds a mini forensic timeline from Chainsaw, EZTools/KAPE,"
+    Write-Host "  and optional web history CSVs. Use it after running KapeSaw.ps1 or stand-alone."
+    Write-Host "" 
+    Write-Host "Usage Examples:" -ForegroundColor Yellow
+    Write-Host "  .\forensic_timeliner.ps1 -CsvDirectory 'C:\kape\chainsaw' -OutputFile 'C:\kape\timeline\Master_Timeline.csv'"
+    Write-Host "  .\forensic_timeliner.ps1 -Interactive" 
+    Write-Host "" 
+    Write-Host "Parameters:" -ForegroundColor Yellow
+    Write-Host "  -CsvDirectory        Path to Chainsaw CSVs (default: C:\kape\chainsaw)"
+    Write-Host "  -OutputFile          Path for final Excel file (default: C:\kape\timeline\Master_Timeline.csv)"
+    Write-Host "  -WebResultsPath      Full Path to webResults.csv **Include file name** (default: C:\kape\browsinghistory\webResults.csv)"
+    Write-Host "  -KapeDirectory       Root folder for Registry/FileSystem/EventLogs/etc (default: C:\kape\timeline)"
+    Write-Host "  -Interactive         Launches local-friendly guided setup"
+    Write-Host "  -Help                Display this help screen"
+    Write-Host "" 
+    exit 0
 }
 
+# =============================================
+# Interactive Mode
+# =============================================
 
-# Set Defaults If Not Provided
-if (-not $CsvDirectory) { $CsvDirectory = "C:\kape\chainsaw" }
-if (-not $OutputFile) { $OutputFile = "C:\kape\timeline\Master_Timeline.xlsx" }
-if (-not $WebResultsPath -or $WebResultsPath -eq "") { $WebResultsPath = "C:\kape\browsinghistory\webResults.csv" }
-if (-not $KapeDirectory -or $KapeDirectory -eq "") { $KapeDirectory = "C:\kape\timeline" }
+    if ($Interactive) {
+        Write-Host "" -ForegroundColor Cyan
+        Write-Host "====== Forensic Timeliner Interactive Configuration ======" -ForegroundColor Cyan
+
+        $CsvDirectory = Read-Host "Path to Chainsaw CSVs [Default: C:\kape\chainsaw]"
+        if (-not $CsvDirectory) { $CsvDirectory = "C:\kape\chainsaw" }
+
+        $OutputFile = Read-Host "Path to output CSV file [Default: C:\kape\timeline\Master_Timeline.csv]"
+        if (-not $OutputFile) { $OutputFile = "C:\kape\timeline\Master_Timeline.csv" }
+
+        $WebResultsPath = Read-Host "Path to webResults.csv [Default: C:\kape\browsinghistory\webResults.csv]"
+        if (-not $WebResultsPath) { $WebResultsPath = "C:\kape\browsinghistory\webResults.csv" }
+
+        $KapeDirectory = Read-Host "Path to KAPE timeline root [Default: C:\kape\timeline]"
+        if (-not $KapeDirectory) { $KapeDirectory = "C:\kape\timeline" }
+
+        Write-Host "Interactive configuration complete. Running timeline build..." -ForegroundColor Green
+
+        $exportFormatPrompt = Read-Host "Select output format: xlsx, csv, or json [Default: csv]"
+        if ($exportFormatPrompt -and $exportFormatPrompt -in @("xlsx", "csv", "json")) {
+            $ExportFormat = $exportFormatPrompt
+        } else {
+            $ExportFormat = "csv"
+}
+
+    }
+
+
+# =============================================
+# SentinelOne Auto Mode
+# =============================================
+    $calledWithArgs = ($PSBoundParameters.Count -gt 0)
+    $s1EnvDetected = $Env:S1_PACKAGE_DIR_PATH -and (Test-Path $Env:S1_PACKAGE_DIR_PATH)
+
+    if (-not $calledWithArgs -and -not $s1EnvDetected -and -not $Interactive) {
+        Write-Host "" -ForegroundColor Yellow
+        Write-Warning "No parameters provided and not running in SentinelOne."
+        Write-Host "Use -Interactive for guided setup or -Help for options."
+        exit 1
+    }
+    # Default Fallbacks if Running in S1 or Param Partial
+    if (-not $CsvDirectory) { $CsvDirectory = "C:\kape\chainsaw" }
+    if (-not $OutputFile) { $OutputFile = "C:\kape\timeline\Master_Timeline.csv" }
+    if (-not $WebResultsPath) { $WebResultsPath = "C:\kape\browsinghistory\webResults.csv" }
+    if (-not $KapeDirectory) { $KapeDirectory = "C:\kape\timeline" }
+
+# ============================================
+# Adjust extension based on export format
+# =============================================    
+    $desiredExtension = "." + $ExportFormat.ToLower()
+    $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $desiredExtension)
+
 
 # ASCII Art Banner
 
@@ -468,45 +529,58 @@ if (Test-Path $EVTFilePath) {
     Write-Host "Event Log directory not found: $EVTFilePath. Skipping..." -ForegroundColor Yellow
 }
 
+# =============================================
+# Export Data Formatting
+# =============================================
 
-# Split Data into Excel Sheets if Row Count Exceeds Excel Limit
-$MaxRowsPerSheet = 1000000
-$TotalRows = $MasterTimeline.Count
-$SheetNumber = 1
 
-if ($TotalRows -le $MaxRowsPerSheet) {
-    $MasterTimeline | Export-Excel -Path $OutputFile -WorksheetName "Timeline_1" -AutoSize -BoldTopRow -FreezeTopRow -TableName "MasterTimeline"
-} else {
-    Write-Host "Master Timeline exceeds $MaxRowsPerSheet rows. Splitting into multiple sheets..."
-    
-    for ($i = 0; $i -lt $TotalRows; $i += $MaxRowsPerSheet) {
-        $SheetData = $MasterTimeline[$i..($i + $MaxRowsPerSheet - 1)]
-        $SheetName = "Timeline_$SheetNumber"
+switch ($ExportFormat) {
+    "xlsx" {
+        # Default: Excel Export
+        $MaxRowsPerSheet = 1000000
+        $TotalRows = $MasterTimeline.Count
+        $SheetNumber = 1
 
-        $SheetData | Export-Excel -Path $OutputFile -WorksheetName $SheetName -AutoSize -BoldTopRow -FreezeTopRow -TableName "MasterTimeline" -Append
-        Write-Host "Saved $SheetName with $($SheetData.Count) rows."
-        $SheetNumber++
-    }
-}
+        if ($TotalRows -le $MaxRowsPerSheet) {
+            $MasterTimeline | Export-Excel -Path $OutputFile -WorksheetName "Timeline_1" -AutoSize -BoldTopRow -FreezeTopRow -TableName "MasterTimeline"
+        } else {
+            Write-Host "Master Timeline exceeds $MaxRowsPerSheet rows. Splitting into multiple sheets..."
+            
+            for ($i = 0; $i -lt $TotalRows; $i += $MaxRowsPerSheet) {
+                $SheetData = $MasterTimeline[$i..($i + $MaxRowsPerSheet - 1)]
+                $SheetName = "Timeline_$SheetNumber"
 
-Write-Host "Master Timeline created successfully with all required fields."
-
-# Open the Excel file for editing
-$excelPackage = Open-ExcelPackage -Path $OutputFile
-
-# Loop through each worksheet
-foreach ($sheet in $excelPackage.Workbook.Worksheets) {
-    $usedRange = $sheet.Dimension.Address
-    if ($usedRange) {
-        $maxColumn = $sheet.Dimension.End.Column
-        for ($col = 1; $col -le $maxColumn; $col++) {
-            $sheet.Column($col).Width = 30
+                $SheetData | Export-Excel -Path $OutputFile -WorksheetName $SheetName -AutoSize -BoldTopRow -FreezeTopRow -TableName "MasterTimeline" -Append
+                Write-Host "Saved $SheetName with $($SheetData.Count) rows."
+                $SheetNumber++
+            }
         }
+
+        # Optional: adjust column widths
+        $excelPackage = Open-ExcelPackage -Path $OutputFile
+        foreach ($sheet in $excelPackage.Workbook.Worksheets) {
+            $usedRange = $sheet.Dimension.Address
+            if ($usedRange) {
+                $maxColumn = $sheet.Dimension.End.Column
+                for ($col = 1; $col -le $maxColumn; $col++) {
+                    $sheet.Column($col).Width = 30
+                }
+            }
+        }
+        Close-ExcelPackage $excelPackage
+
+        Write-Host "Excel export complete. Fields set to width 30." -ForegroundColor Green
+    }
+
+    "csv" {
+        $MasterTimeline | Export-Csv -Path $OutputFile -NoTypeInformation -Encoding UTF8
+        Write-Host "CSV export complete: $OutputFile" -ForegroundColor Green
+    }
+
+    "json" {
+        $MasterTimeline | ConvertTo-Json -Depth 5 | Out-File -FilePath $OutputFile -Encoding UTF8
+        Write-Host "JSON export complete: $OutputFile" -ForegroundColor Green
     }
 }
 
-# Save and close
-Close-ExcelPackage $excelPackage
-
-Write-Host "All Fields have been set to Width 30."
-
+Write-Host "Master Timeline exported successfully to $OutputFile as $ExportFormat." -ForegroundColor Cyan
