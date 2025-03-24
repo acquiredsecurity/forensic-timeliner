@@ -770,8 +770,8 @@ if (Test-Path $MFTPath) {
                         
                         # Filter for relevant files
                         $filteredData = $batchData | Where-Object {
-                            ($_.Extension -match "^(\.Identifier|\.exe|\.dll|\.zip|\.rar|\.7z)$") -and
-                            ($_.ParentPath -like "*\\Users\\*" -or $_.ParentPath -like "*\\tmp\\*")
+                            ($_.Extension -match "^(\.identifier|\.exe|\.dll|\.zip|\.rar|\.7z)$") -and
+                            ($_.ParentPath -match "Users|tmp")
                         }
                         
                         # Process filtered entries
@@ -809,8 +809,8 @@ if (Test-Path $MFTPath) {
                     $batchData = Import-Csv $tempFile
                     
                     $filteredData = $batchData | Where-Object {
-                        ($_.Extension -match "^(\.Identifier|\.exe|\.dll|\.zip|\.rar|\.7z)$") -and
-                        ($_.ParentPath -like "*\\Users\\*" -or $_.ParentPath -like "*\\tmp\\*")
+                        ($_.Extension -match "^(\.identifier|\.exe|\.dll|\.zip|\.rar|\.7z)$") -and
+                        ($_.ParentPath -match "Users|tmp")
                     }
                     
                     $mftRows = $filteredData | ForEach-Object {
