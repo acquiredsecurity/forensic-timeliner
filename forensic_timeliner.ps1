@@ -283,6 +283,7 @@ $StandardFields = @(
 $PreferredFieldOrder = @(
     "DateTime", 
     "ArtifactName",
+    "Detections",
     "EventID",
     "Channel", 
     "User",
@@ -291,7 +292,6 @@ $PreferredFieldOrder = @(
     "DataDetails",
     "CommandLine",
     "ProcessName",
-    "Detections",
     "FileSize",
     "FileExtension",
     "IPAddress", 
