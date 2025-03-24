@@ -28,6 +28,7 @@ colorMap.Add "EventLogs", RGB(153, 50, 204) ' Dark Orchid
 colorMap.Add "FileDeletion", RGB(139, 0, 0) ' Dark Red
 colorMap.Add "LNKFiles", RGB(211, 211, 211) ' Light Gray
 colorMap.Add "MFTCreated", RGB(65, 105, 225) ' Royal Blue
+colorMap.Add "mft", RGB(70, 130, 180) ' Steel Blue
 colorMap.Add "PECmdExecution", RGB(255, 140, 0) ' Dark Orange
 colorMap.Add "RegistryUpdate", RGB(0, 100, 0) ' Dark Green
 colorMap.Add "Shellbags", RGB(255, 165, 0) ' Orange
@@ -51,6 +52,7 @@ fontColorMap.Add "EventLogs", RGB(255, 255, 255) ' White
 fontColorMap.Add "FileDeletion", RGB(255, 255, 255) ' White
 fontColorMap.Add "LNKFiles", RGB(0, 0, 0) ' Black
 fontColorMap.Add "MFTCreated", RGB(255, 255, 255) ' White
+fontColorMap.Add "mft", RGB(255, 255, 255) ' White text
 fontColorMap.Add "PECmdExecution", RGB(0, 0, 0) ' Black
 fontColorMap.Add "RegistryUpdate", RGB(255, 255, 255) ' White
 fontColorMap.Add "Shellbags", RGB(0, 0, 0) ' Black
