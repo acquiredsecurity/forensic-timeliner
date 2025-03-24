@@ -16,7 +16,7 @@ Forensic Timeliner is a PowerShell-based tool that automates the process of aggr
 
 
 
-This tool is designed for forensic analysts who need to quickly timeline and triage using output from Chainsaw mianly focused on event logs, MFT, RDP events, sigma rule and other forensic artifacts efficiently.
+This tool is designed for forensic analysts who need to quickly timeline and triage using output from Kape, EZTools WebHistoryView and Chainsaw mainly focused on standard !Sans Kape output.
 
 I have made design decisions on what date fields to use for certain artifacts. You can always for this and add more modules but it is designed as a starting point.
 - MFT Uses Date created Filter and Search for Executables and Compression Extensions in c:\Users and C:\temp edit the script to add more!
