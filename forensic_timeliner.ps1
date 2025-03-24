@@ -123,10 +123,20 @@ if ($Interactive) {
         Write-Host "  Note: Directory path detected. Using file: $WebResultsPath" -ForegroundColor Yellow
     }
     
+    # Handle output file path validation
     $OutputFile = Read-Host "Path to Forensic Timeline output file [Default: $defaultOutputPath]"
-    if (-not $OutputFile) { $OutputFile = $defaultOutputPath }
-    
-    # Ensure the output file has the correct extension
+    if (-not $OutputFile) { 
+        $OutputFile = $defaultOutputPath 
+    }
+
+    # Check if the path is a directory
+    if (Test-Path $OutputFile -PathType Container) {
+        # User provided only a directory, append default filename
+        $OutputFile = Join-Path $OutputFile "Master_Timeline.$ExportFormat"
+        Write-Host "  Note: Directory path detected. Using file: $OutputFile" -ForegroundColor Yellow
+    }
+
+    # Now we can safely change the extension if needed
     if (-not $OutputFile.EndsWith($fileExtension)) {
         $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $fileExtension.TrimStart('.'))
     }
