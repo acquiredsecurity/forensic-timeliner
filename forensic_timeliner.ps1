@@ -1232,9 +1232,20 @@ switch ($ExportFormat) {
         Write-Host "CSV timeline written to: $OutputFile" -ForegroundColor Green
     }
     "json" {
-        $OrderedTimeline | ConvertTo-Json -Depth 4 | Out-File -FilePath $OutputFile -Encoding UTF8
-        Write-Host "JSON timeline written to: $OutputFile" -ForegroundColor Green
+    # Ensure proper array format for SDL
+    $jsonContent = $OrderedTimeline | ConvertTo-Json -Depth 4
+    
+    # If it's not already an array (starts with [), wrap it in brackets
+    if (-not $jsonContent.TrimStart().StartsWith('[')) {
+        $jsonContent = "[$jsonContent]"
     }
+    
+    # Use UTF8NoBOM encoding for SDL compatibility
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($OutputFile, $jsonContent, $utf8NoBom)
+    
+    Write-Host "JSON timeline written to: $OutputFile" -ForegroundColor Green
+}
 }
 
 Write-Host "Timeline export complete. Total entries: $($MasterTimeline.Count)" -ForegroundColor Cyan
