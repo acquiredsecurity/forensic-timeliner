@@ -11,8 +11,11 @@ param (
     [string]$FileFolderSubDir = "FileFolderAccess",           # File/Folder access subdirectory
     [string]$FileSystemSubDir = "FileSystem",                 # FileSystem subdirectory
     [string]$EventLogsSubDir = "EventLogs",                   # Event logs subdirectory
-    [int]$BatchSize = 5000,                                   # Batch size for processing large files
-    [switch]$Interactive,                                      # Launch interactive prompt
+    [int]$BatchSize = 10000,                                  # Batch size for processing large files
+    [datetime]$StartDate,                                     # Start date for filtering (inclusive)
+    [datetime]$EndDate,                                       # End date for filtering (inclusive)
+    [switch]$Deduplicate,                                     # Enable deduplication of timeline entries
+    [switch]$Interactive,                                     # Launch interactive prompt
     [switch]$Help                                             # Show help menu
 )
 
@@ -70,15 +73,15 @@ if ($Help) {
     Write-Host "" 
     Write-Host "Parameters:" -ForegroundColor Yellow
     Write-Host "  -KapeDirectory       Root folder for Registry/FileSystem/EventLogs/etc (default: C:\kape\timeline)"
+    Write-Host "  -ChainsawDirectory   Path to Chainsaw CSVs (default: C:\kape\chainsaw)"
+    Write-Host "  -WebResultsPath      Full Path to webResults.csv **Include file name** (default: C:\kape\browsinghistory\webResults.csv)"
     Write-Host "  -RegistrySubDir      Registry subdirectory under KapeDirectory (default: Registry)"
     Write-Host "  -ProgramExecSubDir   Program execution subdirectory under KapeDirectory (default: ProgramExecution)"
     Write-Host "  -FileFolderSubDir    File/Folder access subdirectory under KapeDirectory (default: FileFolderAccess)"
     Write-Host "  -FileSystemSubDir    FileSystem subdirectory under KapeDirectory (default: FileSystem)"
     Write-Host "  -EventLogsSubDir     Event logs subdirectory under KapeDirectory (default: EventLogs)"
-    Write-Host "  -ChainsawDirectory   Path to Chainsaw CSVs (default: C:\kape\chainsaw)"
-    Write-Host "  -WebResultsPath      Full Path to webResults.csv **Include file name** (default: C:\kape\browsinghistory\webResults.csv)"
     Write-Host "  -OutputFile          Path for final Excel file (default: C:\kape\timeline\Master_Timeline.csv)"
-    Write-Host "  -BatchSize           Number of records to process at once for large files (default: 5000)"
+    Write-Host "  -BatchSize           Number of records to process at once for large files (default: 10,000)"
     Write-Host "  -Interactive         Launches local-friendly guided setup"
     Write-Host "  -Help                Display this help screen"
     Write-Host "" 
@@ -90,17 +93,43 @@ if ($Interactive) {
     Write-Host "" -ForegroundColor Cyan
     Write-Host "====== Forensic Timeliner Interactive Configuration ======" -ForegroundColor Cyan
 
-    $KapeDirectory = Read-Host "Path to KAPE timeline root [Default: C:\kape\timeline]"
-    if (-not $KapeDirectory) { $KapeDirectory = "C:\kape\timeline" }
+    # Ask for export format first
+    $exportFormatPrompt = Read-Host "Select output format: xlsx, csv, or json [Default: csv]"
+    if ($exportFormatPrompt -and $exportFormatPrompt -in @("xlsx", "csv", "json")) {
+        $ExportFormat = $exportFormatPrompt
+    } else {
+        $ExportFormat = "csv"
+    }
     
-    $OutputFile = Read-Host "Path to output CSV file [Default: C:\kape\timeline\Master_Timeline.csv]"
-    if (-not $OutputFile) { $OutputFile = "C:\kape\timeline\Master_Timeline.csv" }
+    # Set default extension based on selected format
+    $fileExtension = ".$ExportFormat"
+    $defaultOutputPath = "C:\kape\timeline\Master_Timeline$fileExtension"
+    
+    $KapeDirectory = Read-Host "Path to KAPE Processed CSV Files [Default: C:\kape\timeline]"
+    if (-not $KapeDirectory) { $KapeDirectory = "C:\kape\timeline" }
 
     $ChainsawDirectory = Read-Host "Path to Chainsaw CSVs [Default: C:\kape\chainsaw]"
     if (-not $ChainsawDirectory) { $ChainsawDirectory = "C:\kape\chainsaw" }
 
-    $WebResultsPath = Read-Host "Path to webResults.csv [Default: C:\kape\browsinghistory\webResults.csv]"
-    if (-not $WebResultsPath) { $WebResultsPath = "C:\kape\browsinghistory\webResults.csv" }
+    $WebResultsPath = Read-Host "Path to BrowsingHistoryView output file webResults.csv [Default: C:\kape\browsinghistory\webResults.csv]"
+    if (-not $WebResultsPath) { 
+        $WebResultsPath = "C:\kape\browsinghistory\webResults.csv" 
+    }
+    
+    # Validate the web history path to ensure it includes a filename
+    if (-not [string]::IsNullOrEmpty($WebResultsPath) -and (Test-Path $WebResultsPath -PathType Container)) {
+        # If user entered a directory, append the default filename
+        $WebResultsPath = Join-Path $WebResultsPath "webResults.csv"
+        Write-Host "  Note: Directory path detected. Using file: $WebResultsPath" -ForegroundColor Yellow
+    }
+    
+    $OutputFile = Read-Host "Path to Forensic Timeline output file [Default: $defaultOutputPath]"
+    if (-not $OutputFile) { $OutputFile = $defaultOutputPath }
+    
+    # Ensure the output file has the correct extension
+    if (-not $OutputFile.EndsWith($fileExtension)) {
+        $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $fileExtension.TrimStart('.'))
+    }
 
     # Advanced directory configuration (optional)
     $configureSubDirs = Read-Host "Configure subdirectories? This script expects you will be using standard kape !SansTriage output with EZParsers.. (y/n) [Default: n]"
@@ -127,19 +156,52 @@ if ($Interactive) {
         $EventLogsSubDir = "EventLogs"
     }
     
-    $batchSizeInput = Read-Host "Batch size for processing large files [Default: 5000]"
+    $batchSizeInput = Read-Host "Batch size for processing large files [Default: 10,000]"
     if ($batchSizeInput -match '^\d+$') {
         $BatchSize = [int]$batchSizeInput
     }
+    
+    # Ask for deduplication
+    $deduplicateInput = Read-Host "Enable deduplication of timeline entries? (y/n) [Default: n]"
+    if ($deduplicateInput -eq "y") {
+        $Deduplicate = $true
+    } else {
+        $Deduplicate = $false
+    }
+    
+    # Ask for date filtering
+    $dateFilterInput = Read-Host "Apply date range filtering? (y/n) [Default: n]"
+    if ($dateFilterInput -eq "y") {
+        $startDateInput = Read-Host "Enter start date (yyyy-MM-dd) [Leave blank for no start date]"
+        if (-not [string]::IsNullOrWhiteSpace($startDateInput)) {
+            try {
+                $StartDate = [datetime]::ParseExact($startDateInput, "yyyy-MM-dd", $null)
+                Write-Host "  Start date set to: $($StartDate.ToString('yyyy-MM-dd'))" -ForegroundColor Green
+            } catch {
+                Write-Host "  Invalid date format. Start date not set." -ForegroundColor Yellow
+            }
+        }
+        
+        $endDateInput = Read-Host "Enter end date (yyyy-MM-dd) [Leave blank for no end date]"
+        if (-not [string]::IsNullOrWhiteSpace($endDateInput)) {
+            try {
+                $EndDate = [datetime]::ParseExact($endDateInput, "yyyy-MM-dd", $null)
+                Write-Host "  End date set to: $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor Green
+            } catch {
+                Write-Host "  Invalid date format. End date not set." -ForegroundColor Yellow
+            }
+        }
+        
+        # Validate date range if both dates are set
+        if ($StartDate -and $EndDate -and ($StartDate -gt $EndDate)) {
+            Write-Host "  Warning: Start date is after end date. Swapping dates." -ForegroundColor Yellow
+            $tempDate = $StartDate
+            $StartDate = $EndDate
+            $EndDate = $tempDate
+        }
+    }
 
     Write-Host "Interactive configuration complete. Running timeline build..." -ForegroundColor Green
-
-    $exportFormatPrompt = Read-Host "Select output format: xlsx, csv, or json [Default: csv]"
-    if ($exportFormatPrompt -and $exportFormatPrompt -in @("xlsx", "csv", "json")) {
-        $ExportFormat = $exportFormatPrompt
-    } else {
-        $ExportFormat = "csv"
-    }
 }
 
 # SentinelOne Auto Mode - Identifies if running by SentinelOne remote ops
@@ -182,6 +244,9 @@ Mini Timeline Builder for Kape Output, Chainsaw +Sigma
 | with help from the robots [o_o] 
 - Build a quick mini-timeline with Kape and Chainsaw run Rules and Sigma! Use my other script Kapesaw 
 to collect your triage and integrate this Module as well!
+Shoutouts:  
+@EricZimmerman https://github.com/EricZimmerman  
+WithSecure Countercept (@FranticTyping, @AlexKornitzer) For making Chainsaw, @ https://github.com/WithSecureLabs/chainsaw 
 Happy Timelining!
 "@ -ForegroundColor Cyan
 
@@ -958,10 +1023,10 @@ if (Test-Path $lnkPath) {
     Write-Host "  Shellbags path not found: $lnkPath" -ForegroundColor Yellow
 }
 
-# Process Web History
+# Web History
 Write-Host "Processing Web History" -ForegroundColor Cyan
 if (Test-Path $WebResultsPath) {
-    Show-ProcessingProgress -Activity "Processing Web History" -Status "File: webResults.csv" -Current 1 -Total 1 -NestedLevel 1
+    Show-ProcessingProgress -Activity "Processing Web History" -Status "File: $([System.IO.Path]::GetFileName($WebResultsPath))" -Current 1 -Total 1 -NestedLevel 1
     
     try {
         $webRows = Import-Csv $WebResultsPath | ForEach-Object {
@@ -978,7 +1043,7 @@ if (Test-Path $WebResultsPath) {
             Normalize-Row -Fields $row -ArtifactName "WebHistory"
         }
         $MasterTimeline += $webRows
-        Write-Host "  Added $($webRows.Count) web history entries from webResults.csv" -ForegroundColor Green
+        Write-Host "  Added $($webRows.Count) web history entries from $([System.IO.Path]::GetFileName($WebResultsPath))" -ForegroundColor Green
     } catch {
         Write-Host "  Error processing web history: $_" -ForegroundColor Red
     }
@@ -1053,6 +1118,75 @@ if (-not $MasterTimeline -or $MasterTimeline.Count -eq 0) {
 # Sort the timeline by DateTime
 Write-Host "Sorting timeline by DateTime..." -ForegroundColor Cyan
 $MasterTimeline = $MasterTimeline | Sort-Object -Property DateTime
+
+# Apply date range filtering if specified
+if ($StartDate -or $EndDate) {
+    Write-Host "Applying date range filtering..." -ForegroundColor Cyan
+    $originalCount = $MasterTimeline.Count
+    
+    # Filter for entries within date range
+    $MasterTimeline = $MasterTimeline | Where-Object {
+        $entryDate = $null
+        
+        # Try to parse the date from the DateTime field
+        if ($_.DateTime -and (-not [string]::IsNullOrWhiteSpace($_.DateTime))) {
+            try {
+                $entryDate = [datetime]::Parse($_.DateTime)
+            } catch {
+                # If parsing fails, keep the entry (don't filter it out)
+                return $true
+            }
+        } else {
+            # If no date, keep the entry (don't filter it out)
+            return $true
+        }
+        
+        # Apply start date filter if specified
+        $afterStart = (-not $StartDate) -or ($entryDate -ge $StartDate)
+        
+        # Apply end date filter if specified
+        $beforeEnd = (-not $EndDate) -or ($entryDate -le $EndDate)
+        
+        # Include only entries that meet both conditions
+        return $afterStart -and $beforeEnd
+    }
+    
+    $filteredCount = $MasterTimeline.Count
+    $removedCount = $originalCount - $filteredCount
+    
+    Write-Host "  Date range filtering: $removedCount entries removed, $filteredCount entries remaining" -ForegroundColor Green
+    if ($StartDate) { Write-Host "  Start date: $($StartDate.ToString('yyyy-MM-dd'))" -ForegroundColor Green }
+    if ($EndDate) { Write-Host "  End date: $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor Green }
+}
+
+# Apply deduplication if enabled
+if ($Deduplicate) {
+    Write-Host "Applying deduplication..." -ForegroundColor Cyan
+    $originalCount = $MasterTimeline.Count
+    
+    # Create a hashtable to track unique entries
+    $uniqueEntries = @{}
+    $uniqueTimeline = @()
+    
+    foreach ($entry in $MasterTimeline) {
+        # Create a key based on date, path, and event details
+        $key = "$($entry.DateTime)_$($entry.DataPath)_$($entry.DataDetails)_$($entry.EventID)_$($entry.ArtifactName)"
+        
+        # Only add unique entries
+        if (-not $uniqueEntries.ContainsKey($key)) {
+            $uniqueEntries[$key] = $true
+            $uniqueTimeline += $entry
+        }
+    }
+    
+    # Replace the master timeline with the deduplicated version
+    $MasterTimeline = $uniqueTimeline
+    
+    $deduplicatedCount = $MasterTimeline.Count
+    $removedCount = $originalCount - $deduplicatedCount
+    
+    Write-Host "  Deduplication: $removedCount duplicate entries removed, $deduplicatedCount unique entries remaining" -ForegroundColor Green
+}
 
 # Apply the field order to the timeline
 Write-Host "Formatting timeline for export..." -ForegroundColor Cyan
