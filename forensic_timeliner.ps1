@@ -1074,8 +1074,25 @@ if ($fileCount -gt 0) {
         try {
             $artifactName = $chainsawFile.BaseName
             $chainsawRows = Import-Csv -Path $chainsawFile.FullName | ForEach-Object {
+                # Improved timestamp parsing that handles ISO 8601 format with timezone info
+                $dt = if ($_.timestamp) {
+                    try { 
+                        # Try parsing with timezone handling
+                        $dateObj = [datetime]::Parse($_.timestamp, [System.Globalization.CultureInfo]::InvariantCulture, 
+                            [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+                        $dateObj.ToString("yyyy/MM/dd HH:mm:ss")
+                    } 
+                    catch { 
+                        # If parsing fails, keep the original string
+                        $_.timestamp 
+                    }
+                } else {
+                    # If no timestamp, use current date/time
+                    (Get-Date).ToString("yyyy/MM/dd HH:mm:ss")
+                }
+                
                 $row = @{
-                    DateTime           = $_."timestamp"
+                    DateTime           = $dt
                     EventID            = $_."Event ID"
                     Channel            = $_."Channel"
                     Detections         = $_."detections"
