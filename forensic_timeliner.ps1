@@ -254,9 +254,6 @@ Mini Timeline Builder for Kape Output, Chainsaw +Sigma
 | with help from the robots [o_o] 
 - Build a quick mini-timeline with Kape and Chainsaw run Rules and Sigma! Use my other script Kapesaw 
 to collect your triage and integrate this Module as well!
-Shoutouts:  
-@EricZimmerman https://github.com/EricZimmerman  
-WithSecure Countercept (@FranticTyping, @AlexKornitzer) For making Chainsaw, @ https://github.com/WithSecureLabs/chainsaw 
 Happy Timelining!
 "@ -ForegroundColor Cyan
 
