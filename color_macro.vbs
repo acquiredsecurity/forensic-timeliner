@@ -25,58 +25,60 @@ Sub ColorRowsByArtifactName()
     ' Define chunk size to avoid performance issues
     chunkSize = 5000  
 
-    ' Create dictionaries for artifact colors
-    Set colorMap = CreateObject("Scripting.Dictionary")
-    Set fontColorMap = CreateObject("Scripting.Dictionary")
-    Set rowDict = CreateObject("Scripting.Dictionary")
+' Create dictionaries for artifact colors
+Set colorMap = CreateObject("Scripting.Dictionary")
+Set fontColorMap = CreateObject("Scripting.Dictionary")
+Set rowDict = CreateObject("Scripting.Dictionary")
 
-    ' Assign background colors
-    colorMap.Add "account_tampering", RGB(0, 0, 255) ' Blue
-    colorMap.Add "antivirus", RGB(0, 128, 0) ' Green
-    colorMap.Add "indicator_removal", RGB(255, 0, 0) ' Red
-    colorMap.Add "lateral_movement", RGB(255, 165, 0) ' Orange
-    colorMap.Add "login_attacks", RGB(255, 255, 0) ' Yellow
-    colorMap.Add "MFT - FileNameCreated0x30", RGB(128, 0, 128) ' Purple
-    colorMap.Add "microsoft_rds_events_-_user_profile_disk", RGB(0, 255, 255) ' Cyan
-    colorMap.Add "persistence", RGB(128, 128, 0) ' Olive
-    colorMap.Add "powershell_engine_state", RGB(255, 192, 203) ' Pink
-    colorMap.Add "powershell_script", RGB(165, 42, 42) ' Brown
-    colorMap.Add "rdp_events", RGB(0, 255, 0) ' Lime
-    colorMap.Add "service_installation", RGB(0, 128, 128) ' Teal
-    colorMap.Add "sigma", RGB(153, 50, 204) ' Dark Orchid (Purple)
-    colorMap.Add "Web History", RGB(173, 216, 230) ' Light Blue
-    colorMap.Add "File Deletion", RGB(139, 0, 0) ' Dark Red
-    colorMap.Add "Registry Update", RGB(0, 100, 0) ' Dark Green
-    colorMap.Add "Program Execution - Amcache", RGB(135, 206, 235) ' Sky Blue
-    colorMap.Add "LNK Files", RGB(211, 211, 211) ' Light Gray
-    colorMap.Add "File/Folder Access - Shellbags", RGB(255, 140, 0) ' Dark Orange
-    colorMap.Add "MFT - Created ( Users and TMP EXE, DLL, ZIP RAR etc..)", RGB(65, 105, 225) ' Royal Blue
-    colorMap.Add "mft", RGB(0, 128, 128) ' Teal
-    colorMap.Add "Event Logs", RGB(47, 79, 79) ' Dark Slate Gray
+' Assign background colors - UPDATED WITH NEW ARTIFACT NAMES
+colorMap.Add "AmcacheExecution", RGB(135, 206, 235) ' Sky Blue
+colorMap.Add "EventLogs", RGB(153, 50, 204) ' Dark Orchid
+colorMap.Add "FileDeletion", RGB(139, 0, 0) ' Dark Red
+colorMap.Add "LNKFiles", RGB(211, 211, 211) ' Light Gray
+colorMap.Add "MFTCreated", RGB(65, 105, 225) ' Royal Blue
+colorMap.Add "PECmdExecution", RGB(255, 140, 0) ' Dark Orange
+colorMap.Add "RegistryUpdate", RGB(0, 100, 0) ' Dark Green
+colorMap.Add "Shellbags", RGB(255, 165, 0) ' Orange
+colorMap.Add "WebHistory", RGB(173, 216, 230) ' Light Blue
 
-    ' Assign contrasting font colors
-    fontColorMap.Add "account_tampering", RGB(255, 255, 255) ' White
-    fontColorMap.Add "antivirus", RGB(255, 255, 255) ' White
-    fontColorMap.Add "indicator_removal", RGB(255, 255, 255) ' White
-    fontColorMap.Add "lateral_movement", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "login_attacks", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "MFT - FileNameCreated0x30", RGB(255, 255, 255) ' White
-    fontColorMap.Add "microsoft_rds_events_-_user_profile_disk", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "persistence", RGB(255, 255, 255) ' White
-    fontColorMap.Add "powershell_engine_state", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "powershell_script", RGB(255, 255, 255) ' White
-    fontColorMap.Add "rdp_events", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "service_installation", RGB(255, 255, 255) ' White
-    fontColorMap.Add "sigma", RGB(255, 255, 255) ' White
-    fontColorMap.Add "Web History", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "File Deletion", RGB(255, 255, 255) ' White
-    fontColorMap.Add "Registry Update", RGB(255, 255, 255) ' White
-    fontColorMap.Add "Program Execution - Amcache", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "LNK Files", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "File/Folder Access - Shellbags", RGB(0, 0, 0) ' Black
-    fontColorMap.Add "MFT - Created ( Users and TMP EXE, DLL, ZIP RAR etc..)", RGB(255, 255, 255) ' White
-    fontColorMap.Add "mft", RGB(255, 255, 255) ' White
-    fontColorMap.Add "Event Logs", RGB(255, 255, 255) ' White
+' Also keep original Chainsaw rule names
+colorMap.Add "account_tampering", RGB(0, 0, 255) ' Blue
+colorMap.Add "antivirus", RGB(0, 128, 0) ' Green
+colorMap.Add "indicator_removal", RGB(255, 0, 0) ' Red
+colorMap.Add "lateral_movement", RGB(255, 165, 0) ' Orange
+colorMap.Add "login_attacks", RGB(255, 255, 0) ' Yellow
+colorMap.Add "microsoft_rds_events_-_user_profile_disk", RGB(0, 255, 255) ' Cyan
+colorMap.Add "persistence", RGB(128, 128, 0) ' Olive
+colorMap.Add "powershell_engine_state", RGB(255, 192, 203) ' Pink
+colorMap.Add "powershell_script", RGB(165, 42, 42) ' Brown
+colorMap.Add "rdp_events", RGB(0, 255, 0) ' Lime
+colorMap.Add "service_installation", RGB(0, 128, 128) ' Teal
+colorMap.Add "sigma", RGB(153, 50, 204) ' Dark Orchid (Purple)
+
+' Assign contrasting font colors - UPDATED WITH NEW ARTIFACT NAMES
+fontColorMap.Add "AmcacheExecution", RGB(0, 0, 0) ' Black
+fontColorMap.Add "EventLogs", RGB(255, 255, 255) ' White
+fontColorMap.Add "FileDeletion", RGB(255, 255, 255) ' White
+fontColorMap.Add "LNKFiles", RGB(0, 0, 0) ' Black
+fontColorMap.Add "MFTCreated", RGB(255, 255, 255) ' White
+fontColorMap.Add "PECmdExecution", RGB(0, 0, 0) ' Black
+fontColorMap.Add "RegistryUpdate", RGB(255, 255, 255) ' White
+fontColorMap.Add "Shellbags", RGB(0, 0, 0) ' Black
+fontColorMap.Add "WebHistory", RGB(0, 0, 0) ' Black
+
+' Also keep original Chainsaw rule names
+fontColorMap.Add "account_tampering", RGB(255, 255, 255) ' White
+fontColorMap.Add "antivirus", RGB(255, 255, 255) ' White
+fontColorMap.Add "indicator_removal", RGB(255, 255, 255) ' White
+fontColorMap.Add "lateral_movement", RGB(0, 0, 0) ' Black
+fontColorMap.Add "login_attacks", RGB(0, 0, 0) ' Black
+fontColorMap.Add "microsoft_rds_events_-_user_profile_disk", RGB(0, 0, 0) ' Black
+fontColorMap.Add "persistence", RGB(255, 255, 255) ' White
+fontColorMap.Add "powershell_engine_state", RGB(0, 0, 0) ' Black
+fontColorMap.Add "powershell_script", RGB(255, 255, 255) ' White
+fontColorMap.Add "rdp_events", RGB(0, 0, 0) ' Black
+fontColorMap.Add "service_installation", RGB(255, 255, 255) ' White
+fontColorMap.Add "sigma", RGB(255, 255, 255) ' White
 
     ' Read column B values into an array (fast processing)
     Dim data As Variant
@@ -87,11 +89,11 @@ Sub ColorRowsByArtifactName()
         artifactName = data(i, 1)
         If colorMap.Exists(artifactName) Then
             If Not rowDict.Exists(artifactName) Then
-                Set rowDict(artifactName) = ws.Range("A" & (i + 1) & ":V" & (i + 1))
+                Set rowDict(artifactName) = ws.Range("A" & (i + 1) & ":W" & (i + 1))
             Else
                 ' Use Union only if the range is valid
                 If Not rowDict(artifactName) Is Nothing Then
-                    Set rowDict(artifactName) = Union(rowDict(artifactName), ws.Range("A" & (i + 1) & ":V" & (i + 1)))
+                    Set rowDict(artifactName) = Union(rowDict(artifactName), ws.Range("A" & (i + 1) & ":W" & (i + 1)))
                 End If
             End If
         End If
