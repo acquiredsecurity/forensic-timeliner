@@ -1,24 +1,25 @@
 # Parameter Block
 param (
-    [string]$KapeDirectory = "C:\kape\timeline",              # Path to main KAPE timeline folder
-    [string]$WebResultsPath = "C:\kape\browsinghistory\webResults.csv", # Path to webResults.csv
-    [string]$ChainsawDirectory = "C:\kape\chainsaw",          # Directory containing Chainsaw CSV files
-    [string]$OutputFile = "C:\kape\timeline\Master_Timeline.csv", # Output timeline file
+    [string]$KapeDirectory = "C:\kape\timeline",                                            # Path to main KAPE timeline folder
+    [string]$WebResultsPath = "C:\kape\browsinghistory\webResults.csv",                     # Path to webResults.csv
+    [string]$ChainsawDirectory = "C:\kape\chainsaw",                                        # Directory containing Chainsaw CSV files
+    [string]$OutputFile = "C:\kape\timeline\Master_Timeline.csv",                           # Output timeline file
     [ValidateSet("xlsx", "csv", "json")]
-    [string]$ExportFormat = "csv",                            # Default to CSV for cloud ingestion
-    [switch]$SkipEventLogs,                                   # Skip event logs processing
-    [string]$RegistrySubDir = "Registry",                     # Registry subdirectory under KapeDirectory
-    [string]$ProgramExecSubDir = "ProgramExecution",          # Program execution subdirectory
-    [string]$FileFolderSubDir = "FileFolderAccess",           # File/Folder access subdirectory
-    [string]$FileSystemSubDir = "FileSystem",                 # FileSystem subdirectory
-    [string]$EventLogsSubDir = "EventLogs",                   # Event logs subdirectory
+    [string]$ExportFormat = "csv",                                                           # Default to CSV for timeline creation
+    [switch]$SkipEventLogs,                                                                  # Skip event logs processing
+    [string]$RegistrySubDir = "Registry",                                                    # Registry subdirectory under KapeDirectory
+    [string]$ProgramExecSubDir = "ProgramExecution",                                         # Program execution subdirectory
+    [string]$FileFolderSubDir = "FileFolderAccess",                                          # File/Folder access subdirectory
+    [string]$FileSystemSubDir = "FileSystem",                                                # FileSystem subdirectory
+    [string]$EventLogsSubDir = "EventLogs",                                                  # Event logs subdirectory
     [string[]]$MFTExtensionFilter = @(".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"), # MFT File Extension Filter
-    [int]$BatchSize = 10000,                                  # Batch per line size for largr files
-    [datetime]$StartDate,                                     # Start date for filtering (inclusive)
-    [datetime]$EndDate,                                       # End date for filtering (inclusive)
-    [switch]$Deduplicate,                                     # Enable deduplication of timeline entries
-    [switch]$Interactive,                                     # Launch interactive prompt
-    [switch]$Help                                             # Show help menu
+    [string[]]$MFTPathFilter = @("Users", "tmp"),                                            # MFT Path Filter
+    [int]$BatchSize = 10000,                                                                 # Batch per line size for largr files
+    [datetime]$StartDate,                                                                    # Start date for filtering (inclusive)
+    [datetime]$EndDate,                                                                      # End date for filtering (inclusive)
+    [switch]$Deduplicate,                                                                    # Enable deduplication of timeline entries
+    [switch]$Interactive,                                                                    # Launch interactive prompt
+    [switch]$Help                                                                            # Show help menu
 )
 
 # Progress Reporting Function
@@ -158,6 +159,19 @@ if ($Interactive) {
             }
         }
     
+    # Ask about MFT path filtering
+        $currentPaths = $MFTPathFilter -join ", "
+        Write-Host "  Current MFT path filter: $currentPaths" -ForegroundColor Yellow
+        $customizeMFTPaths = Read-Host "Customize MFT path filters? (y/n) [Default: n]"
+        if ($customizeMFTPaths -eq "y") {
+            $addPaths = Read-Host "Enter additional paths to include (comma-separated, e.g. 'Windows\System32,Program Files')"
+            if (-not [string]::IsNullOrWhiteSpace($addPaths)) {
+                $newPaths = $addPaths -split ',' | ForEach-Object { $_.Trim() }
+                $MFTPathFilter = $MFTPathFilter + $newPaths
+                Write-Host "  Updated MFT path filter: $($MFTPathFilter -join ", ")" -ForegroundColor Green
+            }
+        }
+
         # safely change the extension if needed
     if (-not $OutputFile.EndsWith($fileExtension)) {
         $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $fileExtension.TrimStart('.'))
@@ -984,11 +998,12 @@ if (Test-Path $MFTPath) {
                         # Filter for relevant files
                         # Convert array to regex pattern
                             $extensionPattern = "^(" + ($MFTExtensionFilter -join "|").Replace(".", "\.") + ")$"
+                            $pathPattern = "(" + ($MFTPathFilter -join "|") + ")"
 
                             # Filter for relevant files
                             $filteredData = $batchData | Where-Object {
                                 ($_.Extension -match $extensionPattern) -and
-                                ($_.ParentPath -match "Users|tmp")
+                                ($_.ParentPath -match $pathPattern)
                         }
                         
                         # Process filtered entries
@@ -1029,7 +1044,7 @@ if (Test-Path $MFTPath) {
                     
                     $filteredData = $batchData | Where-Object {
                         ($_.Extension -match $extensionPattern) -and
-                        ($_.ParentPath -match "Users|tmp")
+                        ($_.ParentPath -match $pathPattern)
                     }
                     
                     $mftRows = $filteredData | ForEach-Object {
@@ -1295,32 +1310,79 @@ if ($fileCount -gt 0) {
         
         try {
             $artifactName = $chainsawFile.BaseName
-            $chainsawRows = Import-Csv -Path $chainsawFile.FullName | ForEach-Object {
+        
+            # Check if this is an MFT file based on filename only
+            $isMFTFile = $chainsawFile.Name -like "*MFT*"
+            
+            # Import CSV data
+            $csvData = Import-Csv -Path $chainsawFile.FullName
+            
+            # If not determined by filename, check column headers
+            if (-not $isMFTFile) {
+                $headers = $csvData | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+                $isMFTFile = $headers -contains "FileNameCreated0x30"
+            }
+            
+            # Select appropriate timestamp field
+            $timestampField = if ($isMFTFile) { "FileNameCreated0x30" } else { "timestamp" }
+            
+            # Process the data
+            $chainsawRows = $csvData | ForEach-Object {
                 # Improved timestamp parsing that handles ISO 8601 format with timezone info
-                $dt = if ($_.timestamp) {
+                $dt = if ($_.$timestampField) {
                     try { 
                         # Try parsing with timezone handling
-                        $dateObj = [datetime]::Parse($_.timestamp, [System.Globalization.CultureInfo]::InvariantCulture, 
+                        $dateObj = [datetime]::Parse($_.$timestampField, [System.Globalization.CultureInfo]::InvariantCulture, 
                             [System.Globalization.DateTimeStyles]::AdjustToUniversal)
                         $dateObj.ToString("yyyy/MM/dd HH:mm:ss")
                     } 
                     catch { 
                         # If parsing fails, keep the original string
-                        $_.timestamp 
+                        $_.$timestampField 
                     }
                 } else {
                     # If no timestamp, use current date/time
                     (Get-Date).ToString("yyyy/MM/dd HH:mm:ss")
                 }
+            
                 
                 $row = @{
                     DateTime           = $dt
                     EventId            = $_."Event ID"
                     Description        =  "Chainsaw"
                     Info               = $_."detections"
-                    DataPath           = $_."Threat Path"
-                    DataDetails        = $_."Threat Name"
-                    User               = $_."User"
+                    DataPath = $(if ($_."Threat Path") { 
+                        $_."Threat Path" 
+                      } elseif ($_."Scheduled Task Name") { 
+                        $_."Scheduled Task Name" 
+                      } elseif ($_."FileNamePath") { 
+                        $_."FileNamePath" 
+                      } elseif ($_."Information") { 
+                        $_."Information" 
+                      } elseif ($_."HostApplication") { 
+                        $_."HostApplication" 
+                      } elseif ($_."Service File Name") { 
+                        $_."Service File Name" 
+                      } elseif ($_."Event Data") { 
+                        $_."Event Data" 
+                      } else {
+                        "Unknown Path"
+                      })
+                      DataDetails = $(if ($_."Threat Name") { 
+                        $_."Threat Name" 
+                      } elseif ($_."Service Name") { 
+                        $_."Service Name" 
+                      } else {
+                        ""  
+                      })
+
+                    User = $(if ($_."User") { 
+                        $_."User" 
+                      } elseif ($_."User Name") { 
+                        $_."User Name" 
+                      } else {
+                        "Unknown User"
+                      })
                     Computer           = $_."Computer"
                     UserSID            = $_."User SID"
                     MemberSID          = $_."Member SID"
