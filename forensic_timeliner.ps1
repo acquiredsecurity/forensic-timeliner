@@ -6,12 +6,14 @@ param (
     [string]$OutputFile = "C:\kape\timeline\Master_Timeline.csv", # Output timeline file
     [ValidateSet("xlsx", "csv", "json")]
     [string]$ExportFormat = "csv",                            # Default to CSV for cloud ingestion
+    [switch]$SkipEventLogs,                                   # Skip event logs processing
     [string]$RegistrySubDir = "Registry",                     # Registry subdirectory under KapeDirectory
     [string]$ProgramExecSubDir = "ProgramExecution",          # Program execution subdirectory
     [string]$FileFolderSubDir = "FileFolderAccess",           # File/Folder access subdirectory
     [string]$FileSystemSubDir = "FileSystem",                 # FileSystem subdirectory
     [string]$EventLogsSubDir = "EventLogs",                   # Event logs subdirectory
-    [int]$BatchSize = 10000,                                  # Batch size for processing large files
+    [string[]]$MFTExtensionFilter = @(".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"), # MFT File Extension Filter
+    [int]$BatchSize = 10000,                                  # Batch per line size for largr files
     [datetime]$StartDate,                                     # Start date for filtering (inclusive)
     [datetime]$EndDate,                                       # End date for filtering (inclusive)
     [switch]$Deduplicate,                                     # Enable deduplication of timeline entries
@@ -135,8 +137,28 @@ if ($Interactive) {
         $OutputFile = Join-Path $OutputFile "Master_Timeline.$ExportFormat"
         Write-Host "  Note: Directory path detected. Using file: $OutputFile" -ForegroundColor Yellow
     }
-
-    # Now we can safely change the extension if needed
+    # Ask for Event Log Processing
+        $processEventLogsPrompt = Read-Host "Process Event Logs? This can be time-consuming and event log data should already be exported with Chainsaw and Sigma (y/n) [Default: y]"
+    if ($processEventLogsPrompt -eq "n") {
+        $SkipEventLogs = $true
+        Write-Host "  Event log processing will be skipped" -ForegroundColor Yellow
+    } else {
+        $SkipEventLogs = $false
+    }
+    # Ask about MFT file extension filtering
+        $currentExtensions = $MFTExtensionFilter -join ", "
+        Write-Host "  Current MFT extension filter: $currentExtensions" -ForegroundColor Yellow
+        $customizeMFTExtensions = Read-Host "Customize MFT file extension filter? (y/n) [Default: n]"
+        if ($customizeMFTExtensions -eq "y") {
+            $addExtensions = Read-Host "Enter additional extensions to include (comma-separated, include the dot, e.g. '.pdf,.docx,.bat')"
+            if (-not [string]::IsNullOrWhiteSpace($addExtensions)) {
+                $newExtensions = $addExtensions -split ',' | ForEach-Object { $_.Trim() }
+                $MFTExtensionFilter = $MFTExtensionFilter + $newExtensions
+                Write-Host "  Updated MFT extension filter: $($MFTExtensionFilter -join ", ")" -ForegroundColor Green
+            }
+        }
+    
+        # safely change the extension if needed
     if (-not $OutputFile.EndsWith($fileExtension)) {
         $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $fileExtension.TrimStart('.'))
     }
@@ -273,27 +295,28 @@ if ($ExportFormat -eq "xlsx") {
 
 # Standard field order
 $StandardFields = @(
-    "DateTime", "ArtifactName", "EventID", "Channel", "Detections", "DataPath", "DataDetails",
+    "DateTime", "ArtifactName", "EventId", "Description", "Info", "DataPath", "DataDetails",
     "User", "Computer", "FileSize", "FileExtension", "UserSID", "MemberSID", "ProcessName", "IPAddress", "LogonType", "Count",
-    "SourceAddress", "DestinationAddress", "ServiceType", "ShellType", "CommandLine", "SHA1", "EvidencePath",
-    "VisitCount", "VisitFrom", "VisitType", "WebBrowser"
+    "SourceAddress", "DestinationAddress", "ServiceType", "CommandLine", "SHA1", "EvidencePath"
+    
 )
 
 # Define preferred field order for output
 $PreferredFieldOrder = @(
     "DateTime", 
     "ArtifactName",
-    "Detections",
-    "EventID",
-    "Channel", 
+    "Description",
+    "Info",
+    "DataDetails",
+    "DataPath",
+    "FileExtension",
+    "EvidencePath",
+    "EventId", 
     "User",
     "Computer",
-    "DataPath", 
-    "DataDetails",
     "CommandLine",
     "ProcessName",
     "FileSize",
-    "FileExtension",
     "IPAddress", 
     "SourceAddress",
     "DestinationAddress",
@@ -301,13 +324,7 @@ $PreferredFieldOrder = @(
     "UserSID", 
     "MemberSID",
     "ServiceType", 
-    "ShellType",
     "SHA1", 
-    "EvidencePath",
-    "VisitCount", 
-    "VisitFrom", 
-    "VisitType", 
-    "WebBrowser",
     "Count"
 )
 
@@ -360,9 +377,9 @@ function Process-EventLogBatch {
             $dt = try { [datetime]::Parse($entry.TimeCreated).ToString("yyyy/MM/dd HH:mm:ss") } catch { $entry.TimeCreated }
             $row = @{
                 DateTime       = $dt
-                EventID        = $entry."EventId"
-                Channel        = $entry."Channel"
-                Detections     = $entry."MapDescription"
+                EventId        = $entry."EventId"
+                Description    = $entry."Channel"
+                Info           = $entry."MapDescription"
                 DataPath       = $entry."PayloadData1"
                 DataDetails    = $entry."PayloadData2"
                 Computer       = $entry."Computer"
@@ -387,8 +404,22 @@ $script:totalSources = 0
 # Check Amcache
 $AmCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
 if (Test-Path $AmCachePath) {
-    $AmcacheFiles = @(Get-ChildItem -Path $AmCachePath -Filter "*_Amcache_AssociatedFileEntries.csv" -ErrorAction SilentlyContinue)
+    $AmcacheFiles = @(Get-ChildItem -Path $AmCachePath -Filter "*ssociatedFileEntries.csv" -ErrorAction SilentlyContinue)
     $script:totalSources += $AmcacheFiles.Count
+}
+
+# Check AppCompatCache
+$AppCompatCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
+if (Test-Path $AppCompatCachePath) {
+    $AppCompatCacheFiles = @(Get-ChildItem -Path $AppCompatCachePath -Filter "*AppCompatCache*.csv" -ErrorAction SilentlyContinue)
+    $script:totalSources += $AppCompatCacheFiles.Count
+}
+
+# Check AutomaticDestinations
+$AutoDestPath = Join-Path $KapeDirectory $FileFolderSubDir
+if (Test-Path $AutoDestPath) {
+    $AutoDestFiles = @(Get-ChildItem -Path $AutoDestPath -Filter "*AutomaticDestinations*.csv" -ErrorAction SilentlyContinue)
+    $script:totalSources += $AutoDestFiles.Count
 }
 
 # Check Event Logs
@@ -441,7 +472,7 @@ if (Test-Path $WebResultsPath) {
     $script:totalSources++
 }
 
-# Check Chainsaw
+# Check for Chainsaw Files
 $ChainsawFiles = @(Get-ChildItem -Path $ChainsawDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "webResults.csv" })
 $script:totalSources += $ChainsawFiles.Count
 
@@ -452,7 +483,7 @@ Write-Progress -Activity "Building Forensic Timeline" -Status "Initializing" -Pe
 Write-Host "Processing Amcache" -ForegroundColor Cyan
 $AmCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
 if (Test-Path $AmCachePath) {
-    $AmcacheFiles = Get-ChildItem -Path $AmCachePath -Filter "*_Amcache_AssociatedFileEntries.csv" -ErrorAction SilentlyContinue
+    $AmcacheFiles = Get-ChildItem -Path $AmCachePath -Filter "*ssociatedFileEntries.csv" -ErrorAction SilentlyContinue
     $fileCount = $AmcacheFiles.Count
     
     if ($fileCount -gt 0) {
@@ -466,6 +497,8 @@ if (Test-Path $AmCachePath) {
                     $row = @{
                         DateTime       = $_."FileKeyLastWriteTimestamp"
                         DataPath       = $_."FullPath"
+                        Info           = $_."ProductName"
+                        Description    =  "Program Execution"
                         DataDetails    = $_."Name"
                         FileExtension  = $_."FileExtension"
                         SHA1           = $_."SHA1"
@@ -487,11 +520,99 @@ if (Test-Path $AmCachePath) {
     Write-Host "  Amcache path not found: $AmCachePath" -ForegroundColor Yellow
 }
 
+
+# Process AppCompatCache
+Write-Host "Processing AppCompatCache" -ForegroundColor Cyan
+$AppCompatCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
+if (Test-Path $AppCompatCachePath) {
+    $AppCompatCacheFiles = Get-ChildItem -Path $AppCompatCachePath -Filter "*AppCompatCache*.csv" -ErrorAction SilentlyContinue
+    $fileCount = $AppCompatCacheFiles.Count
+    
+    if ($fileCount -gt 0) {
+        $fileCounter = 0
+        foreach ($file in $AppCompatCacheFiles) {
+            $fileCounter++
+            Show-ProcessingProgress -Activity "Processing AppCompatCache Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+            
+            try {
+                $accRows = Import-Csv $file.FullName | ForEach-Object {
+                    $row = @{
+                        DateTime       = $_."LastModifiedTimeUTC"
+                        DataPath       = $_."Path"
+                        DataDetails    = $_."Path" -replace '.*\\([^\\]+)$', '$1'
+                        Info           = "Last Modified"
+                        EvidencePath   = $_."SourceFile"
+                        Description    =  "Program Execution"
+                    }
+                    Normalize-Row -Fields $row -ArtifactName "AppCompatCache"
+                }
+                $MasterTimeline += $accRows
+                Write-Host "  Added $($accRows.Count) AppCompatCache entries from $($file.Name)" -ForegroundColor Green
+            } catch {
+                Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+            }
+            
+            Update-OverallProgress -CurrentSource "AppCompatCache"
+        }
+    } else {
+        Write-Host "  No AppCompatCache files found" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  AppCompatCache path not found: $AppCompatCachePath" -ForegroundColor Yellow
+}
+
+
+# Process Jump Lists (Auto Destinations)
+Write-Host "Processing AutomaticDestinations" -ForegroundColor Cyan
+$AutoDestPath = Join-Path $KapeDirectory $FileFolderSubDir
+if (Test-Path $AutoDestPath) {
+    $AutoDestFiles = Get-ChildItem -Path $AutoDestPath -Filter "*AutomaticDestinations*.csv" -ErrorAction SilentlyContinue
+    $fileCount = $AutoDestFiles.Count
+    
+    if ($fileCount -gt 0) {
+        $fileCounter = 0
+        foreach ($file in $AutoDestFiles) {
+            $fileCounter++
+            Show-ProcessingProgress -Activity "Processing AutomaticDestinations Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+            
+            try {
+                $jumpRows = Import-Csv $file.FullName | ForEach-Object {
+                    $row = @{
+                        DateTime     = $_."SourceCreated"  
+                        DataPath     = $_."Path"    
+                        DataDetails  = $_."AppIdDescription"
+                        Info         = "Source Created"
+                        Computer     = $_."Hostname"
+                        FileSize     = $_."FileSize"          
+                        EvidencePath = $_."SourceFile"              
+                        Description  = "File & Folder Access"
+                    }
+                    Normalize-Row -Fields $row -ArtifactName "Jump Lists"
+                }
+                $MasterTimeline += $jumpRows
+                Write-Host "  Added $($jumpRows.Count) JumpList entries from $($file.Name)" -ForegroundColor Green
+            } catch {
+                Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+            }
+            
+            Update-OverallProgress -CurrentSource "JumpLists"
+        }
+    } else {
+        Write-Host "  No AutomaticDestinations files found" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  AutomaticDestinations path not found: $AutoDestPath" -ForegroundColor Yellow
+}
+
+
+
+
 # Define filtering criteria per channel for Event Logs
 $EventChannelFilters = @{
     "Application" = @(1000, 1001)
     "Microsoft-Windows-PowerShell/Operational" = @(4100, 4103, 4104)
     "Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational" = @(72, 98, 104, 131, 140)
+    "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational" = @(21, 22)
     "Microsoft-Windows-TaskScheduler/Operational" = @(106, 140, 141, 129, 200, 201)
     "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational" = @(261, 1149)
     "Microsoft-Windows-WinRM/Operational" = @(169)
@@ -501,6 +622,8 @@ $EventChannelFilters = @{
 }
 
 # Process Event Logs with batching
+
+if (!$SkipEventLogs) {
 Write-Host "Processing Event Logs" -ForegroundColor Cyan
 $EVTPath = Join-Path $KapeDirectory $EventLogsSubDir
 if (Test-Path $EVTPath) {
@@ -544,11 +667,11 @@ if (Test-Path $EVTPath) {
                             $dt = try { [datetime]::Parse($_.TimeCreated).ToString("yyyy/MM/dd HH:mm:ss") } catch { $_.TimeCreated }
                             $row = @{
                                 DateTime       = $dt
-                                EventID        = $_."EventId"
-                                Channel        = $_."Channel"
-                                Detections     = $_."MapDescription"
-                                DataPath       = $_."PayloadData1"
-                                DataDetails    = $_."PayloadData2"
+                                EventId        = $_."EventId"
+                                Description    = $_."Channel"
+                                Info           = $_."MapDescription"
+                                DataDetails    = $_."PayloadData1"
+                                DataPath       = $_."PayloadData2"
                                 Computer       = $_."Computer"
                                 EvidencePath   = $_."SourceFile"
                             }
@@ -578,6 +701,10 @@ if (Test-Path $EVTPath) {
     }
 } else {
     Write-Host "  Event Log directory not found: $EVTPath" -ForegroundColor Yellow
+}
+
+} else {
+    Write-Host "Skipping Event Log processing (disabled via parameter)" -ForegroundColor Yellow
 }
 
 # Function to process event log batches
@@ -615,11 +742,11 @@ function Process-EventLogBatch {
             $dt = try { [datetime]::Parse($entry.TimeCreated).ToString("yyyy/MM/dd HH:mm:ss") } catch { $entry.TimeCreated }
             $row = @{
                 DateTime       = $dt
-                EventID        = $entry."EventId"
-                Channel        = $entry."Channel"
-                Detections     = $entry."MapDescription"
-                DataPath       = $entry."PayloadData1"
-                DataDetails    = $entry."PayloadData2"
+                EventId        = $entry."EventId"
+                Description    = $entry."Channel"
+                Info           = $entry."MapDescription"
+                DataDetails    = $_."PayloadData1"
+                DataPath       = $_."PayloadData2"
                 Computer       = $entry."Computer"
                 EvidencePath   = $entry."SourceFile"
             }
@@ -650,11 +777,13 @@ if ($fileCount -gt 0) {
         try {
             $delRows = Import-Csv $file.FullName | ForEach-Object {
                 $row = @{
-                    DateTime     = $_."DeletedOn"
-                    DataPath     = $_."FileName"
-                    DataDetails  = $_."FileType"
-                    FileSize     = $_."FileSize"
-                    EvidencePath = $_."SourceName"
+                    DateTime      = $_."DeletedOn"
+                    DataPath      = $_."FileName"
+                    Description   =  "File System"
+                    DataDetails = $_."Path" -replace '.*\\([^\\]+)$', '$1'
+                    Info          = $_."FileType"
+                    FileSize      = $_."FileSize"
+                    EvidencePath  = $_."SourceName"
                 }
                 Normalize-Row -Fields $row -ArtifactName "FileDeletion"
             }
@@ -668,6 +797,15 @@ if ($fileCount -gt 0) {
     }
 } else {
     Write-Host "  No file deletion records found" -ForegroundColor Yellow
+}
+
+
+# Check for null variables and set defaults
+if (-not $KapeDirectory) {
+    $KapeDirectory = "C:\kape" # Set appropriate default path
+}
+if (-not $FileFolderSubDir) {
+    $FileFolderSubDir = "timeline\LECmd" # Adjust based on your folder structure
 }
 
 # Process LNK Files
@@ -684,17 +822,92 @@ if (Test-Path $lnkPath) {
             Show-ProcessingProgress -Activity "Processing LNK Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
             try {
-                $lnkRows = Import-Csv $file.FullName | ForEach-Object {
+                $csvData = Import-Csv $file.FullName
+                
+            # First pass - Target Created
+                $lnkRows = $csvData | ForEach-Object {
+                    $dataPathValue = $(if ($_."LocalPath") { 
+                                        $_."LocalPath" 
+                                    } elseif ($_."TargetIDAbsolutePath") { 
+                                        $_."TargetIDAbsolutePath" 
+                                    } else { 
+                                        $_."NetworkPath" 
+                                    })
+                    
                     $row = @{
-                        DateTime     = $_."TargetCreated"
-                        DataPath     = $_."LocalPath"
-                        FileSize     = $_."FileSize"
-                        EvidencePath = $_."SourceFile"
+                        DateTime       = $_."TargetCreated"
+                        DataPath       = $dataPathValue
+                        Description    = "File & Folder Access"
+                        Info           = "Target Created"
+                        DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                            "Unknown Path" 
+                         } else { 
+                            Split-Path -Leaf $dataPathValue 
+                         })
+                        FileSize       = $_."FileSize"
+                        EvidencePath   = $_."SourceFile"
                     }
                     Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                 }
                 $MasterTimeline += $lnkRows
-                Write-Host "  Added $($lnkRows.Count) LNK file entries from $($file.Name)" -ForegroundColor Green
+                Write-Host "  Added $($lnkRows.Count) LNK Target Created entries from $($file.Name)" -ForegroundColor Green
+                
+                # Second pass - Source Created
+                    $lnkRows = $csvData | ForEach-Object {
+                        $dataPathValue = $(if ($_."LocalPath") { 
+                                            $_."LocalPath" 
+                                        } elseif ($_."TargetIDAbsolutePath") { 
+                                            $_."TargetIDAbsolutePath" 
+                                        } else { 
+                                            $_."NetworkPath" 
+                                        })
+                        
+                        $row = @{
+                            DateTime       = $_."SourceCreated"
+                            DataPath       = $dataPathValue
+                            Description    = "File & Folder Access"
+                            Info           = "Sourced Created"
+                            DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                "Unknown Path" 
+                             } else { 
+                                Split-Path -Leaf $dataPathValue 
+                             })
+                            FileSize       = $_."FileSize"
+                            EvidencePath   = $_."SourceFile"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                    }
+                $MasterTimeline += $lnkRows
+                Write-Host "  Added $($lnkRows.Count) LNK Source Created entries from $($file.Name)" -ForegroundColor Green
+                
+            # Third pass - Target Modified
+                    $lnkRows = $csvData | ForEach-Object {
+                        $dataPathValue = $(if ($_."LocalPath") { 
+                                            $_."LocalPath" 
+                                        } elseif ($_."TargetIDAbsolutePath") { 
+                                            $_."TargetIDAbsolutePath" 
+                                        } else { 
+                                            $_."NetworkPath" 
+                                        })
+                        
+                        $row = @{
+                            DateTime       = $_."TargetModified"
+                            DataPath       = $dataPathValue
+                            Description    = "File & Folder Access"
+                            Info           = "Target Modified"
+                            DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                "Unknown Path" 
+                             } else { 
+                                Split-Path -Leaf $dataPathValue 
+                             })
+                            FileSize       = $_."FileSize"
+                            EvidencePath   = $_."SourceFile"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                    }
+                $MasterTimeline += $lnkRows
+                Write-Host "  Added $($lnkRows.Count) LNK Target Modified entries from $($file.Name)" -ForegroundColor Green
+                
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
@@ -769,9 +982,13 @@ if (Test-Path $MFTPath) {
                         $batchData = Import-Csv $tempFile
                         
                         # Filter for relevant files
-                        $filteredData = $batchData | Where-Object {
-                            ($_.Extension -match "^(\.identifier|\.exe|\.dll|\.zip|\.rar|\.7z)$") -and
-                            ($_.ParentPath -match "Users|tmp")
+                        # Convert array to regex pattern
+                            $extensionPattern = "^(" + ($MFTExtensionFilter -join "|").Replace(".", "\.") + ")$"
+
+                            # Filter for relevant files
+                            $filteredData = $batchData | Where-Object {
+                                ($_.Extension -match $extensionPattern) -and
+                                ($_.ParentPath -match "Users|tmp")
                         }
                         
                         # Process filtered entries
@@ -781,10 +998,12 @@ if (Test-Path $MFTPath) {
                                 DateTime       = $dt
                                 DataPath       = $_."ParentPath"
                                 DataDetails    = $_."FileName"
+                                Description    = "File System"
+                                Info           = "File Created"
                                 FileSize       = $_."FileSize"
                                 FileExtension  = $_."Extension"
                             }
-                            Normalize-Row -Fields $row -ArtifactName "MFTCreated"
+                            Normalize-Row -Fields $row -ArtifactName "MFT"
                         }
                         
                         $MasterTimeline += $mftRows
@@ -809,7 +1028,7 @@ if (Test-Path $MFTPath) {
                     $batchData = Import-Csv $tempFile
                     
                     $filteredData = $batchData | Where-Object {
-                        ($_.Extension -match "^(\.identifier|\.exe|\.dll|\.zip|\.rar|\.7z)$") -and
+                        ($_.Extension -match $extensionPattern) -and
                         ($_.ParentPath -match "Users|tmp")
                     }
                     
@@ -819,10 +1038,12 @@ if (Test-Path $MFTPath) {
                             DateTime       = $dt
                             DataPath       = $_."ParentPath"
                             DataDetails    = $_."FileName"
+                            Description    = "File System"
+                            Info           = "File Created"
                             FileSize       = $_."FileSize"
                             FileExtension  = $_."Extension"
                         }
-                        Normalize-Row -Fields $row -ArtifactName "MFTCreated"
+                        Normalize-Row -Fields $row -ArtifactName "MFT"
                     }
                     
                     $MasterTimeline += $mftRows
@@ -866,9 +1087,11 @@ if (Test-Path $PECmdPath) {
                     $row = @{
                         DateTime     = $_."LastRun"
                         DataPath     = $_."SourceFilename"
+                        Info         = "Last Run"
                         DataDetails  = $_."ExecutableName"
+                        Description  =  "Program Execution"
                     }
-                    Normalize-Row -Fields $row -ArtifactName "PECmdExecution"
+                    Normalize-Row -Fields $row -ArtifactName "Prefetch Files"
                 }
                 $MasterTimeline += $peRows
                 Write-Host "  Added $($peRows.Count) prefetch entries from $($file.Name)" -ForegroundColor Green
@@ -928,12 +1151,12 @@ if (Test-Path $RegistryPath) {
                             $row = @{
                                 DateTime     = $_."LastWriteTimestamp"
                                 DataPath     = $_."ValueData"
+                                Description  =  $_."Category"
                                 DataDetails  = $_."Description"
-                                EventID      = $_."HiveType"
-                                Detections   = $_."Category"
+                                Info         = $_."Comment"
                                 EvidencePath = $_."HivePath"
                             }
-                            Normalize-Row -Fields $row -ArtifactName "RegistryUpdate"
+                            Normalize-Row -Fields $row -ArtifactName "Registry"
                         }
                         
                         $MasterTimeline += $regRows
@@ -960,13 +1183,13 @@ if (Test-Path $RegistryPath) {
                     $regRows = $batchData | ForEach-Object {
                         $row = @{
                             DateTime     = $_."LastWriteTimestamp"
-                            DataPath     = $_."ValueData"
-                            DataDetails  = $_."Description"
-                            EventID      = $_."HiveType"
-                            Detections   = $_."Category"
-                            EvidencePath = $_."HivePath"
+                                DataPath     = $_."ValueData"
+                                Description  =  $_."Category"
+                                DataDetails  = $_."Description"
+                                Info         = $_."Comment"
+                                EvidencePath = $_."HivePath"
                         }
-                        Normalize-Row -Fields $row -ArtifactName "RegistryUpdate"
+                        Normalize-Row -Fields $row -ArtifactName "Registry"
                     }
                     
                     $MasterTimeline += $regRows
@@ -1011,7 +1234,8 @@ if (Test-Path $lnkPath) {
                         DateTime    = $_."LastWriteTime"
                         DataPath    = $_."AbsolutePath"
                         DataDetails = $_."Value"
-                        ShellType   = $_."ShellType"
+                        Description =  "File & Folder Access"
+                        Info        = "Last Write"
                     }
                     Normalize-Row -Fields $row -ArtifactName "Shellbags"
                 }
@@ -1040,11 +1264,9 @@ if (Test-Path $WebResultsPath) {
             $row = @{
                 DateTime     = $_."Visit Time"
                 DataPath     = $_."URL"
+                Info         = $_."Web Browser"
                 DataDetails  = $_."Title"
-                VisitCount   = $_."Visit Count"
-                VisitType    = $_."Visit Type"
-                VisitFrom    = $_."Visit From"
-                WebBrowser   = $_."Web Browser"
+                Description  =  "Web Activity"
                 User         = $_."User Profile"
             }
             Normalize-Row -Fields $row -ArtifactName "WebHistory"
@@ -1093,9 +1315,9 @@ if ($fileCount -gt 0) {
                 
                 $row = @{
                     DateTime           = $dt
-                    EventID            = $_."Event ID"
-                    Channel            = $_."Channel"
-                    Detections         = $_."detections"
+                    EventId            = $_."Event ID"
+                    Description        =  "Chainsaw"
+                    Info               = $_."detections"
                     DataPath           = $_."Threat Path"
                     DataDetails        = $_."Threat Name"
                     User               = $_."User"
@@ -1139,9 +1361,15 @@ if (-not $MasterTimeline -or $MasterTimeline.Count -eq 0) {
     exit 1
 }
 
-# Sort the timeline by DateTime
-Write-Host "Sorting timeline by DateTime..." -ForegroundColor Cyan
-$MasterTimeline = $MasterTimeline | Sort-Object -Property DateTime
+# Filter out rows with empty DateTime values
+Write-Host "Removing entries with missing timestamps..." -ForegroundColor Cyan
+$originalCount = $MasterTimeline.Count
+$MasterTimeline = $MasterTimeline | Where-Object { 
+    -not [string]::IsNullOrWhiteSpace($_.DateTime) 
+}
+$filteredCount = $MasterTimeline.Count
+$removedCount = $originalCount - $filteredCount
+Write-Host "  Removed $removedCount entries with missing timestamps, $filteredCount entries remaining" -ForegroundColor Green
 
 # Apply date range filtering if specified
 if ($StartDate -or $EndDate) {
