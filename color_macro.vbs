@@ -27,10 +27,10 @@ colorMap.Add "AmcacheExecution", RGB(135, 206, 235) ' Sky Blue
 colorMap.Add "EventLogs", RGB(153, 50, 204) ' Dark Orchid
 colorMap.Add "FileDeletion", RGB(139, 0, 0) ' Dark Red
 colorMap.Add "LNKFiles", RGB(211, 211, 211) ' Light Gray
-colorMap.Add "MFTCreated", RGB(65, 105, 225) ' Royal Blue
+colorMap.Add "MFT", RGB(65, 105, 225) ' Royal Blue
 colorMap.Add "mft", RGB(70, 130, 180) ' Steel Blue
-colorMap.Add "PECmdExecution", RGB(255, 140, 0) ' Dark Orange
-colorMap.Add "RegistryUpdate", RGB(0, 100, 0) ' Dark Green
+colorMap.Add "Prefetch Files", RGB(255, 140, 0) ' Dark Orange
+colorMap.Add "Registry", RGB(0, 100, 0) ' Dark Green
 colorMap.Add "Shellbags", RGB(255, 165, 0) ' Orange
 colorMap.Add "WebHistory", RGB(173, 216, 230) ' Light Blue
 colorMap.Add "account_tampering", RGB(0, 0, 255) ' Blue
@@ -45,16 +45,18 @@ colorMap.Add "powershell_script", RGB(165, 42, 42) ' Brown
 colorMap.Add "rdp_events", RGB(0, 255, 0) ' Lime
 colorMap.Add "service_installation", RGB(0, 128, 128) ' Teal
 colorMap.Add "sigma", RGB(153, 50, 204) ' Dark Orchid (Purple)
+colorMap.Add "AppCompatCache", RGB(176, 224, 230) ' Powder Blue
+colorMap.Add "Jump Lists", RGB(230, 230, 250) ' Lavender
 
 ' Assign contrasting font colors
 fontColorMap.Add "AmcacheExecution", RGB(0, 0, 0) ' Black
 fontColorMap.Add "EventLogs", RGB(255, 255, 255) ' White
 fontColorMap.Add "FileDeletion", RGB(255, 255, 255) ' White
 fontColorMap.Add "LNKFiles", RGB(0, 0, 0) ' Black
-fontColorMap.Add "MFTCreated", RGB(255, 255, 255) ' White
+fontColorMap.Add "MFT", RGB(255, 255, 255) ' White
 fontColorMap.Add "mft", RGB(255, 255, 255) ' White text
-fontColorMap.Add "PECmdExecution", RGB(0, 0, 0) ' Black
-fontColorMap.Add "RegistryUpdate", RGB(255, 255, 255) ' White
+fontColorMap.Add "Prefetch Files", RGB(0, 0, 0) ' Black
+fontColorMap.Add "Registry", RGB(255, 255, 255) ' White
 fontColorMap.Add "Shellbags", RGB(0, 0, 0) ' Black
 fontColorMap.Add "WebHistory", RGB(0, 0, 0) ' Black
 fontColorMap.Add "account_tampering", RGB(255, 255, 255) ' White
@@ -69,13 +71,16 @@ fontColorMap.Add "powershell_script", RGB(255, 255, 255) ' White
 fontColorMap.Add "rdp_events", RGB(0, 0, 0) ' Black
 fontColorMap.Add "service_installation", RGB(255, 255, 255) ' White
 fontColorMap.Add "sigma", RGB(255, 255, 255) ' White
+fontColorMap.Add "AppCompatCache", RGB(0, 0, 0) ' Black
+fontColorMap.Add "Jump Lists", RGB(0, 0, 0) ' Black
+
 
 ' Process each row directly - much simpler and often faster
     For i = 2 To lastRow
         artifactName = ws.Cells(i, 2).Value
         If colorMap.Exists(artifactName) Then
             ' Format the entire row directly
-            With ws.Range("A" & i & ":W" & i)
+            With ws.Range("A" & i & ":AC" & i)
                 .Interior.Color = colorMap(artifactName)
                 .Font.Color = fontColorMap(artifactName)
             End With
@@ -91,5 +96,12 @@ fontColorMap.Add "sigma", RGB(255, 255, 255) ' White
     Application.ScreenUpdating = True
     Application.Calculation = xlCalculationAutomatic
     
+' Format header row with black background and white text
+With ws.Range("A1:AC1")
+    .Interior.Color = RGB(0, 0, 0)
+    .Font.Color = RGB(255, 255, 255)
+    .Font.Bold = True
+End With
+
     MsgBox "Row coloring complete!", vbInformation
 End Sub
