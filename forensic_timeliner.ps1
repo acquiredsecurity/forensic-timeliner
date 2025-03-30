@@ -637,6 +637,7 @@ $EventChannelFilters = @{
 }
 
 # process event logs
+# process event logs
 if (!$SkipEventLogs) {
     Write-Host "Processing Event Logs" -ForegroundColor Cyan
     
@@ -669,6 +670,12 @@ if (!$SkipEventLogs) {
             foreach ($file in $evtFiles) {
                 $fileCounter++
                 Show-ProcessingProgress -Activity "Processing Event Logs" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+                
+                # Create a hashtable to track matches by channel
+                $channelMatches = @{}
+                foreach ($channel in $EventChannelFilters.Keys) {
+                    $channelMatches[$channel] = 0
+                }
                 
                 try {
                     # Use streaming approach for large files
@@ -735,16 +742,29 @@ if (!$SkipEventLogs) {
                                          $EventChannelFilters[$channel] -contains $eventId)) {
                                         $filteredBatch += $entry
                                         $totalFiltered++
+                                        
+                                        # Track which channel matched
+                                        if ($channelMatches.ContainsKey($channel)) {
+                                            $channelMatches[$channel]++
+                                        }
                                     } else {
                                         $skippedEntries++
                                     }
                                 }
                                 
-                                # Report filter efficiency periodically
+                                # Report filter efficiency periodically with channel information
                                 $batchSize = $batchData.Count
                                 if ($batchSize -gt 0 -and $totalProcessed % ($progressUpdateFrequency * 10) -eq 0) {
                                     $filterRatio = [math]::Round(($totalFiltered / $totalProcessed) * 100, 1)
-                                    Write-Host "    Filter efficiency: $totalFiltered of $totalProcessed entries ($filterRatio%) matched filters" -ForegroundColor Gray
+                                    
+                                    # Find most matched channel so far
+                                    $topChannel = $channelMatches.GetEnumerator() | Where-Object { $_.Value -gt 0 } | Sort-Object -Property Value -Descending | Select-Object -First 1
+                                    
+                                    if ($topChannel) {
+                                        Write-Host "    Filter efficiency: $totalFiltered of $totalProcessed entries. Filtering $($topChannel.Key) ($filterRatio%) matched filters" -ForegroundColor Gray
+                                    } else {
+                                        Write-Host "    Filter efficiency: $totalFiltered of $totalProcessed entries ($filterRatio%) matched filters" -ForegroundColor Gray
+                                    }
                                 }
                                 
                                 # Create timeline entries from filtered batch
@@ -847,6 +867,11 @@ if (!$SkipEventLogs) {
                                      $EventChannelFilters[$channel] -contains $eventId)) {
                                     $filteredBatch += $entry
                                     $totalFiltered++
+                                    
+                                    # Track which channel matched
+                                    if ($channelMatches.ContainsKey($channel)) {
+                                        $channelMatches[$channel]++
+                                    }
                                 } else {
                                     $skippedEntries++
                                 }
@@ -909,10 +934,19 @@ if (!$SkipEventLogs) {
                     # Report on processing results
                     Write-Host "  Added $totalAdded event log entries from $($file.Name)" -ForegroundColor Green
                     
-                    # Report final filter efficiency
+                    # Report final filter efficiency with channel breakdown
                     if ($totalProcessed -gt 0) {
                         $filterRatio = [math]::Round(($totalFiltered / $totalProcessed) * 100, 1)
                         Write-Host "  Filter efficiency: $totalFiltered of $totalProcessed entries ($filterRatio%) matched filters" -ForegroundColor Green
+                        
+                        # Show breakdown by channel
+                        Write-Host "  Channel matches:" -ForegroundColor Yellow
+                        foreach ($channel in $channelMatches.Keys | Sort-Object) {
+                            $count = $channelMatches[$channel]
+                            if ($count -gt 0) {
+                                Write-Host "    $channel : $count matches" -ForegroundColor Gray
+                            }
+                        }
                     }
                     
                     if ($skippedEntries -gt 0) {
@@ -1094,6 +1128,25 @@ if (Test-Path $lnkPath) {
 
 # Process MFT Created with batching for large files
 Write-Host "Processing MFT File" -ForegroundColor Cyan
+
+
+# Display current MFT filter settings - ensure this completes before other output begins
+Write-Host ""
+Write-Host "  Current MFT Filters:" -ForegroundColor Yellow
+Write-Host "  (You can customize these filters by editing the MFT filter variables in the script)" -ForegroundColor Yellow
+Write-Host "  -----------------------------------------" -ForegroundColor Yellow
+Write-Host "  File Extension Filters:" -ForegroundColor Gray
+foreach ($ext in $MFTExtensionFilter | Sort-Object) {
+    Write-Host "    $ext" -ForegroundColor Gray
+}
+Write-Host ""
+Write-Host "  Path Filters:" -ForegroundColor Gray
+foreach ($path in $MFTPathFilter | Sort-Object) {
+    Write-Host "    $path" -ForegroundColor Gray
+}
+Write-Host "  -----------------------------------------" -ForegroundColor Yellow
+Write-Host ""
+
 $MFTPath = Join-Path $KapeDirectory $FileSystemSubDir
 if (Test-Path $MFTPath) {
     $mftFiles = Get-ChildItem $MFTPath -Filter "*MFT_Out*.csv" -ErrorAction SilentlyContinue
@@ -1109,6 +1162,16 @@ if (Test-Path $MFTPath) {
                 # Process MFT files in batches due to potentially large size
                 $totalEntriesProcessed = 0
                 $totalRowsAdded = 0
+                $extensionMatches = @{}
+                $pathMatches = @{}
+                
+                # Initialize counters for each filter
+                foreach ($ext in $MFTExtensionFilter) {
+                    $extensionMatches[$ext] = 0
+                }
+                foreach ($path in $MFTPathFilter) {
+                    $pathMatches[$path] = 0
+                }
                 
                 # Get number of lines for progress reporting
                 $totalLines = (Get-Content $file.FullName | Measure-Object -Line).Lines
@@ -1152,15 +1215,35 @@ if (Test-Path $MFTPath) {
                         # Import data from temp file
                         $batchData = Import-Csv $tempFile
                         
-                        # Filter for relevant files
                         # Convert array to regex pattern
-                            $extensionPattern = "^(" + ($MFTExtensionFilter -join "|").Replace(".", "\.") + ")$"
-                            $pathPattern = "(" + ($MFTPathFilter -join "|") + ")"
+                        $extensionPattern = "^(" + ($MFTExtensionFilter -join "|").Replace(".", "\.") + ")$"
+                        $pathPattern = "(" + ($MFTPathFilter -join "|") + ")"
 
-                            # Filter for relevant files
-                            $filteredData = $batchData | Where-Object {
-                                ($_.Extension -match $extensionPattern) -and
-                                ($_.ParentPath -match $pathPattern)
+                        # Filter for relevant files
+                        $filteredData = $batchData | Where-Object {
+                            $extensionMatch = $_.Extension -match $extensionPattern
+                            $pathMatch = $_.ParentPath -match $pathPattern
+                            
+                            # Track which filters matched
+                            if ($extensionMatch) {
+                                foreach ($ext in $MFTExtensionFilter) {
+                                    if ($_.Extension -eq $ext) {
+                                        $extensionMatches[$ext]++
+                                        break
+                                    }
+                                }
+                            }
+                            
+                            if ($pathMatch) {
+                                foreach ($path in $MFTPathFilter) {
+                                    if ($_.ParentPath -match $path) {
+                                        $pathMatches[$path]++
+                                        break
+                                    }
+                                }
+                            }
+                            
+                            return ($extensionMatch -and $pathMatch)
                         }
                         
                         # Process filtered entries
@@ -1200,8 +1283,29 @@ if (Test-Path $MFTPath) {
                     $batchData = Import-Csv $tempFile
                     
                     $filteredData = $batchData | Where-Object {
-                        ($_.Extension -match $extensionPattern) -and
-                        ($_.ParentPath -match $pathPattern)
+                        $extensionMatch = $_.Extension -match $extensionPattern
+                        $pathMatch = $_.ParentPath -match $pathPattern
+                        
+                        # Track which filters matched
+                        if ($extensionMatch) {
+                            foreach ($ext in $MFTExtensionFilter) {
+                                if ($_.Extension -eq $ext) {
+                                    $extensionMatches[$ext]++
+                                    break
+                                }
+                            }
+                        }
+                        
+                        if ($pathMatch) {
+                            foreach ($path in $MFTPathFilter) {
+                                if ($_.ParentPath -match $path) {
+                                    $pathMatches[$path]++
+                                    break
+                                }
+                            }
+                        }
+                        
+                        return ($extensionMatch -and $pathMatch)
                     }
                     
                     $mftRows = $filteredData | ForEach-Object {
@@ -1227,7 +1331,26 @@ if (Test-Path $MFTPath) {
                 
                 $reader.Close()
                 
+                # Report on filter matches
                 Write-Host "  Processed $totalEntriesProcessed MFT entries, added $totalRowsAdded to timeline from $($file.Name)" -ForegroundColor Green
+                
+                Write-Host "  MFT Filter Matches:" -ForegroundColor Yellow
+                
+                Write-Host "  Extension Filter Matches:" -ForegroundColor Gray
+                foreach ($ext in $extensionMatches.Keys | Sort-Object) {
+                    $count = $extensionMatches[$ext]
+                    if ($count -gt 0) {
+                        Write-Host "    $ext : $count matches" -ForegroundColor Gray
+                    }
+                }
+                
+                Write-Host "  Path Filter Matches:" -ForegroundColor Gray
+                foreach ($path in $pathMatches.Keys | Sort-Object) {
+                    $count = $pathMatches[$path]
+                    if ($count -gt 0) {
+                        Write-Host "    $path : $count matches" -ForegroundColor Gray
+                    }
+                }
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
@@ -1240,7 +1363,6 @@ if (Test-Path $MFTPath) {
 } else {
     Write-Host "  MFT path not found: $MFTPath" -ForegroundColor Yellow
 }
-
 # Process PECmd (Prefetch Files)
 Write-Host "Processing Prefetch Files" -ForegroundColor Cyan
 $PECmdPath = Join-Path $KapeDirectory $ProgramExecSubDir
