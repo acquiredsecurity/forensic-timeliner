@@ -272,6 +272,16 @@ if (-not $KapeDirectory) { $KapeDirectory = "C:\kape\timeline" }
 $desiredExtension = "." + $ExportFormat.ToLower()
 $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $desiredExtension)
 
+
+
+# Set Timeline Log Path
+$TimelineDirectory = "C:\kape\timeline\"
+$LogFilePath = Join-Path -Path $TimelineDirectory -ChildPath "ForensicTimeliner_Log_$(Get-Date -Format 'yyyy-MM-dd_HHmmss').txt"
+
+# Start transcript to capture console output
+Start-Transcript -Path $LogFilePath -Append
+
+
 # ASCII Art Banner
 Write-Host @"
 
@@ -969,6 +979,7 @@ if (!$SkipEventLogs) {
     }
 }
 # Process File Deletion records
+# Process File Deletion records
 Write-Host "Processing Deleted Files" -ForegroundColor Cyan
 $FileDeletionFiles = Get-ChildItem -Path $KapeDirectory -Recurse -Filter "*RBCmd*.csv" -ErrorAction SilentlyContinue
 $fileCount = $FileDeletionFiles.Count
@@ -981,11 +992,22 @@ if ($fileCount -gt 0) {
         
         try {
             $delRows = Import-Csv $file.FullName | ForEach-Object {
+                # Check if the path has a file extension (indicating it's a file, not a folder)
+                $isFile = $_."FileName" -match '.*\\[^\\]+\.[^\\\.]+$'
+                
+                $dataDetails = if ($isFile) {
+                    # Extract just the filename if it's a file
+                    $_."FileName" -replace '.*\\([^\\]+)$', '$1'
+                } else {
+                    # It's a folder
+                    "Folder Deletion"
+                }
+                
                 $row = @{
                     DateTime      = $_."DeletedOn"
                     DataPath      = $_."FileName"
-                    Description   =  "File System"
-                    DataDetails = $_."Path" -replace '.*\\([^\\]+)$', '$1'
+                    Description   = "File System"
+                    DataDetails   = $dataDetails
                     Info          = $_."FileType"
                     FileSize      = $_."FileSize"
                     EvidencePath  = $_."SourceName"
@@ -1003,7 +1025,6 @@ if ($fileCount -gt 0) {
 } else {
     Write-Host "  No file deletion records found" -ForegroundColor Yellow
 }
-
 
 # Check for null variables and set defaults
 if (-not $KapeDirectory) {
@@ -1071,7 +1092,7 @@ if (Test-Path $lnkPath) {
                             DateTime       = $_."SourceCreated"
                             DataPath       = $dataPathValue
                             Description    = "File & Folder Access"
-                            Info           = "Sourced Created"
+                            Info           = "Source Created"
                             DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
                                 "Unknown Path" 
                              } else { 
@@ -1645,7 +1666,7 @@ if ($fileCount -gt 0) {
                       } elseif ($_."Event Data") { 
                         $_."Event Data" 
                       } else {
-                        "Unknown Path"
+                        ""
                       })
                       DataDetails = $(if ($_."Threat Name") { 
                         $_."Threat Name" 
@@ -1850,3 +1871,6 @@ switch ($ExportFormat) {
 
 Write-Host "Timeline export complete. Total entries: $($MasterTimeline.Count)" -ForegroundColor Cyan
 Write-Host "Output file: $OutputFile" -ForegroundColor Green
+# Logfile
+Write-Host "Script completed. Log file saved to: $LogFilePath" -ForegroundColor Cyan
+Stop-Transcript
