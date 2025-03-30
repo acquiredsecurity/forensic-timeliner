@@ -1,11 +1,11 @@
 # Parameter Block
 param (
-    [string]$KapeDirectory = "C:\kape\timeline",                                            # Path to main KAPE timeline folder
+    [string]$KapeDirectory = "C:\kape\timeline",                                            # Path to main KAPE timeline folder and csv output from EZ Tools
     [string]$WebResultsPath = "C:\kape\browsinghistory\webResults.csv",                     # Path to webResults.csv
     [string]$ChainsawDirectory = "C:\kape\chainsaw",                                        # Directory containing Chainsaw CSV files
     [string]$OutputFile = "C:\kape\timeline\Master_Timeline.csv",                           # Output timeline file
     [ValidateSet("xlsx", "csv", "json")]
-    [string]$ExportFormat = "csv",                                                           # Default to CSV for timeline creation
+    [string]$ExportFormat = "csv",                                                           # Output Format  CSV for timeline creation with Json and Xlsx Options
     [switch]$SkipEventLogs,                                                                  # Skip event logs processing
     [string]$RegistrySubDir = "Registry",                                                    # Registry subdirectory under KapeDirectory
     [string]$ProgramExecSubDir = "ProgramExecution",                                         # Program execution subdirectory
@@ -75,17 +75,18 @@ if ($Help) {
     Write-Host "  .\forensic_timeliner.ps1 -Interactive" 
     Write-Host "" 
     Write-Host "Parameters:" -ForegroundColor Yellow
-    Write-Host "  -KapeDirectory       Root folder for Registry/FileSystem/EventLogs/etc (default: C:\kape\timeline)"
-    Write-Host "  -ChainsawDirectory   Path to Chainsaw CSVs (default: C:\kape\chainsaw)"
-    Write-Host "  -WebResultsPath      Full Path to webResults.csv **Include file name** (default: C:\kape\browsinghistory\webResults.csv)"
-    Write-Host "  -RegistrySubDir      Registry subdirectory under KapeDirectory (default: Registry)"
-    Write-Host "  -ProgramExecSubDir   Program execution subdirectory under KapeDirectory (default: ProgramExecution)"
-    Write-Host "  -FileFolderSubDir    File/Folder access subdirectory under KapeDirectory (default: FileFolderAccess)"
-    Write-Host "  -FileSystemSubDir    FileSystem subdirectory under KapeDirectory (default: FileSystem)"
-    Write-Host "  -EventLogsSubDir     Event logs subdirectory under KapeDirectory (default: EventLogs)"
-    Write-Host "  -OutputFile          Path for final Excel file (default: C:\kape\timeline\Master_Timeline.csv)"
-    Write-Host "  -BatchSize           Number of records to process at once for large files (default: 10,000)"
-    Write-Host "  -Interactive         Launches local-friendly guided setup"
+    Write-Host "  -KapeDirectory       Default path for Kape CSV Output Registry/FileSystem/EventLogs/etc.. (default: C:\kape\timeline)"
+    Write-Host "  -ChainsawDirectory   Default path to Chainsaw CSVs (default: C:\kape\chainsaw)"
+    Write-Host "  -WebResultsPath      Default path to webResults.csv **Include file name** (default: C:\kape\browsinghistory\webResults.csv)"
+    Write-Host "  -RegistrySubDir      Default name of Registry subdirectory under KapeDirectory (default: Registry)"
+    Write-Host "  -ProgramExecSubDir   Default name of Program Execution subdirectory under KapeDirectory (default: ProgramExecution)"
+    Write-Host "  -FileFolderSubDir    Default name of File/Folder access subdirectory under KapeDirectory (default: FileFolderAccess)"
+    Write-Host "  -FileSystemSubDir    Default name of FileSystem subdirectory under KapeDirectory (default: FileSystem)"
+    Write-Host "  -EventLogsSubDir     Default name of Event logs subdirectory under KapeDirectory (default: EventLogs)"
+    Write-Host "  -OutputFile          Default path to timeline output file (default: C:\kape\timeline\Master_Timeline.csv)"
+    Write-Host "  -BatchSize           Batch processing chunk size for large datasets (default: 10,000 records per batch - increase for" 
+               "                       faster processing on powerful systems or decrease for memory-constrained environments)(default: 10,000)"
+    Write-Host "  -Interactive         Automate your way through the setup process when running this script locally"
     Write-Host "  -Help                Display this help screen"
     Write-Host "" 
     exit 0
@@ -139,7 +140,7 @@ if ($Interactive) {
         Write-Host "  Note: Directory path detected. Using file: $OutputFile" -ForegroundColor Yellow
     }
     # Ask for Event Log Processing
-        $processEventLogsPrompt = Read-Host "Process Event Logs? This can be time-consuming and event log data should already be exported with Chainsaw and Sigma (y/n) [Default: y]"
+        $processEventLogsPrompt = Read-Host "Include Windows Event Log processing? (Chainsaw with Sigma already provides analysis for these logs. Enabling this will significantly increase processing time and timeline size) (y/n) [Default: y]"
     if ($processEventLogsPrompt -eq "n") {
         $SkipEventLogs = $true
         Write-Host "  Event log processing will be skipped" -ForegroundColor Yellow
@@ -273,6 +274,7 @@ $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $desiredExtension)
 
 # ASCII Art Banner
 Write-Host @"
+
   ______     
  |  ____|                     (_)                
  | |__ ___  _ __ ___ _ __  ___ _  ___            
@@ -285,12 +287,11 @@ Write-Host @"
     | |  | | | | | | |  __/ | | | | |  __/ |     
     |_|  |_|_| |_| |_|\___|_|_|_| |_|\___|_|
                                                                                            
-Mini Timeline Builder for Kape Output, Chainsaw +Sigma 
+Mini Timeline Builder for Kape Output, Chainsaw +Sigma & WebhistoryView
 | Made by https://github.com/acquiredsecurity 
 | with help from the robots [o_o] 
-- Build a quick mini-timeline with Kape and Chainsaw run Rules and Sigma! Use my other script Kapesaw 
-to collect your triage and integrate this Module as well!
-Happy Timelining!
+- Build powerful timelines from digital forensic artifacts!
+=) Happy Timelining!
 "@ -ForegroundColor Cyan
 
 # Initialize the MasterTimeline array
@@ -635,148 +636,304 @@ $EventChannelFilters = @{
     "System" = @(7045)
 }
 
-# Process Event Logs with batching
-
+# process event logs
 if (!$SkipEventLogs) {
-Write-Host "Processing Event Logs" -ForegroundColor Cyan
-$EVTPath = Join-Path $KapeDirectory $EventLogsSubDir
-if (Test-Path $EVTPath) {
-    $evtFiles = Get-ChildItem $EVTPath -Filter "*EvtxECmd*.csv" -ErrorAction SilentlyContinue
-    $fileCount = $evtFiles.Count
+    Write-Host "Processing Event Logs" -ForegroundColor Cyan
     
-    if ($fileCount -gt 0) {
-        $fileCounter = 0
-        foreach ($file in $evtFiles) {
-            $fileCounter++
-            Show-ProcessingProgress -Activity "Processing Event Logs" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
-            
-            try {
-                # Using a simpler approach for event logs to avoid potential issues
-                $data = Import-Csv $file.FullName
+    # Display current event log filter settings
+    Write-Host "  Current Event Log Filters:" -ForegroundColor Yellow
+    Write-Host "  (You can customize these filters by editing the `$EventChannelFilters hashtable in the script)" -ForegroundColor Yellow
+    Write-Host "  -----------------------------------------" -ForegroundColor Yellow
+    foreach ($channel in $EventChannelFilters.Keys | Sort-Object) {
+        $eventIds = $EventChannelFilters[$channel]
+        if ($eventIds.Count -eq 0) {
+            Write-Host "    $channel : All Events" -ForegroundColor Gray
+        } else {
+            $eventIdList = $eventIds -join ", "
+            Write-Host "    $channel : Events $eventIdList" -ForegroundColor Gray
+        }
+    }
+    Write-Host "  -----------------------------------------" -ForegroundColor Yellow
+    
+    Write-Host "  Warning: Event log processing may take significantly longer than other artifacts." -ForegroundColor Yellow
+    Write-Host "  Consider using -SkipEventLogs in the future if this step takes too long." -ForegroundColor Yellow
+    Write-Host "  Note: Some event log entries may be skipped due to formatting issues in the CSV." -ForegroundColor Yellow
+    
+    $EVTPath = Join-Path $KapeDirectory $EventLogsSubDir
+    if (Test-Path $EVTPath) {
+        $evtFiles = Get-ChildItem $EVTPath -Filter "*EvtxECmd*.csv" -ErrorAction SilentlyContinue
+        $fileCount = $evtFiles.Count
+        
+        if ($fileCount -gt 0) {
+            $fileCounter = 0
+            foreach ($file in $evtFiles) {
+                $fileCounter++
+                Show-ProcessingProgress -Activity "Processing Event Logs" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
                 
-                # Filter for relevant event IDs
-                $filtered = $data | Where-Object {
-                    $channel = $_.Channel
-                    $eventId = [int]$_.EventId
-                    if ($EventChannelFilters.ContainsKey($channel)) {
-                        $allowed = $EventChannelFilters[$channel]
-                        ($allowed.Count -eq 0) -or ($allowed -contains $eventId)
-                    } else {
-                        $false
-                    }
-                }
-                
-                if ($filtered.Count -gt 0) {
-                    # Process in batches of 1000 for memory efficiency
-                    $batchSize = 1000
-                    $totalBatches = [math]::Ceiling($filtered.Count / $batchSize)
+                try {
+                    # Use streaming approach for large files
+                    $reader = New-Object System.IO.StreamReader($file.FullName)
+                    $headerLine = $reader.ReadLine()
+                    
+                    $batchCount = 0
+                    $totalProcessed = 0
                     $totalAdded = 0
+                    $skippedEntries = 0
+                    $totalFiltered = 0
+                    $batch = New-Object System.Collections.ArrayList
+                    $progressUpdateFrequency = 5000  # Update progress less frequently
                     
-                    for ($i = 0; $i -lt $totalBatches; $i++) {
-                        # Get current batch
-                        $currentBatch = $filtered | Select-Object -Skip ($i * $batchSize) -First $batchSize
+                    # Process the file line by line in batches
+                    while (-not $reader.EndOfStream) {
+                        $line = $reader.ReadLine()
                         
-                        # Process batch
-                        $evtRows = $currentBatch | ForEach-Object {
-                            $dt = try { [datetime]::Parse($_.TimeCreated).ToString("yyyy/MM/dd HH:mm:ss") } catch { $_.TimeCreated }
-                            $row = @{
-                                DateTime       = $dt
-                                EventId        = $_."EventId"
-                                Description    = $_."Channel"
-                                Info           = $_."MapDescription"
-                                DataDetails    = $_."PayloadData1"
-                                DataPath       = $_."PayloadData2"
-                                Computer       = $_."Computer"
-                                EvidencePath   = $_."SourceFile"
+                        # Skip empty lines
+                        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                        
+                        [void]$batch.Add($line)
+                        $batchCount++
+                        $totalProcessed++
+                        
+                        # Process in batches of 500 lines
+                        if ($batchCount -ge 500) {
+                            # Create temp CSV file for the batch
+                            $tempFile = [System.IO.Path]::GetTempFileName()
+                            
+                            try {
+                                # Write header and batch to temp file
+                                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                                
+                                # Import batch data
+                                $batchData = Import-Csv $tempFile
+                                
+                                # Filter for events of interest with error handling
+                                $filteredBatch = @()
+                                foreach ($entry in $batchData) {
+                                    # Check for null channel
+                                    $channel = $entry.Channel
+                                    if ([string]::IsNullOrWhiteSpace($channel)) {
+                                        $skippedEntries++
+                                        continue
+                                    }
+                                    
+                                    $eventIdString = $entry.EventId
+                                    
+                                    # Only process entries with valid event IDs and channels
+                                    $validEventId = $false
+                                    $eventId = 0
+                                    try {
+                                        $eventId = [int]$eventIdString
+                                        $validEventId = $true
+                                    } catch {
+                                        $validEventId = $false
+                                    }
+                                    
+                                    if ($validEventId -and 
+                                        $EventChannelFilters.ContainsKey($channel) -and 
+                                        ($EventChannelFilters[$channel].Count -eq 0 -or 
+                                         $EventChannelFilters[$channel] -contains $eventId)) {
+                                        $filteredBatch += $entry
+                                        $totalFiltered++
+                                    } else {
+                                        $skippedEntries++
+                                    }
+                                }
+                                
+                                # Report filter efficiency periodically
+                                $batchSize = $batchData.Count
+                                if ($batchSize -gt 0 -and $totalProcessed % ($progressUpdateFrequency * 10) -eq 0) {
+                                    $filterRatio = [math]::Round(($totalFiltered / $totalProcessed) * 100, 1)
+                                    Write-Host "    Filter efficiency: $totalFiltered of $totalProcessed entries ($filterRatio%) matched filters" -ForegroundColor Gray
+                                }
+                                
+                                # Create timeline entries from filtered batch
+                                $evtRows = @()
+                                foreach ($entry in $filteredBatch) {
+                                    # Extract TimeCreated and handle the timestamps
+                                    $dateTimeString = $entry.TimeCreated
+                                    
+                                    # Format timestamps consistently with other artifacts
+                                    $dateTimeFormatted = $dateTimeString
+                                    try {
+                                        if ([string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                            $dateTimeFormatted = "Unknown"
+                                        } 
+                                        # Handle partial timestamps like "28:04.8"
+                                        elseif ($dateTimeString -match '^\d+:\d+\.\d+$') {
+                                            $dateTimeFormatted = "Time: $dateTimeString"
+                                        } 
+                                        # Format full timestamps and drop microseconds
+                                        else {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy/MM/dd HH:mm:ss")
+                                        }
+                                    } catch {
+                                        # Keep original string if parsing fails
+                                    }
+                                    
+                                    $row = @{
+                                        DateTime     = $dateTimeFormatted
+                                        EventId      = $entry."EventId"
+                                        Description  = $entry."Channel"
+                                        Info         = $entry."MapDescription"
+                                        DataDetails  = $entry."PayloadData1"
+                                        DataPath     = $entry."PayloadData2"
+                                        Computer     = $entry."Computer"
+                                        EvidencePath = $entry."SourceFile"
+                                    }
+                                    $evtRows += Normalize-Row -Fields $row -ArtifactName "EventLogs"
+                                }
+                                
+                                # Add to master timeline
+                                $MasterTimeline += $evtRows
+                                $totalAdded += $evtRows.Count
+                                
+                                # Update progress less frequently
+                                if ($totalProcessed % $progressUpdateFrequency -eq 0) {
+                                    Show-ProcessingProgress -Activity "Processing Event Log: $($file.Name)" -Status "Processed $totalProcessed lines, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                                }
                             }
-                            Normalize-Row -Fields $row -ArtifactName "EventLogs"
+                            catch {
+                                Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                            }
+                            finally {
+                                # Clean up temp file
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
+                            }
+                            
+                            # Reset batch
+                            $batch.Clear()
+                            $batchCount = 0
                         }
-                        
-                        $MasterTimeline += $evtRows
-                        $totalAdded += $evtRows.Count
-                        
-                        # Show progress
-                        $percentComplete = [math]::Min(100, [math]::Round((($i + 1) / $totalBatches) * 100))
-                        Show-ProcessingProgress -Activity "Processing Event Logs: $($file.Name)" -Status "Batch $($i+1) of $totalBatches ($percentComplete%)" -Current ($i+1) -Total $totalBatches -NestedLevel 2
                     }
                     
+                    # Process any remaining lines
+                    if ($batch.Count -gt 0) {
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Filter for events of interest with error handling
+                            $filteredBatch = @()
+                            foreach ($entry in $batchData) {
+                                # Check for null channel
+                                $channel = $entry.Channel
+                                if ([string]::IsNullOrWhiteSpace($channel)) {
+                                    $skippedEntries++
+                                    continue
+                                }
+                                
+                                $eventIdString = $entry.EventId
+                                
+                                # Only process entries with valid event IDs and channels
+                                $validEventId = $false
+                                $eventId = 0
+                                try {
+                                    $eventId = [int]$eventIdString
+                                    $validEventId = $true
+                                } catch {
+                                    $validEventId = $false
+                                }
+                                
+                                if ($validEventId -and 
+                                    $EventChannelFilters.ContainsKey($channel) -and 
+                                    ($EventChannelFilters[$channel].Count -eq 0 -or 
+                                     $EventChannelFilters[$channel] -contains $eventId)) {
+                                    $filteredBatch += $entry
+                                    $totalFiltered++
+                                } else {
+                                    $skippedEntries++
+                                }
+                            }
+                            
+                            # Create timeline entries from filtered batch
+                            $evtRows = @()
+                            foreach ($entry in $filteredBatch) {
+                                # Extract TimeCreated and handle the timestamps
+                                $dateTimeString = $entry.TimeCreated
+                                
+                                # Format timestamps consistently with other artifacts
+                                $dateTimeFormatted = $dateTimeString
+                                try {
+                                    if ([string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        $dateTimeFormatted = "Unknown"
+                                    } 
+                                    # Handle partial timestamps like "28:04.8"
+                                    elseif ($dateTimeString -match '^\d+:\d+\.\d+$') {
+                                        $dateTimeFormatted = "Time: $dateTimeString"
+                                    } 
+                                    # Format full timestamps and drop microseconds
+                                    else {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy/MM/dd HH:mm:ss")
+                                    }
+                                } catch {
+                                    # Keep original string if parsing fails
+                                }
+                                
+                                $row = @{
+                                    DateTime     = $dateTimeFormatted
+                                    EventId      = $entry."EventId"
+                                    Description  = $entry."Channel"
+                                    Info         = $entry."MapDescription"
+                                    DataDetails  = $entry."PayloadData1"
+                                    DataPath     = $entry."PayloadData2"
+                                    Computer     = $entry."Computer"
+                                    EvidencePath = $entry."SourceFile"
+                                }
+                                $evtRows += Normalize-Row -Fields $row -ArtifactName "EventLogs"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $evtRows
+                            $totalAdded += $evtRows.Count
+                        }
+                        catch {
+                            Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+                    
+                    $reader.Close()
+                    
+                    # Report on processing results
                     Write-Host "  Added $totalAdded event log entries from $($file.Name)" -ForegroundColor Green
-                } else {
-                    Write-Host "  No matching Event IDs found in $($file.Name). Skipping..." -ForegroundColor Yellow
+                    
+                    # Report final filter efficiency
+                    if ($totalProcessed -gt 0) {
+                        $filterRatio = [math]::Round(($totalFiltered / $totalProcessed) * 100, 1)
+                        Write-Host "  Filter efficiency: $totalFiltered of $totalProcessed entries ($filterRatio%) matched filters" -ForegroundColor Green
+                    }
+                    
+                    if ($skippedEntries -gt 0) {
+                        Write-Host "  Skipped $skippedEntries entries due to formatting issues or non-matching event IDs" -ForegroundColor Yellow
+                    }
                 }
-            } catch {
-                Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
-            }
-            
-            Update-OverallProgress -CurrentSource "Event Logs"
-        }
-    } else {
-        Write-Host "  No Event Log files found" -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "  Event Log directory not found: $EVTPath" -ForegroundColor Yellow
-}
-
-} else {
-    Write-Host "Skipping Event Log processing (disabled via parameter)" -ForegroundColor Yellow
-}
-
-# Function to process event log batches
-function Process-EventLogBatch {
-    param (
-        [string]$HeaderLine,
-        [System.Collections.ArrayList]$DataLines,
-        [hashtable]$HeaderMap
-    )
-    
-    # Create temp file for Import-Csv
-    $tempFile = [System.IO.Path]::GetTempFileName()
-    
-    try {
-        # Write header and data to temp file
-        $HeaderLine | Out-File -FilePath $tempFile -Encoding utf8
-        $DataLines | Out-File -FilePath $tempFile -Encoding utf8 -Append
-        
-        # Import and filter
-        $batchData = Import-Csv $tempFile
-        $filtered = $batchData | Where-Object {
-            $channel = $_.Channel
-            $eventId = [int]$_.EventId
-            if ($EventChannelFilters.ContainsKey($channel)) {
-                $allowed = $EventChannelFilters[$channel]
-                ($allowed.Count -eq 0) -or ($allowed -contains $eventId)
-            } else {
-                $false
+                catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+                
+                Update-OverallProgress -CurrentSource "Event Logs"
             }
         }
-        
-        # Process filtered entries
-        $results = @()
-        foreach ($entry in $filtered) {
-            $dt = try { [datetime]::Parse($entry.TimeCreated).ToString("yyyy/MM/dd HH:mm:ss") } catch { $entry.TimeCreated }
-            $row = @{
-                DateTime       = $dt
-                EventId        = $entry."EventId"
-                Description    = $entry."Channel"
-                Info           = $entry."MapDescription"
-                DataDetails    = $_."PayloadData1"
-                DataPath       = $_."PayloadData2"
-                Computer       = $entry."Computer"
-                EvidencePath   = $entry."SourceFile"
-            }
-            $results += Normalize-Row -Fields $row -ArtifactName "EventLogs"
+        else {
+            Write-Host "  No Event Log files found" -ForegroundColor Yellow
         }
-        
-        return $results
     }
-    finally {
-        # Clean up temp file
-        if (Test-Path $tempFile) {
-            Remove-Item $tempFile -Force
-        }
+    else {
+        Write-Host "  Event Log path not found: $EVTPath" -ForegroundColor Yellow
     }
 }
-
 # Process File Deletion records
 Write-Host "Processing Deleted Files" -ForegroundColor Cyan
 $FileDeletionFiles = Get-ChildItem -Path $KapeDirectory -Recurse -Filter "*RBCmd*.csv" -ErrorAction SilentlyContinue
@@ -1517,9 +1674,40 @@ switch ($ExportFormat) {
         $OrderedTimeline | Export-Excel -Path $OutputFile -WorksheetName "Timeline" -AutoSize -BoldTopRow -FreezeTopRow -TableName "MasterTimeline"
         Write-Host "Excel timeline written to: $OutputFile" -ForegroundColor Green
     }
+
     "csv" {
+    $totalRows = $OrderedTimeline.Count
+    $maxRowsPerFile = 1000000000  # 1 Million row max per CSV Export
+    
+    if ($totalRows -le $maxRowsPerFile) {
+        # If under the threshold, just create a single file
         $OrderedTimeline | Export-Csv -Path $OutputFile -NoTypeInformation -Encoding UTF8
         Write-Host "CSV timeline written to: $OutputFile" -ForegroundColor Green
+    } else {
+        # Need to split into multiple files
+        $fileCounter = 1
+        $fileBaseName = [System.IO.Path]::GetFileNameWithoutExtension($OutputFile)
+        $fileExtension = [System.IO.Path]::GetExtension($OutputFile)
+        $fileDirectory = [System.IO.Path]::GetDirectoryName($OutputFile)
+        
+        for ($i = 0; $i -lt $totalRows; $i += $maxRowsPerFile) {
+            $endIndex = [Math]::Min($i + $maxRowsPerFile - 1, $totalRows - 1)
+            $chunk = $OrderedTimeline[$i..$endIndex]
+            
+            $chunkFileName = if ($fileDirectory) {
+                Join-Path -Path $fileDirectory -ChildPath "$fileBaseName-part$fileCounter$fileExtension"
+            } else {
+                "$fileBaseName-part$fileCounter$fileExtension"
+            }
+            
+            $chunk | Export-Csv -Path $chunkFileName -NoTypeInformation -Encoding UTF8
+            Write-Host "CSV timeline part $fileCounter written to: $chunkFileName" -ForegroundColor Green
+            $fileCounter++
+        }
+        
+        Write-Host "CSV timeline split into $($fileCounter-1) parts due to large size" -ForegroundColor Yellow
+    }
+
     }
     "json" {
     # Ensure proper array format for SDL
@@ -1530,7 +1718,7 @@ switch ($ExportFormat) {
         $jsonContent = "[$jsonContent]"
     }
     
-    # Use UTF8NoBOM encoding for SDL compatibility
+    # Use UTF8NoBOM encoding for SIEM compatibility
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
     [System.IO.File]::WriteAllText($OutputFile, $jsonContent, $utf8NoBom)
     
