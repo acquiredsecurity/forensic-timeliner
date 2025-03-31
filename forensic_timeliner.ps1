@@ -1,9 +1,10 @@
 # Parameter Block
 param (
-    [string]$KapeDirectory = "C:\kape\timeline",                                            # Path to main KAPE timeline folder and csv output from EZ Tools
-    [string]$WebResultsPath = "C:\kape\browsinghistory\webResults.csv",                     # Path to webResults.csv
-    [string]$ChainsawDirectory = "C:\kape\chainsaw",                                        # Directory containing Chainsaw CSV files
-    [string]$OutputFile = "C:\kape\timeline\Master_Timeline.csv",                           # Output timeline file
+    [string]$BaseDir = "C:\kape", 
+    [string]$KapeDirectory = "$BaseDir\timeline",                                            # Path to main KAPE timeline folder and csv output from EZ Tools
+    [string]$WebResultsPath = "$BaseDir\browsinghistory\webResults.csv",                     # Path to webResults.csv
+    [string]$ChainsawDirectory = "$BaseDir\chainsaw",                                        # Directory containing Chainsaw CSV files
+    [string]$OutputFile = "$BaseDir\timeline\Master_Timeline.csv",                           # Output timeline file
     [ValidateSet("xlsx", "csv", "json")]
     [string]$ExportFormat = "csv",                                                           # Output Format  CSV for timeline creation with Json and Xlsx Options
     [switch]$SkipEventLogs,                                                                  # Skip event logs processing
@@ -71,19 +72,19 @@ if ($Help) {
     Write-Host "  and optional web history CSVs. Use it after running KapeSaw.ps1 or stand-alone."
     Write-Host "" 
     Write-Host "Usage Examples:" -ForegroundColor Yellow
-    Write-Host "  .\forensic_timeliner.ps1 -ChainsawDirectory 'C:\kape\chainsaw' -OutputFile 'C:\kape\timeline\Master_Timeline.csv'"
+    Write-Host "  .\forensic_timeliner.ps1 -ChainsawDirectory '$BaseDir\chainsaw' -OutputFile '$BaseDir\timeline\Master_Timeline.csv'"
     Write-Host "  .\forensic_timeliner.ps1 -Interactive" 
     Write-Host "" 
     Write-Host "Parameters:" -ForegroundColor Yellow
-    Write-Host "  -KapeDirectory       Default path for Kape CSV Output Registry/FileSystem/EventLogs/etc.. (default: C:\kape\timeline)"
-    Write-Host "  -ChainsawDirectory   Default path to Chainsaw CSVs (default: C:\kape\chainsaw)"
-    Write-Host "  -WebResultsPath      Default path to webResults.csv **Include file name** (default: C:\kape\browsinghistory\webResults.csv)"
+    Write-Host "  -KapeDirectory       Default path for Kape CSV Output Registry/FileSystem/EventLogs/etc.. (default: $BaseDir\timeline)"
+    Write-Host "  -ChainsawDirectory   Default path to Chainsaw CSVs (default: $BaseDir\chainsaw)"
+    Write-Host "  -WebResultsPath      Default path to webResults.csv **Include file name** (default: $BaseDir\browsinghistory\webResults.csv)"
     Write-Host "  -RegistrySubDir      Default name of Registry subdirectory under KapeDirectory (default: Registry)"
     Write-Host "  -ProgramExecSubDir   Default name of Program Execution subdirectory under KapeDirectory (default: ProgramExecution)"
     Write-Host "  -FileFolderSubDir    Default name of File/Folder access subdirectory under KapeDirectory (default: FileFolderAccess)"
     Write-Host "  -FileSystemSubDir    Default name of FileSystem subdirectory under KapeDirectory (default: FileSystem)"
     Write-Host "  -EventLogsSubDir     Default name of Event logs subdirectory under KapeDirectory (default: EventLogs)"
-    Write-Host "  -OutputFile          Default path to timeline output file (default: C:\kape\timeline\Master_Timeline.csv)"
+    Write-Host "  -OutputFile          Default path to timeline output file (default: $BaseDir\timeline\Master_Timeline.csv)"
     Write-Host "  -BatchSize           Batch processing chunk size for large datasets (default: 10,000 records per batch - increase for" 
                "                       faster processing on powerful systems or decrease for memory-constrained environments)(default: 10,000)"
     Write-Host "  -Interactive         Automate your way through the setup process when running this script locally"
@@ -107,17 +108,17 @@ if ($Interactive) {
     
     # Set default extension based on selected format
     $fileExtension = ".$ExportFormat"
-    $defaultOutputPath = "C:\kape\timeline\Master_Timeline$fileExtension"
+    $defaultOutputPath = "$BaseDir\timeline\Master_Timeline$fileExtension"
     
-    $KapeDirectory = Read-Host "Path to KAPE Processed CSV Files [Default: C:\kape\timeline]"
-    if (-not $KapeDirectory) { $KapeDirectory = "C:\kape\timeline" }
+    $KapeDirectory = Read-Host "Path to KAPE Processed CSV Files [Default: $BaseDir\timeline]"
+    if (-not $KapeDirectory) { $KapeDirectory = "$BaseDir\timeline" }
 
-    $ChainsawDirectory = Read-Host "Path to Chainsaw CSVs [Default: C:\kape\chainsaw]"
-    if (-not $ChainsawDirectory) { $ChainsawDirectory = "C:\kape\chainsaw" }
+    $ChainsawDirectory = Read-Host "Path to Chainsaw CSVs [Default: $BaseDir\chainsaw]"
+    if (-not $ChainsawDirectory) { $ChainsawDirectory = "$BaseDir\chainsaw" }
 
-    $WebResultsPath = Read-Host "Path to BrowsingHistoryView output file webResults.csv [Default: C:\kape\browsinghistory\webResults.csv]"
+    $WebResultsPath = Read-Host "Path to BrowsingHistoryView output file webResults.csv [Default: $BaseDir\browsinghistory\webResults.csv]"
     if (-not $WebResultsPath) { 
-        $WebResultsPath = "C:\kape\browsinghistory\webResults.csv" 
+        $WebResultsPath = "$BaseDir\browsinghistory\webResults.csv" 
     }
     
     # Validate the web history path to ensure it includes a filename
@@ -263,10 +264,10 @@ if (-not $calledWithArgs -and -not $s1EnvDetected -and -not $Interactive) {
 }
 
 # Default Fallbacks if Running in S1 or Param Partial
-if (-not $ChainsawDirectory) { $ChainsawDirectory = "C:\kape\chainsaw" }
-if (-not $OutputFile) { $OutputFile = "C:\kape\timeline\Master_Timeline.csv" }
-if (-not $WebResultsPath) { $WebResultsPath = "C:\kape\browsinghistory\webResults.csv" }
-if (-not $KapeDirectory) { $KapeDirectory = "C:\kape\timeline" }
+if (-not $ChainsawDirectory) { $ChainsawDirectory = "$BaseDir\chainsaw" }
+if (-not $OutputFile) { $OutputFile = "$BaseDir\timeline\Master_Timeline.csv" }
+if (-not $WebResultsPath) { $WebResultsPath = "$BaseDir\browsinghistory\webResults.csv" }
+if (-not $KapeDirectory) { $KapeDirectory = "$BaseDir\timeline" }
 
 # Adjust extension based on export format
 $desiredExtension = "." + $ExportFormat.ToLower()
@@ -275,7 +276,7 @@ $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $desiredExtension)
 
 
 # Set Timeline Log Path
-$TimelineDirectory = "C:\kape\timeline\"
+$TimelineDirectory = "$BaseDir\timeline\"
 $LogFilePath = Join-Path -Path $TimelineDirectory -ChildPath "ForensicTimeliner_Log_$(Get-Date -Format 'yyyy-MM-dd_HHmmss').txt"
 
 # Start transcript to capture console output
@@ -1028,7 +1029,7 @@ if ($fileCount -gt 0) {
 
 # Check for null variables and set defaults
 if (-not $KapeDirectory) {
-    $KapeDirectory = "C:\kape" # Set appropriate default path
+    $KapeDirectory = $BaseDir # Set appropriate default path
 }
 if (-not $FileFolderSubDir) {
     $FileFolderSubDir = "timeline\LECmd" # Adjust based on your folder structure
@@ -1497,11 +1498,11 @@ if (Test-Path $RegistryPath) {
                     
                     $regRows = $batchData | ForEach-Object {
                         $row = @{
-                            DateTime     = $_."LastWriteTimestamp"
+                                DateTime     = $_."LastWriteTimestamp"
                                 DataPath     = $_."ValueData"
                                 Description  =  $_."Category"
-                                DataDetails  = $_."Description"
-                                Info         = $_."Comment"
+                                DataDetails  = $_."HiveType"
+                                Info         = $_."Description"
                                 EvidencePath = $_."HivePath"
                         }
                         Normalize-Row -Fields $row -ArtifactName "Registry"
@@ -1576,12 +1577,39 @@ if (Test-Path $WebResultsPath) {
     
     try {
         $webRows = Import-Csv $WebResultsPath | ForEach-Object {
+            # Extract filename if URL starts with file://
+            $dataDetails = $_."Title"
+            $url = $_."URL"
+            
+            # Default description
+            $description = "Web Activity"
+            
+            # Check if the URL starts with file:// and extract the filename
+            if ($url -match "^file:///") {
+                # Extract filename after the last slash
+                if ($url -match "/([^/]+)$") {
+                    $filename = $matches[1]
+                    # Use the filename as DataDetails
+                    $dataDetails = $filename
+                }
+                # Change description to File & Folder Access for file:// URLs
+                $description = "File & Folder Access"
+            }
+            # Check for search URLs
+            elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                $description = "Web Search"
+            }
+            # Check for download URLs
+            elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                $description = "Web Download"
+            }
+            
             $row = @{
                 DateTime     = $_."Visit Time"
-                DataPath     = $_."URL"
+                DataPath     = $url
                 Info         = $_."Web Browser"
-                DataDetails  = $_."Title"
-                Description  =  "Web Activity"
+                DataDetails  = $dataDetails
+                Description  = $description
                 User         = $_."User Profile"
             }
             Normalize-Row -Fields $row -ArtifactName "WebHistory"
