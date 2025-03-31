@@ -87,7 +87,7 @@ if ($Help) {
     Write-Host "  -OutputFile          Default path to timeline output file (default: $BaseDir\timeline\Master_Timeline.csv)"
     Write-Host "  -BatchSize           Batch processing chunk size for large datasets (default: 10,000 records per batch - increase for" 
                "                       faster processing on powerful systems or decrease for memory-constrained environments)(default: 10,000)"
-    Write-Host "  -Interactive         Automate your way through the setup process when running this script locally"
+    Write-Host "  -Interactive         Get assistance with the setup process when running this script locally"
     Write-Host "  -Help                Display this help screen"
     Write-Host "" 
     exit 0
@@ -140,7 +140,7 @@ if ($Interactive) {
         $OutputFile = Join-Path $OutputFile "Master_Timeline.$ExportFormat"
         Write-Host "  Note: Directory path detected. Using file: $OutputFile" -ForegroundColor Yellow
     }
-    # Ask for Event Log Processing
+    # Ask if User would like t process Event Logs
         $processEventLogsPrompt = Read-Host "Include Windows Event Log processing? (Chainsaw with Sigma already provides analysis for these logs. Enabling this will significantly increase processing time and timeline size) (y/n) [Default: y]"
     if ($processEventLogsPrompt -eq "n") {
         $SkipEventLogs = $true
@@ -148,7 +148,7 @@ if ($Interactive) {
     } else {
         $SkipEventLogs = $false
     }
-    # Ask about MFT file extension filtering
+    # Ask is the user would like to filter the MFT by file extension 
         $currentExtensions = $MFTExtensionFilter -join ", "
         Write-Host "  Current MFT extension filter: $currentExtensions" -ForegroundColor Yellow
         $customizeMFTExtensions = Read-Host "Customize MFT file extension filter? (y/n) [Default: n]"
@@ -161,7 +161,7 @@ if ($Interactive) {
             }
         }
     
-    # Ask about MFT path filtering
+    # Ask is the user would like to filter the MFT by file path
         $currentPaths = $MFTPathFilter -join ", "
         Write-Host "  Current MFT path filter: $currentPaths" -ForegroundColor Yellow
         $customizeMFTPaths = Read-Host "Customize MFT path filters? (y/n) [Default: n]"
@@ -648,7 +648,6 @@ $EventChannelFilters = @{
 }
 
 # process event logs
-# process event logs
 if (!$SkipEventLogs) {
     Write-Host "Processing Event Logs" -ForegroundColor Cyan
     
@@ -979,7 +978,7 @@ if (!$SkipEventLogs) {
         Write-Host "  Event Log path not found: $EVTPath" -ForegroundColor Yellow
     }
 }
-# Process File Deletion records
+
 # Process File Deletion records
 Write-Host "Processing Deleted Files" -ForegroundColor Cyan
 $FileDeletionFiles = Get-ChildItem -Path $KapeDirectory -Recurse -Filter "*RBCmd*.csv" -ErrorAction SilentlyContinue
@@ -1531,7 +1530,6 @@ if (Test-Path $RegistryPath) {
     Write-Host "  Registry path not found: $RegistryPath" -ForegroundColor Yellow
 }
 
-# Process Shellbags
 # Process Shellbags
 Write-Host "Processing Shellbags" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
