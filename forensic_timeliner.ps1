@@ -519,20 +519,114 @@ if (Test-Path $AmCachePath) {
             Show-ProcessingProgress -Activity "Processing Amcache Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
             try {
-                $amRows = Import-Csv $file.FullName | ForEach-Object {
-                    $row = @{
-                        DateTime       = $_."FileKeyLastWriteTimestamp"
-                        DataPath       = $_."FullPath"
-                        Info           = $_."ProductName"
-                        Description    =  "Program Execution"
-                        DataDetails    = $_."Name"
-                        FileExtension  = $_."FileExtension"
-                        SHA1           = $_."SHA1"
+                # Use streaming approach for large files
+                $reader = New-Object System.IO.StreamReader($file.FullName)
+                $headerLine = $reader.ReadLine()
+                $batchCount = 0
+                $totalProcessed = 0
+                $totalAdded = 0
+                $batch = New-Object System.Collections.ArrayList
+                
+                # Process the file line by line in batches
+                while (-not $reader.EndOfStream) {
+                    $line = $reader.ReadLine()
+                    
+                    # Skip empty lines
+                    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                    
+                    [void]$batch.Add($line)
+                    $batchCount++
+                    $totalProcessed++
+                    
+                    # Process in batches of the specified size
+                    if ($batchCount -ge $BatchSize) {
+                        # Create temp CSV file for the batch
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        
+                        try {
+                            # Write header and batch to temp file
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            # Import batch data
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Process batch data
+                            $amRows = $batchData | ForEach-Object {
+                                $row = @{
+                                    DateTime       = $_."FileKeyLastWriteTimestamp"
+                                    DataPath       = $_."FullPath"
+                                    Info           = $_."ProductName"
+                                    Description    = "Program Execution"
+                                    DataDetails    = $_."Name"
+                                    FileExtension  = $_."FileExtension"
+                                    SHA1           = $_."SHA1"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "AmcacheExecution"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $amRows
+                            $totalAdded += $amRows.Count
+                            
+                            # Update progress
+                            Show-ProcessingProgress -Activity "Processing Amcache: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            # Clean up temp file
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        
+                        # Reset batch
+                        $batch.Clear()
+                        $batchCount = 0
                     }
-                    Normalize-Row -Fields $row -ArtifactName "AmcacheExecution"
                 }
-                $MasterTimeline += $amRows
-                Write-Host "  Added $($amRows.Count) Amcache entries from $($file.Name)" -ForegroundColor Green
+                
+                # Process any remaining lines
+                if ($batch.Count -gt 0) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        $batchData = Import-Csv $tempFile
+                        
+                        $amRows = $batchData | ForEach-Object {
+                            $row = @{
+                                DateTime       = $_."FileKeyLastWriteTimestamp"
+                                DataPath       = $_."FullPath"
+                                Info           = $_."ProductName"
+                                Description    = "Program Execution"
+                                DataDetails    = $_."Name"
+                                FileExtension  = $_."FileExtension"
+                                SHA1           = $_."SHA1"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "AmcacheExecution"
+                        }
+                        
+                        $MasterTimeline += $amRows
+                        $totalAdded += $amRows.Count
+                    }
+                    catch {
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
+                
+                $reader.Close()
+                
+                # Report on processing results
+                Write-Host "  Added $totalAdded Amcache entries from $($file.Name)" -ForegroundColor Green
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
@@ -561,19 +655,116 @@ if (Test-Path $AppCompatCachePath) {
             Show-ProcessingProgress -Activity "Processing AppCompatCache Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
             try {
-                $accRows = Import-Csv $file.FullName | ForEach-Object {
-                    $row = @{
-                        DateTime       = $_."LastModifiedTimeUTC"
-                        DataPath       = $_."Path"
-                        DataDetails    = $_."Path" -replace '.*\\([^\\]+)$', '$1'
-                        Info           = "Last Modified"
-                        EvidencePath   = $_."SourceFile"
-                        Description    =  "Program Execution"
+                # Use streaming approach for large files
+                $reader = New-Object System.IO.StreamReader($file.FullName)
+                $headerLine = $reader.ReadLine()
+                
+                $batchCount = 0
+                $totalProcessed = 0
+                $totalAdded = 0
+                $batch = New-Object System.Collections.ArrayList
+                
+                # Process the file line by line in batches
+                while (-not $reader.EndOfStream) {
+                    $line = $reader.ReadLine()
+                    
+                    # Skip empty lines
+                    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                    
+                    [void]$batch.Add($line)
+                    $batchCount++
+                    $totalProcessed++
+                    
+                    # Process in batches of the specified size
+                    if ($batchCount -ge $BatchSize) {
+                        # Create temp CSV file for the batch
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        
+                        try {
+                            # Write header and batch to temp file
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            # Import batch data
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Process batch data - using exact field mappings from your original code
+                            $accRows = $batchData | ForEach-Object {
+                                $row = @{
+                                    DateTime       = $_."LastModifiedTimeUTC"
+                                    DataPath       = $_."Path"
+                                    DataDetails    = $_."Path" -replace '.*\\([^\\]+)$', '$1'
+                                    Info           = "Last Modified"
+                                    EvidencePath   = $_."SourceFile"
+                                    Description    = "Program Execution"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "AppCompatCache"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $accRows
+                            $totalAdded += $accRows.Count
+                            
+                            # Update progress
+                            if ($totalProcessed % 5000 -eq 0) {
+                                Show-ProcessingProgress -Activity "Processing AppCompatCache: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            # Clean up temp file
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        
+                        # Reset batch
+                        $batch.Clear()
+                        $batchCount = 0
                     }
-                    Normalize-Row -Fields $row -ArtifactName "AppCompatCache"
                 }
-                $MasterTimeline += $accRows
-                Write-Host "  Added $($accRows.Count) AppCompatCache entries from $($file.Name)" -ForegroundColor Green
+                
+                # Process any remaining lines
+                if ($batch.Count -gt 0) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        $batchData = Import-Csv $tempFile
+                        
+                        # Use exact same field mappings as above and in your original code
+                        $accRows = $batchData | ForEach-Object {
+                            $row = @{
+                                DateTime       = $_."LastModifiedTimeUTC"
+                                DataPath       = $_."Path"
+                                DataDetails    = $_."Path" -replace '.*\\([^\\]+)$', '$1'
+                                Info           = "Last Modified"
+                                EvidencePath   = $_."SourceFile"
+                                Description    = "Program Execution"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "AppCompatCache"
+                        }
+                        
+                        $MasterTimeline += $accRows
+                        $totalAdded += $accRows.Count
+                    }
+                    catch {
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
+                
+                $reader.Close()
+                
+                # Report on processing results
+                Write-Host "  Added $totalAdded AppCompatCache entries from $($file.Name)" -ForegroundColor Green
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
@@ -586,52 +777,6 @@ if (Test-Path $AppCompatCachePath) {
 } else {
     Write-Host "  AppCompatCache path not found: $AppCompatCachePath" -ForegroundColor Yellow
 }
-
-
-# Process Jump Lists (Auto Destinations)
-Write-Host "Processing AutomaticDestinations" -ForegroundColor Cyan
-$AutoDestPath = Join-Path $KapeDirectory $FileFolderSubDir
-if (Test-Path $AutoDestPath) {
-    $AutoDestFiles = Get-ChildItem -Path $AutoDestPath -Filter "*AutomaticDestinations*.csv" -ErrorAction SilentlyContinue
-    $fileCount = $AutoDestFiles.Count
-    
-    if ($fileCount -gt 0) {
-        $fileCounter = 0
-        foreach ($file in $AutoDestFiles) {
-            $fileCounter++
-            Show-ProcessingProgress -Activity "Processing AutomaticDestinations Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
-            
-            try {
-                $jumpRows = Import-Csv $file.FullName | ForEach-Object {
-                    $row = @{
-                        DateTime     = $_."SourceCreated"  
-                        DataPath     = $_."Path"    
-                        DataDetails  = $_."AppIdDescription"
-                        Info         = "Source Created"
-                        Computer     = $_."Hostname"
-                        FileSize     = $_."FileSize"          
-                        EvidencePath = $_."SourceFile"              
-                        Description  = "File & Folder Access"
-                    }
-                    Normalize-Row -Fields $row -ArtifactName "Jump Lists"
-                }
-                $MasterTimeline += $jumpRows
-                Write-Host "  Added $($jumpRows.Count) JumpList entries from $($file.Name)" -ForegroundColor Green
-            } catch {
-                Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
-            }
-            
-            Update-OverallProgress -CurrentSource "JumpLists"
-        }
-    } else {
-        Write-Host "  No AutomaticDestinations files found" -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "  AutomaticDestinations path not found: $AutoDestPath" -ForegroundColor Yellow
-}
-
-
-
 
 # Define filtering criteria per channel for Event Logs
 $EventChannelFilters = @{
@@ -979,6 +1124,7 @@ if (!$SkipEventLogs) {
     }
 }
 
+
 # Process File Deletion records
 Write-Host "Processing Deleted Files" -ForegroundColor Cyan
 $FileDeletionFiles = Get-ChildItem -Path $KapeDirectory -Recurse -Filter "*RBCmd*.csv" -ErrorAction SilentlyContinue
@@ -991,31 +1137,140 @@ if ($fileCount -gt 0) {
         Show-ProcessingProgress -Activity "Processing File Deletion Records" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
         
         try {
-            $delRows = Import-Csv $file.FullName | ForEach-Object {
-                # Check if the path has a file extension (indicating it's a file, not a folder)
-                $isFile = $_."FileName" -match '.*\\[^\\]+\.[^\\\.]+$'
+            # Use streaming approach for large files
+            $reader = New-Object System.IO.StreamReader($file.FullName)
+            $headerLine = $reader.ReadLine()
+            
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+            
+            # Process the file line by line in batches
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
                 
-                $dataDetails = if ($isFile) {
-                    # Extract just the filename if it's a file
-                    $_."FileName" -replace '.*\\([^\\]+)$', '$1'
-                } else {
-                    # It's a folder
-                    "Folder Deletion"
-                }
+                # Skip empty lines
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
                 
-                $row = @{
-                    DateTime      = $_."DeletedOn"
-                    DataPath      = $_."FileName"
-                    Description   = "File System"
-                    DataDetails   = $dataDetails
-                    Info          = $_."FileType"
-                    FileSize      = $_."FileSize"
-                    EvidencePath  = $_."SourceName"
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+                
+                # Process in batches of the specified size
+                if ($batchCount -ge $BatchSize) {
+                    # Create temp CSV file for the batch
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    
+                    try {
+                        # Write header and batch to temp file
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        # Import batch data
+                        $batchData = Import-Csv $tempFile
+                        
+                        # Process batch data using exact same logic as original code
+                        $delRows = $batchData | ForEach-Object {
+                            # Check if the path has a file extension (indicating it's a file, not a folder)
+                            $isFile = $_."FileName" -match '.*\\[^\\]+\.[^\\\.]+$'
+                            
+                            $dataDetails = if ($isFile) {
+                                # Extract just the filename if it's a file
+                                $_."FileName" -replace '.*\\([^\\]+)$', '$1'
+                            } else {
+                                # It's a folder
+                                "Folder Deletion"
+                            }
+                            
+                            $row = @{
+                                DateTime      = $_."DeletedOn"
+                                DataPath      = $_."FileName"
+                                Description   = "File System"
+                                DataDetails   = $dataDetails
+                                Info          = $_."FileType"
+                                FileSize      = $_."FileSize"
+                                EvidencePath  = $_."SourceName"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "FileDeletion"
+                        }
+                        
+                        # Add to master timeline
+                        $MasterTimeline += $delRows
+                        $totalAdded += $delRows.Count
+                        
+                        # Update progress
+                        if ($totalProcessed % 5000 -eq 0) {
+                            Show-ProcessingProgress -Activity "Processing File Deletion: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                        }
+                    }
+                    catch {
+                        Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        # Clean up temp file
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                    
+                    # Reset batch
+                    $batch.Clear()
+                    $batchCount = 0
                 }
-                Normalize-Row -Fields $row -ArtifactName "FileDeletion"
             }
-            $MasterTimeline += $delRows
-            Write-Host "  Added $($delRows.Count) file deletion entries from $($file.Name)" -ForegroundColor Green
+            
+            # Process any remaining lines
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    
+                    $batchData = Import-Csv $tempFile
+                    
+                    # Process remaining batch with same logic
+                    $delRows = $batchData | ForEach-Object {
+                        # Check if the path has a file extension (indicating it's a file, not a folder)
+                        $isFile = $_."FileName" -match '.*\\[^\\]+\.[^\\\.]+$'
+                        
+                        $dataDetails = if ($isFile) {
+                            # Extract just the filename if it's a file
+                            $_."FileName" -replace '.*\\([^\\]+)$', '$1'
+                        } else {
+                            # It's a folder
+                            "Folder Deletion"
+                        }
+                        
+                        $row = @{
+                            DateTime      = $_."DeletedOn"
+                            DataPath      = $_."FileName"
+                            Description   = "File System"
+                            DataDetails   = $dataDetails
+                            Info          = $_."FileType"
+                            FileSize      = $_."FileSize"
+                            EvidencePath  = $_."SourceName"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "FileDeletion"
+                    }
+                    
+                    $MasterTimeline += $delRows
+                    $totalAdded += $delRows.Count
+                }
+                catch {
+                    Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                }
+                finally {
+                    if (Test-Path $tempFile) {
+                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+            
+            $reader.Close()
+            
+            # Report on processing results
+            Write-Host "  Added $totalAdded file deletion entries from $($file.Name)" -ForegroundColor Green
         } catch {
             Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
         }
@@ -1026,14 +1281,7 @@ if ($fileCount -gt 0) {
     Write-Host "  No file deletion records found" -ForegroundColor Yellow
 }
 
-# Check for null variables and set defaults
-if (-not $KapeDirectory) {
-    $KapeDirectory = $BaseDir # Set appropriate default path
-}
-if (-not $FileFolderSubDir) {
-    $FileFolderSubDir = "timeline\LECmd" # Adjust based on your folder structure
-}
-
+# Process LNK Files
 # Process LNK Files
 Write-Host "Processing LNK Files" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
@@ -1048,92 +1296,251 @@ if (Test-Path $lnkPath) {
             Show-ProcessingProgress -Activity "Processing LNK Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
             try {
-                $csvData = Import-Csv $file.FullName
+                # Use streaming approach for large files
+                $reader = New-Object System.IO.StreamReader($file.FullName)
+                $headerLine = $reader.ReadLine()
                 
-            # First pass - Target Created
-                $lnkRows = $csvData | ForEach-Object {
-                    $dataPathValue = $(if ($_."LocalPath") { 
-                                        $_."LocalPath" 
-                                    } elseif ($_."TargetIDAbsolutePath") { 
-                                        $_."TargetIDAbsolutePath" 
-                                    } else { 
-                                        $_."NetworkPath" 
-                                    })
+                $batchCount = 0
+                $totalProcessed = 0
+                $totalAdded = 0
+                $batch = New-Object System.Collections.ArrayList
+                
+                # Process the file line by line in batches
+                while (-not $reader.EndOfStream) {
+                    $line = $reader.ReadLine()
                     
-                    $row = @{
-                        DateTime       = $_."TargetCreated"
-                        DataPath       = $dataPathValue
-                        Description    = "File & Folder Access"
-                        Info           = "Target Created"
-                        DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                            "Unknown Path" 
-                         } else { 
-                            Split-Path -Leaf $dataPathValue 
-                         })
-                        FileSize       = $_."FileSize"
-                        EvidencePath   = $_."SourceFile"
+                    # Skip empty lines
+                    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                    
+                    [void]$batch.Add($line)
+                    $batchCount++
+                    $totalProcessed++
+                    
+                    # Process in batches of the specified size
+                    if ($batchCount -ge $BatchSize) {
+                        # Create temp CSV file for the batch
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        
+                        try {
+                            # Write header and batch to temp file
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            # Import batch data
+                            $batchData = Import-Csv $tempFile
+                            
+                            # First pass - Target Created
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dataPathValue = $(if ($_."LocalPath") { 
+                                                    $_."LocalPath" 
+                                                } elseif ($_."TargetIDAbsolutePath") { 
+                                                    $_."TargetIDAbsolutePath" 
+                                                } else { 
+                                                    $_."NetworkPath" 
+                                                })
+                                
+                                $row = @{
+                                    DateTime       = $_."TargetCreated"
+                                    DataPath       = $dataPathValue
+                                    Description    = "File & Folder Access"
+                                    Info           = "Target Created"
+                                    DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                        "Unknown Path" 
+                                     } else { 
+                                        Split-Path -Leaf $dataPathValue 
+                                     })
+                                    FileSize       = $_."FileSize"
+                                    EvidencePath   = $_."SourceFile"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                            }
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
+                            
+                            # Second pass - Source Created
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dataPathValue = $(if ($_."LocalPath") { 
+                                                    $_."LocalPath" 
+                                                } elseif ($_."TargetIDAbsolutePath") { 
+                                                    $_."TargetIDAbsolutePath" 
+                                                } else { 
+                                                    $_."NetworkPath" 
+                                                })
+                                
+                                $row = @{
+                                    DateTime       = $_."SourceCreated"
+                                    DataPath       = $dataPathValue
+                                    Description    = "File & Folder Access"
+                                    Info           = "Source Created"
+                                    DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                        "Unknown Path" 
+                                     } else { 
+                                        Split-Path -Leaf $dataPathValue 
+                                     })
+                                    FileSize       = $_."FileSize"
+                                    EvidencePath   = $_."SourceFile"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                            }
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
+                            
+                            # Third pass - Target Modified
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dataPathValue = $(if ($_."LocalPath") { 
+                                                    $_."LocalPath" 
+                                                } elseif ($_."TargetIDAbsolutePath") { 
+                                                    $_."TargetIDAbsolutePath" 
+                                                } else { 
+                                                    $_."NetworkPath" 
+                                                })
+                                
+                                $row = @{
+                                    DateTime       = $_."TargetModified"
+                                    DataPath       = $dataPathValue
+                                    Description    = "File & Folder Access"
+                                    Info           = "Target Modified"
+                                    DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                        "Unknown Path" 
+                                     } else { 
+                                        Split-Path -Leaf $dataPathValue 
+                                     })
+                                    FileSize       = $_."FileSize"
+                                    EvidencePath   = $_."SourceFile"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                            }
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
+                            
+                            # Update progress
+                            if ($totalProcessed % 1000 -eq 0) {
+                                Show-ProcessingProgress -Activity "Processing LNK Files: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            # Clean up temp file
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        
+                        # Reset batch
+                        $batch.Clear()
+                        $batchCount = 0
                     }
-                    Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                 }
-                $MasterTimeline += $lnkRows
-                Write-Host "  Added $($lnkRows.Count) LNK Target Created entries from $($file.Name)" -ForegroundColor Green
                 
-                # Second pass - Source Created
-                    $lnkRows = $csvData | ForEach-Object {
-                        $dataPathValue = $(if ($_."LocalPath") { 
-                                            $_."LocalPath" 
-                                        } elseif ($_."TargetIDAbsolutePath") { 
-                                            $_."TargetIDAbsolutePath" 
-                                        } else { 
-                                            $_."NetworkPath" 
-                                        })
+                # Process any remaining lines
+                if ($batch.Count -gt 0) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
                         
-                        $row = @{
-                            DateTime       = $_."SourceCreated"
-                            DataPath       = $dataPathValue
-                            Description    = "File & Folder Access"
-                            Info           = "Source Created"
-                            DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                                "Unknown Path" 
-                             } else { 
-                                Split-Path -Leaf $dataPathValue 
-                             })
-                            FileSize       = $_."FileSize"
-                            EvidencePath   = $_."SourceFile"
-                        }
-                        Normalize-Row -Fields $row -ArtifactName "LNKFiles"
-                    }
-                $MasterTimeline += $lnkRows
-                Write-Host "  Added $($lnkRows.Count) LNK Source Created entries from $($file.Name)" -ForegroundColor Green
-                
-            # Third pass - Target Modified
-                    $lnkRows = $csvData | ForEach-Object {
-                        $dataPathValue = $(if ($_."LocalPath") { 
-                                            $_."LocalPath" 
-                                        } elseif ($_."TargetIDAbsolutePath") { 
-                                            $_."TargetIDAbsolutePath" 
-                                        } else { 
-                                            $_."NetworkPath" 
-                                        })
+                        $batchData = Import-Csv $tempFile
                         
-                        $row = @{
-                            DateTime       = $_."TargetModified"
-                            DataPath       = $dataPathValue
-                            Description    = "File & Folder Access"
-                            Info           = "Target Modified"
-                            DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                                "Unknown Path" 
-                             } else { 
-                                Split-Path -Leaf $dataPathValue 
-                             })
-                            FileSize       = $_."FileSize"
-                            EvidencePath   = $_."SourceFile"
+                        # First pass - Target Created (for remaining batch)
+                        $lnkRows = $batchData | ForEach-Object {
+                            $dataPathValue = $(if ($_."LocalPath") { 
+                                                $_."LocalPath" 
+                                            } elseif ($_."TargetIDAbsolutePath") { 
+                                                $_."TargetIDAbsolutePath" 
+                                            } else { 
+                                                $_."NetworkPath" 
+                                            })
+                            
+                            $row = @{
+                                DateTime       = $_."TargetCreated"
+                                DataPath       = $dataPathValue
+                                Description    = "File & Folder Access"
+                                Info           = "Target Created"
+                                DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                    "Unknown Path" 
+                                 } else { 
+                                    Split-Path -Leaf $dataPathValue 
+                                 })
+                                FileSize       = $_."FileSize"
+                                EvidencePath   = $_."SourceFile"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                         }
-                        Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                        $MasterTimeline += $lnkRows
+                        $totalAdded += $lnkRows.Count
+                        
+                        # Second pass - Source Created (for remaining batch)
+                        $lnkRows = $batchData | ForEach-Object {
+                            $dataPathValue = $(if ($_."LocalPath") { 
+                                                $_."LocalPath" 
+                                            } elseif ($_."TargetIDAbsolutePath") { 
+                                                $_."TargetIDAbsolutePath" 
+                                            } else { 
+                                                $_."NetworkPath" 
+                                            })
+                            
+                            $row = @{
+                                DateTime       = $_."SourceCreated"
+                                DataPath       = $dataPathValue
+                                Description    = "File & Folder Access"
+                                Info           = "Source Created"
+                                DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                    "Unknown Path" 
+                                 } else { 
+                                    Split-Path -Leaf $dataPathValue 
+                                 })
+                                FileSize       = $_."FileSize"
+                                EvidencePath   = $_."SourceFile"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                        }
+                        $MasterTimeline += $lnkRows
+                        $totalAdded += $lnkRows.Count
+                        
+                        # Third pass - Target Modified (for remaining batch)
+                        $lnkRows = $batchData | ForEach-Object {
+                            $dataPathValue = $(if ($_."LocalPath") { 
+                                                $_."LocalPath" 
+                                            } elseif ($_."TargetIDAbsolutePath") { 
+                                                $_."TargetIDAbsolutePath" 
+                                            } else { 
+                                                $_."NetworkPath" 
+                                            })
+                            
+                            $row = @{
+                                DateTime       = $_."TargetModified"
+                                DataPath       = $dataPathValue
+                                Description    = "File & Folder Access"
+                                Info           = "Target Modified"
+                                DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                    "Unknown Path" 
+                                 } else { 
+                                    Split-Path -Leaf $dataPathValue 
+                                 })
+                                FileSize       = $_."FileSize"
+                                EvidencePath   = $_."SourceFile"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                        }
+                        $MasterTimeline += $lnkRows
+                        $totalAdded += $lnkRows.Count
                     }
-                $MasterTimeline += $lnkRows
-                Write-Host "  Added $($lnkRows.Count) LNK Target Modified entries from $($file.Name)" -ForegroundColor Green
+                    catch {
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
                 
+                $reader.Close()
+                
+                # Report on processing results
+                Write-Host "  Added $totalAdded LNK entries from $($file.Name)" -ForegroundColor Green
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
@@ -1384,6 +1791,7 @@ if (Test-Path $MFTPath) {
 } else {
     Write-Host "  MFT path not found: $MFTPath" -ForegroundColor Yellow
 }
+# Process Prefetch Files
 # Process PECmd (Prefetch Files)
 Write-Host "Processing Prefetch Files" -ForegroundColor Cyan
 $PECmdPath = Join-Path $KapeDirectory $ProgramExecSubDir
@@ -1398,18 +1806,114 @@ if (Test-Path $PECmdPath) {
             Show-ProcessingProgress -Activity "Processing Prefetch Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
             try {
-                $peRows = Import-Csv $file.FullName | ForEach-Object {
-                    $row = @{
-                        DateTime     = $_."LastRun"
-                        DataPath     = $_."SourceFilename"
-                        Info         = "Last Run"
-                        DataDetails  = $_."ExecutableName"
-                        Description  =  "Program Execution"
+                # Use streaming approach for large files
+                $reader = New-Object System.IO.StreamReader($file.FullName)
+                $headerLine = $reader.ReadLine()
+                
+                $batchCount = 0
+                $totalProcessed = 0
+                $totalAdded = 0
+                $batch = New-Object System.Collections.ArrayList
+                
+                # Process the file line by line in batches
+                while (-not $reader.EndOfStream) {
+                    $line = $reader.ReadLine()
+                    
+                    # Skip empty lines
+                    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                    
+                    [void]$batch.Add($line)
+                    $batchCount++
+                    $totalProcessed++
+                    
+                    # Process in batches of the specified size
+                    if ($batchCount -ge $BatchSize) {
+                        # Create temp CSV file for the batch
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        
+                        try {
+                            # Write header and batch to temp file
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            # Import batch data
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Process batch data using exact same field mappings as your original code
+                            $peRows = $batchData | ForEach-Object {
+                                $row = @{
+                                    DateTime     = $_."LastRun"
+                                    DataPath     = $_."SourceFilename"
+                                    Info         = "Last Run"
+                                    DataDetails  = $_."ExecutableName"
+                                    Description  = "Program Execution"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Prefetch Files"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $peRows
+                            $totalAdded += $peRows.Count
+                            
+                            # Update progress
+                            if ($totalProcessed % 5000 -eq 0) {
+                                Show-ProcessingProgress -Activity "Processing Prefetch Files: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            # Clean up temp file
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        
+                        # Reset batch
+                        $batch.Clear()
+                        $batchCount = 0
                     }
-                    Normalize-Row -Fields $row -ArtifactName "Prefetch Files"
                 }
-                $MasterTimeline += $peRows
-                Write-Host "  Added $($peRows.Count) prefetch entries from $($file.Name)" -ForegroundColor Green
+                
+                # Process any remaining lines
+                if ($batch.Count -gt 0) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        $batchData = Import-Csv $tempFile
+                        
+                        # Process remaining batch with same field mappings
+                        $peRows = $batchData | ForEach-Object {
+                            $row = @{
+                                DateTime     = $_."LastRun"
+                                DataPath     = $_."SourceFilename"
+                                Info         = "Last Run"
+                                DataDetails  = $_."ExecutableName"
+                                Description  = "Program Execution"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Prefetch Files"
+                        }
+                        
+                        $MasterTimeline += $peRows
+                        $totalAdded += $peRows.Count
+                    }
+                    catch {
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
+                
+                $reader.Close()
+                
+                # Report on processing results
+                Write-Host "  Added $totalAdded prefetch entries from $($file.Name)" -ForegroundColor Green
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
@@ -1531,6 +2035,7 @@ if (Test-Path $RegistryPath) {
 }
 
 # Process Shellbags
+# Process Shellbags
 Write-Host "Processing Shellbags" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
 if (Test-Path $lnkPath) {
@@ -1544,48 +2049,167 @@ if (Test-Path $lnkPath) {
             Show-ProcessingProgress -Activity "Processing Shellbags" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
             try {
-                # First pass - Last Write Time
-                $shellRows = Import-Csv $file.FullName | ForEach-Object {
-                    $row = @{
-                        DateTime    = $_."LastWriteTime"
-                        DataPath    = $_."AbsolutePath"
-                        DataDetails = $_."Value"
-                        Description = "File & Folder Access"
-                        Info        = "Last Write"
-                    }
-                    Normalize-Row -Fields $row -ArtifactName "Shellbags"
-                }
-                $MasterTimeline += $shellRows
-                Write-Host "  Added $($shellRows.Count) shellbag Last Write entries from $($file.Name)" -ForegroundColor Green
+                # Use streaming approach for large files
+                $reader = New-Object System.IO.StreamReader($file.FullName)
+                $headerLine = $reader.ReadLine()
                 
-                # Second pass - First Interacted
-                $shellRows = Import-Csv $file.FullName | Where-Object { -not [string]::IsNullOrEmpty($_."FirstInteracted") } | ForEach-Object {
-                    $row = @{
-                        DateTime    = $_."FirstInteracted"
-                        DataPath    = $_."AbsolutePath"
-                        DataDetails = $_."Value"
-                        Description = "File & Folder Access"
-                        Info        = "First Interacted"
-                    }
-                    Normalize-Row -Fields $row -ArtifactName "Shellbags"
-                }
-                $MasterTimeline += $shellRows
-                Write-Host "  Added $($shellRows.Count) shellbag First Interacted entries from $($file.Name)" -ForegroundColor Green
+                $batchCount = 0
+                $totalProcessed = 0
+                $totalAdded = 0
+                $batch = New-Object System.Collections.ArrayList
                 
-                # Third pass - Last Interacted
-                $shellRows = Import-Csv $file.FullName | Where-Object { -not [string]::IsNullOrEmpty($_."LastInteracted") } | ForEach-Object {
-                    $row = @{
-                        DateTime    = $_."LastInteracted"
-                        DataPath    = $_."AbsolutePath"
-                        DataDetails = $_."Value"
-                        Description = "File & Folder Access"
-                        Info        = "Last Interacted"
+                # Process the file line by line in batches
+                while (-not $reader.EndOfStream) {
+                    $line = $reader.ReadLine()
+                    
+                    # Skip empty lines
+                    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                    
+                    [void]$batch.Add($line)
+                    $batchCount++
+                    $totalProcessed++
+                    
+                    # Process in batches of the specified size
+                    if ($batchCount -ge $BatchSize) {
+                        # Create temp CSV file for the batch
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        
+                        try {
+                            # Write header and batch to temp file
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            # Import batch data
+                            $batchData = Import-Csv $tempFile
+                            
+                            # First pass - Last Write Time
+                            $shellRows = $batchData | ForEach-Object {
+                                $row = @{
+                                    DateTime    = $_."LastWriteTime"
+                                    DataPath    = $_."AbsolutePath"
+                                    DataDetails = $_."Value"
+                                    Description = "File & Folder Access"
+                                    Info        = "Last Write"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                            }
+                            $MasterTimeline += $shellRows
+                            $totalAdded += $shellRows.Count
+                            
+                            # Second pass - First Interacted
+                            $shellRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."FirstInteracted") } | ForEach-Object {
+                                $row = @{
+                                    DateTime    = $_."FirstInteracted"
+                                    DataPath    = $_."AbsolutePath"
+                                    DataDetails = $_."Value"
+                                    Description = "File & Folder Access"
+                                    Info        = "First Interacted"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                            }
+                            $MasterTimeline += $shellRows
+                            $totalAdded += $shellRows.Count
+                            
+                            # Third pass - Last Interacted
+                            $shellRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."LastInteracted") } | ForEach-Object {
+                                $row = @{
+                                    DateTime    = $_."LastInteracted"
+                                    DataPath    = $_."AbsolutePath"
+                                    DataDetails = $_."Value"
+                                    Description = "File & Folder Access"
+                                    Info        = "Last Interacted"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                            }
+                            $MasterTimeline += $shellRows
+                            $totalAdded += $shellRows.Count
+                            
+                            # Update progress
+                            if ($totalProcessed % 1000 -eq 0) {
+                                Show-ProcessingProgress -Activity "Processing Shellbags: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            # Clean up temp file
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        
+                        # Reset batch
+                        $batch.Clear()
+                        $batchCount = 0
                     }
-                    Normalize-Row -Fields $row -ArtifactName "Shellbags"
                 }
-                $MasterTimeline += $shellRows
-                Write-Host "  Added $($shellRows.Count) shellbag Last Interacted entries from $($file.Name)" -ForegroundColor Green
                 
+                # Process any remaining lines
+                if ($batch.Count -gt 0) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        $batchData = Import-Csv $tempFile
+                        
+                        # First pass - Last Write Time (for remaining batch)
+                        $shellRows = $batchData | ForEach-Object {
+                            $row = @{
+                                DateTime    = $_."LastWriteTime"
+                                DataPath    = $_."AbsolutePath"
+                                DataDetails = $_."Value"
+                                Description = "File & Folder Access"
+                                Info        = "Last Write"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                        }
+                        $MasterTimeline += $shellRows
+                        $totalAdded += $shellRows.Count
+                        
+                        # Second pass - First Interacted (for remaining batch)
+                        $shellRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."FirstInteracted") } | ForEach-Object {
+                            $row = @{
+                                DateTime    = $_."FirstInteracted"
+                                DataPath    = $_."AbsolutePath"
+                                DataDetails = $_."Value"
+                                Description = "File & Folder Access"
+                                Info        = "First Interacted"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                        }
+                        $MasterTimeline += $shellRows
+                        $totalAdded += $shellRows.Count
+                        
+                        # Third pass - Last Interacted (for remaining batch)
+                        $shellRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."LastInteracted") } | ForEach-Object {
+                            $row = @{
+                                DateTime    = $_."LastInteracted"
+                                DataPath    = $_."AbsolutePath"
+                                DataDetails = $_."Value"
+                                Description = "File & Folder Access"
+                                Info        = "Last Interacted"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                        }
+                        $MasterTimeline += $shellRows
+                        $totalAdded += $shellRows.Count
+                    }
+                    catch {
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
+                
+                $reader.Close()
+                
+                # Report on processing results
+                Write-Host "  Added $totalAdded shellbag entries from $($file.Name)" -ForegroundColor Green
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
@@ -1600,51 +2224,176 @@ if (Test-Path $lnkPath) {
 }
 
 # Web History
+# Web History
 Write-Host "Processing Web History" -ForegroundColor Cyan
 if (Test-Path $WebResultsPath) {
     Show-ProcessingProgress -Activity "Processing Web History" -Status "File: $([System.IO.Path]::GetFileName($WebResultsPath))" -Current 1 -Total 1 -NestedLevel 1
     
     try {
-        $webRows = Import-Csv $WebResultsPath | ForEach-Object {
-            # Extract filename if URL starts with file://
-            $dataDetails = $_."Title"
-            $url = $_."URL"
+        # Use streaming approach for large files
+        $reader = New-Object System.IO.StreamReader($WebResultsPath)
+        $headerLine = $reader.ReadLine()
+        
+        $batchCount = 0
+        $totalProcessed = 0
+        $totalAdded = 0
+        $batch = New-Object System.Collections.ArrayList
+        
+        # Process the file line by line in batches
+        while (-not $reader.EndOfStream) {
+            $line = $reader.ReadLine()
             
-            # Default description
-            $description = "Web Activity"
+            # Skip empty lines
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
             
-            # Check if the URL starts with file:// and extract the filename
-            if ($url -match "^file:///") {
-                # Extract filename after the last slash
-                if ($url -match "/([^/]+)$") {
-                    $filename = $matches[1]
-                    # Use the filename as DataDetails
-                    $dataDetails = $filename
+            [void]$batch.Add($line)
+            $batchCount++
+            $totalProcessed++
+            
+            # Process in batches of the specified size
+            if ($batchCount -ge $BatchSize) {
+                # Create temp CSV file for the batch
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                
+                try {
+                    # Write header and batch to temp file
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    
+                    # Import batch data
+                    $batchData = Import-Csv $tempFile
+                    
+                    # Process batch data with special URL handling
+                    $webRows = $batchData | ForEach-Object {
+                        # Extract filename if URL starts with file://
+                        $dataDetails = $_."Title"
+                        $url = $_."URL"
+                        
+                        # Default description
+                        $description = "Web Activity"
+                        
+                        # Check if the URL starts with file:// and extract the filename
+                        if ($url -match "^file:///") {
+                            # Extract filename after the last slash
+                            if ($url -match "/([^/]+)$") {
+                                $filename = $matches[1]
+                                # Use the filename as DataDetails
+                                $dataDetails = $filename
+                            }
+                            # Change description to File & Folder Access for file:// URLs
+                            $description = "File & Folder Access"
+                        }
+                        # Check for search URLs
+                        elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                            $description = "Web Search"
+                        }
+                        # Check for download URLs
+                        elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                            $description = "Web Download"
+                        }
+                        
+                        $row = @{
+                            DateTime     = $_."Visit Time"
+                            DataPath     = $url
+                            Info         = $_."Web Browser"
+                            DataDetails  = $dataDetails
+                            Description  = $description
+                            User         = $_."User Profile"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "WebHistory"
+                    }
+                    
+                    # Add to master timeline
+                    $MasterTimeline += $webRows
+                    $totalAdded += $webRows.Count
+                    
+                    # Update progress
+                    if ($totalProcessed % 5000 -eq 0) {
+                        Show-ProcessingProgress -Activity "Processing Web History" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                    }
                 }
-                # Change description to File & Folder Access for file:// URLs
-                $description = "File & Folder Access"
+                catch {
+                    Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                }
+                finally {
+                    # Clean up temp file
+                    if (Test-Path $tempFile) {
+                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    }
+                }
+                
+                # Reset batch
+                $batch.Clear()
+                $batchCount = 0
             }
-            # Check for search URLs
-            elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
-                $description = "Web Search"
-            }
-            # Check for download URLs
-            elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
-                $description = "Web Download"
-            }
-            
-            $row = @{
-                DateTime     = $_."Visit Time"
-                DataPath     = $url
-                Info         = $_."Web Browser"
-                DataDetails  = $dataDetails
-                Description  = $description
-                User         = $_."User Profile"
-            }
-            Normalize-Row -Fields $row -ArtifactName "WebHistory"
         }
-        $MasterTimeline += $webRows
-        Write-Host "  Added $($webRows.Count) web history entries from $([System.IO.Path]::GetFileName($WebResultsPath))" -ForegroundColor Green
+        
+        # Process any remaining lines
+        if ($batch.Count -gt 0) {
+            $tempFile = [System.IO.Path]::GetTempFileName()
+            try {
+                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                
+                $batchData = Import-Csv $tempFile
+                
+                # Process remaining batch with same logic
+                $webRows = $batchData | ForEach-Object {
+                    # Extract filename if URL starts with file://
+                    $dataDetails = $_."Title"
+                    $url = $_."URL"
+                    
+                    # Default description
+                    $description = "Web Activity"
+                    
+                    # Check if the URL starts with file:// and extract the filename
+                    if ($url -match "^file:///") {
+                        # Extract filename after the last slash
+                        if ($url -match "/([^/]+)$") {
+                            $filename = $matches[1]
+                            # Use the filename as DataDetails
+                            $dataDetails = $filename
+                        }
+                        # Change description to File & Folder Access for file:// URLs
+                        $description = "File & Folder Access"
+                    }
+                    # Check for search URLs
+                    elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                        $description = "Web Search"
+                    }
+                    # Check for download URLs
+                    elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                        $description = "Web Download"
+                    }
+                    
+                    $row = @{
+                        DateTime     = $_."Visit Time"
+                        DataPath     = $url
+                        Info         = $_."Web Browser"
+                        DataDetails  = $dataDetails
+                        Description  = $description
+                        User         = $_."User Profile"
+                    }
+                    Normalize-Row -Fields $row -ArtifactName "WebHistory"
+                }
+                
+                $MasterTimeline += $webRows
+                $totalAdded += $webRows.Count
+            }
+            catch {
+                Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+            }
+            finally {
+                if (Test-Path $tempFile) {
+                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                }
+            }
+        }
+        
+        $reader.Close()
+        
+        # Report on processing results
+        Write-Host "  Added $totalAdded web history entries from $([System.IO.Path]::GetFileName($WebResultsPath))" -ForegroundColor Green
     } catch {
         Write-Host "  Error processing web history: $_" -ForegroundColor Red
     }
@@ -1653,7 +2402,7 @@ if (Test-Path $WebResultsPath) {
 } else {
     Write-Host "  Web history file not found: $WebResultsPath" -ForegroundColor Yellow
 }
-
+# Process Chainsaw CSV files
 # Process Chainsaw CSV files
 Write-Host "Processing Chainsaw CSV Files" -ForegroundColor Cyan
 $ChainsawFiles = Get-ChildItem -Path $ChainsawDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "webResults.csv" }
@@ -1671,93 +2420,243 @@ if ($fileCount -gt 0) {
             # Check if this is an MFT file based on filename only
             $isMFTFile = $chainsawFile.Name -like "*MFT*"
             
-            # Import CSV data
-            $csvData = Import-Csv -Path $chainsawFile.FullName
+            # Use streaming approach for large files
+            $reader = New-Object System.IO.StreamReader($chainsawFile.FullName)
+            $headerLine = $reader.ReadLine()
             
             # If not determined by filename, check column headers
+            $headers = $headerLine -split ','
             if (-not $isMFTFile) {
-                $headers = $csvData | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
                 $isMFTFile = $headers -contains "FileNameCreated0x30"
             }
             
             # Select appropriate timestamp field
             $timestampField = if ($isMFTFile) { "FileNameCreated0x30" } else { "timestamp" }
             
-            # Process the data
-            $chainsawRows = $csvData | ForEach-Object {
-                # Improved timestamp parsing that handles ISO 8601 format with timezone info
-                $dt = if ($_.$timestampField) {
-                    try { 
-                        # Try parsing with timezone handling
-                        $dateObj = [datetime]::Parse($_.$timestampField, [System.Globalization.CultureInfo]::InvariantCulture, 
-                            [System.Globalization.DateTimeStyles]::AdjustToUniversal)
-                        $dateObj.ToString("yyyy/MM/dd HH:mm:ss")
-                    } 
-                    catch { 
-                        # If parsing fails, keep the original string
-                        $_.$timestampField 
-                    }
-                } else {
-                    # If no timestamp, use current date/time
-                    (Get-Date).ToString("yyyy/MM/dd HH:mm:ss")
-                }
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
             
+            # Process the file line by line in batches
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
                 
-                $row = @{
-                    DateTime           = $dt
-                    EventId            = $_."Event ID"
-                    Description        =  "Chainsaw"
-                    Info               = $_."detections"
-                    DataPath = $(if ($_."Threat Path") { 
-                        $_."Threat Path" 
-                      } elseif ($_."Scheduled Task Name") { 
-                        $_."Scheduled Task Name" 
-                      } elseif ($_."FileNamePath") { 
-                        $_."FileNamePath" 
-                      } elseif ($_."Information") { 
-                        $_."Information" 
-                      } elseif ($_."HostApplication") { 
-                        $_."HostApplication" 
-                      } elseif ($_."Service File Name") { 
-                        $_."Service File Name" 
-                      } elseif ($_."Event Data") { 
-                        $_."Event Data" 
-                      } else {
-                        ""
-                      })
-                      DataDetails = $(if ($_."Threat Name") { 
-                        $_."Threat Name" 
-                      } elseif ($_."Service Name") { 
-                        $_."Service Name" 
-                      } else {
-                        ""  
-                      })
-
-                    User = $(if ($_."User") { 
-                        $_."User" 
-                      } elseif ($_."User Name") { 
-                        $_."User Name" 
-                      } else {
-                        "Unknown User"
-                      })
-                    Computer           = $_."Computer"
-                    UserSID            = $_."User SID"
-                    MemberSID          = $_."Member SID"
-                    ProcessName        = $_."Process Name"
-                    IPAddress          = $_."IP Address"
-                    LogonType          = $_."Logon Type"
-                    Count              = $_."count"
-                    SourceAddress      = $_."Source Address"
-                    DestinationAddress = $_."Dest Address"
-                    ServiceType        = $_."Service Type"
-                    CommandLine        = $_."CommandLine"
-                    SHA1               = $_."SHA1"
-                    EvidencePath       = $_."path"
+                # Skip empty lines
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+                
+                # Process in batches of the specified size
+                if ($batchCount -ge $BatchSize) {
+                    # Create temp CSV file for the batch
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    
+                    try {
+                        # Write header and batch to temp file
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        # Import batch data
+                        $batchData = Import-Csv $tempFile
+                        
+                        # Process batch data
+                        $chainsawRows = $batchData | ForEach-Object {
+                            # Improved timestamp parsing that handles ISO 8601 format with timezone info
+                            $dt = if ($_.$timestampField) {
+                                try { 
+                                    # Try parsing with timezone handling
+                                    $dateObj = [datetime]::Parse($_.$timestampField, [System.Globalization.CultureInfo]::InvariantCulture, 
+                                        [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+                                    $dateObj.ToString("yyyy/MM/dd HH:mm:ss")
+                                } 
+                                catch { 
+                                    # If parsing fails, keep the original string
+                                    $_.$timestampField 
+                                }
+                            } else {
+                                # If no timestamp, use current date/time
+                                (Get-Date).ToString("yyyy/MM/dd HH:mm:ss")
+                            }
+                        
+                            $row = @{
+                                DateTime           = $dt
+                                EventId            = $_."Event ID"
+                                Description        = "Chainsaw"
+                                Info               = $_."detections"
+                                DataPath = $(if ($_."Threat Path") { 
+                                    $_."Threat Path" 
+                                } elseif ($_."Scheduled Task Name") { 
+                                    $_."Scheduled Task Name" 
+                                } elseif ($_."FileNamePath") { 
+                                    $_."FileNamePath" 
+                                } elseif ($_."Information") { 
+                                    $_."Information" 
+                                } elseif ($_."HostApplication") { 
+                                    $_."HostApplication" 
+                                } elseif ($_."Service File Name") { 
+                                    $_."Service File Name" 
+                                } elseif ($_."Event Data") { 
+                                    $_."Event Data" 
+                                } else {
+                                    ""
+                                })
+                                DataDetails = $(if ($_."Threat Name") { 
+                                    $_."Threat Name" 
+                                } elseif ($_."Service Name") { 
+                                    $_."Service Name" 
+                                } else {
+                                    ""  
+                                })
+                                User = $(if ($_."User") { 
+                                    $_."User" 
+                                } elseif ($_."User Name") { 
+                                    $_."User Name" 
+                                } else {
+                                    "Unknown User"
+                                })
+                                Computer           = $_."Computer"
+                                UserSID            = $_."User SID"
+                                MemberSID          = $_."Member SID"
+                                ProcessName        = $_."Process Name"
+                                IPAddress          = $_."IP Address"
+                                LogonType          = $_."Logon Type"
+                                Count              = $_."count"
+                                SourceAddress      = $_."Source Address"
+                                DestinationAddress = $_."Dest Address"
+                                ServiceType        = $_."Service Type"
+                                CommandLine        = $_."CommandLine"
+                                SHA1               = $_."SHA1"
+                                EvidencePath       = $_."path"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName $artifactName
+                        }
+                        
+                        # Add to master timeline
+                        $MasterTimeline += $chainsawRows
+                        $totalAdded += $chainsawRows.Count
+                        
+                        # Update progress
+                        if ($totalProcessed % 5000 -eq 0) {
+                            Show-ProcessingProgress -Activity "Processing Chainsaw: $($chainsawFile.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                        }
+                    }
+                    catch {
+                        Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        # Clean up temp file
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                    
+                    # Reset batch
+                    $batch.Clear()
+                    $batchCount = 0
                 }
-                Normalize-Row -Fields $row -ArtifactName $artifactName
             }
-            $MasterTimeline += $chainsawRows
-            Write-Host "  Added $($chainsawRows.Count) entries from $($chainsawFile.Name)" -ForegroundColor Green
+            
+            # Process any remaining lines
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    
+                    $batchData = Import-Csv $tempFile
+                    
+                    # Process remaining batch with same logic
+                    $chainsawRows = $batchData | ForEach-Object {
+                        # Improved timestamp parsing that handles ISO 8601 format with timezone info
+                        $dt = if ($_.$timestampField) {
+                            try { 
+                                # Try parsing with timezone handling
+                                $dateObj = [datetime]::Parse($_.$timestampField, [System.Globalization.CultureInfo]::InvariantCulture, 
+                                    [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+                                $dateObj.ToString("yyyy/MM/dd HH:mm:ss")
+                            } 
+                            catch { 
+                                # If parsing fails, keep the original string
+                                $_.$timestampField 
+                            }
+                        } else {
+                            # If no timestamp, use current date/time
+                            (Get-Date).ToString("yyyy/MM/dd HH:mm:ss")
+                        }
+                    
+                        $row = @{
+                            DateTime           = $dt
+                            EventId            = $_."Event ID"
+                            Description        = "Chainsaw"
+                            Info               = $_."detections"
+                            DataPath = $(if ($_."Threat Path") { 
+                                $_."Threat Path" 
+                            } elseif ($_."Scheduled Task Name") { 
+                                $_."Scheduled Task Name" 
+                            } elseif ($_."FileNamePath") { 
+                                $_."FileNamePath" 
+                            } elseif ($_."Information") { 
+                                $_."Information" 
+                            } elseif ($_."HostApplication") { 
+                                $_."HostApplication" 
+                            } elseif ($_."Service File Name") { 
+                                $_."Service File Name" 
+                            } elseif ($_."Event Data") { 
+                                $_."Event Data" 
+                            } else {
+                                ""
+                            })
+                            DataDetails = $(if ($_."Threat Name") { 
+                                $_."Threat Name" 
+                            } elseif ($_."Service Name") { 
+                                $_."Service Name" 
+                            } else {
+                                ""  
+                            })
+                            User = $(if ($_."User") { 
+                                $_."User" 
+                            } elseif ($_."User Name") { 
+                                $_."User Name" 
+                            } else {
+                                "Unknown User"
+                            })
+                            Computer           = $_."Computer"
+                            UserSID            = $_."User SID"
+                            MemberSID          = $_."Member SID"
+                            ProcessName        = $_."Process Name"
+                            IPAddress          = $_."IP Address"
+                            LogonType          = $_."Logon Type"
+                            Count              = $_."count"
+                            SourceAddress      = $_."Source Address"
+                            DestinationAddress = $_."Dest Address"
+                            ServiceType        = $_."Service Type"
+                            CommandLine        = $_."CommandLine"
+                            SHA1               = $_."SHA1"
+                            EvidencePath       = $_."path"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName $artifactName
+                    }
+                    
+                    $MasterTimeline += $chainsawRows
+                    $totalAdded += $chainsawRows.Count
+                }
+                catch {
+                    Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                }
+                finally {
+                    if (Test-Path $tempFile) {
+                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+            
+            $reader.Close()
+            
+            # Report on processing results
+            Write-Host "  Added $totalAdded entries from $($chainsawFile.Name)" -ForegroundColor Green
         } catch {
             Write-Host "  Error processing $($chainsawFile.Name): $_" -ForegroundColor Red
         }
@@ -1767,7 +2666,6 @@ if ($fileCount -gt 0) {
 } else {
     Write-Host "  No Chainsaw CSV files found in $ChainsawDirectory" -ForegroundColor Yellow
 }
-
 # Complete the overall progress bar
 Write-Progress -Activity "Building Forensic Timeline" -Status "Processing Complete" -PercentComplete 100 -Id 0 -Completed
 
