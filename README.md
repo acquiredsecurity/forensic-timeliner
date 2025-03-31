@@ -18,6 +18,7 @@ Forensic Timeliner is a PowerShell-based tool that automates the process of aggr
 - Exports to multiple formats (CSV, JSON, XLSX)
 - Interactive setup mode
 - Batch processing for large datasets
+  - Uses a StreamReader to read the file line by line into batches of 10k lines at a time
 
 ## Requirements
 
