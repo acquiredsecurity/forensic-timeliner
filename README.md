@@ -123,6 +123,20 @@ The tool normalizes various forensic artifacts into a consistent timeline format
 | Computer | Computer |
 | SourceFile | EvidencePath |
 
+Event Log Filtering:
+
+Filters Uses a predefined set of Event ID's for filtering. Channels and Event Ids can be adjusted in the script.
+    "Application" = @(1000, 1001)
+    "Microsoft-Windows-PowerShell/Operational" = @(4100, 4103, 4104)
+    "Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational" = @(72, 98, 104, 131, 140)
+    "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational" = @(21, 22)
+    "Microsoft-Windows-TaskScheduler/Operational" = @(106, 140, 141, 129, 200, 201)
+    "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational" = @(261, 1149)
+    "Microsoft-Windows-WinRM/Operational" = @(169)
+    "Security" = @(1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756)
+    "SentinelOne/Operational" = @(1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110)
+    "System" = @(7045)
+
 #### File Deletion
 | EZ Tool Field | Timeline Field |
 |--------------|----------------|
@@ -152,6 +166,13 @@ The tool normalizes various forensic artifacts into a consistent timeline format
 | "File Created" | Info |
 | FileSize | FileSize |
 | Extension | FileExtension |
+
+MFT Filtering:
+
+Filters by File Path by looking in the Users Directory or TMP folder. Can be configured in interactive mode or in the script.
+Filter by file path looking for executables and file compression. Can be configured in interactive mode or in the script.
+
+
 
 #### Prefetch Files
 | EZ Tool Field | Timeline Field |
