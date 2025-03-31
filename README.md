@@ -174,7 +174,7 @@ The tool normalizes various forensic artifacts into a consistent timeline format
 #### Shellbags
 | EZ Tool Field | Timeline Field |
 |--------------|----------------|
-| LastWriteTime | DateTime |
+| LastWriteTime/FirstInteracted/LastInteracted | DateTime |
 | AbsolutePath | DataPath |
 | Value | DataDetails |
 | "Last Write" | Info |
