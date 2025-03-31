@@ -1,69 +1,9 @@
-# Forensic Timeliner
-DISCLAIMER: This script is provided as-is, without warranty or guarantee of fitness for a particular purpose. It automates third-party tools that are licensed under their own terms. Ensure you have proper authorization to use and distribute all tools involved.
-
-<img width="790" alt="image" src="https://github.com/user-attachments/assets/4276088c-c7cc-4610-85f1-04fb328dc402" />
-
-
+## Forensic Timeliner
 Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifacts from [Chainsaw](https://github.com/WithSecureLabs/chainsaw) and KAPE / [EZTools](https://github.com/EricZimmerman) into a structured **MINI** **Master Timeline** and can output to CSV, JSON and XLSX. Use this tool to quickly get your analysis started on a host by combining the output of Kape/EZ Tools and Chiansaw output. Use the VB macro to color code the artifacts and once you have formatted the Date/Time Column you can sort by Date/Time and start the anlaysis. This tool is designed for forensic analysts who need to quickly timeline and triage using output from Kape, EZTools WebHistoryView and Chainsaw mainly focused on standard !Sans Kape output.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-<img width="1763" alt="image" src="https://github.com/user-attachments/assets/e2c17563-8400-41b5-ab04-f10edc891598" />
-
-
-
-
-
-### Special Thanks
-Eric Zimmerman for building and maintaining Kape and all his tools
-Chainsaw Creators
-Nirsoft
-Anybody who uses this!
-
----
-sample commandline:
-.\forensic_timeliner.ps1 -CsvDirectory "C:\timeine" -OutputFile "C:\chainsaw\Master_Timeline.xlsx"
-
--CsvDirectory  - the path to your kape and chainsaw output, by default I have output all of my parsed forensic artifact CSV files to a folder "c:\kape\timeline"
--OutputFile - the path to save your timeline to. By default this saves to "C:\kape\timeline\Master_Timeline.xlsx"
-
-## Features
-- Automatically combines all **Chainsaw CSV outputs** into a single csv
-- **Normalizes timestamps** into a readable format (yyyy-mm-dd hh:mm:ss) When you open excel you will need to select column A and use format > cutom format to fix the Date/Time field.
-- Assigns an **artifact name** to each row for easy identification.
-- Supports **color-coding** for different artifacts (see `color_macro.vbs` for details).
-
-
-
-
-## Requirements
-### Windows:
-1. **PowerShell** (Version 5.1 or later)
-2. **ImportExcel PowerShell Module** (for Excel support)
-   powershell
-   Install-Module ImportExcel -Force -Scope CurrentUser
-3. Chainsaw (https://github.com/WithSecureLabs/chainsaw)
-Optional:
-4. Excel Macro for Color Coding:
-The file color_macro.vbs can be used to apply color coding to each row based on the artifact type.
-
-
-# Forensic Timeliner
-
-A mini forensic timeline builder for KAPE outputs, Chainsaw+Sigma results, and web history data. This tool helps investigators build comprehensive timelines from diverse digital forensic artifacts.
-
-![Forensic Timeliner](https://raw.githubusercontent.com/yourusername/forensic_timeliner/main/images/banner.png)
+<img width="1407" alt="image" src="https://github.com/user-attachments/assets/300855b7-dc4a-4aef-9ee6-ca36e24d3dbc" />
+<img width="1409" alt="image" src="https://github.com/user-attachments/assets/725e7a77-5815-41d6-a111-9889c72875ed" />
+<img width="1397" alt="image" src="https://github.com/user-attachments/assets/107f1874-0fe3-4dac-b3e5-2e8f5b5a1dac" />
 
 ## Features
 
@@ -90,12 +30,6 @@ A mini forensic timeline builder for KAPE outputs, Chainsaw+Sigma results, and w
 
 ```powershell
 .\forensic_timeliner.ps1 -Interactive
-```
-
-### Command-Line Options
-
-```powershell
-.\forensic_timeliner.ps1 -ChainsawDirectory "C:\kape\chainsaw" -OutputFile "C:\kape\timeline\Master_Timeline.csv"
 ```
 
 ### Parameters
@@ -311,18 +245,19 @@ These can be customized in interactive mode or by modifying the script parameter
 
 Event logs are filtered by channel and event ID. You can customize the filtering criteria in the script by modifying the `$EventChannelFilters` hashtable.
 
-## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments
+### Special Thanks
+Eric Zimmerman for building and maintaining Kape and all his tools
+Chainsaw Creators
+Nirsoft
+Anybody who uses this!
 
-- Built by [Your Name/Organization]
-- Thanks to Eric Zimmerman and the Kroll team for creating KAPE and EZ Tools
-- Inspired by the needs of DFIR practitioners everywhere
+# Disclaimer
+DISCLAIMER: This script is provided as-is, without warranty or guarantee of fitness for a particular purpose. It automates third-party tools that are licensed under their own terms. Ensure you have proper authorization to use and distribute all tools involved.
 
 
