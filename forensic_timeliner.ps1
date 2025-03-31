@@ -1532,6 +1532,7 @@ if (Test-Path $RegistryPath) {
 }
 
 # Process Shellbags
+# Process Shellbags
 Write-Host "Processing Shellbags" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
 if (Test-Path $lnkPath) {
@@ -1545,18 +1546,48 @@ if (Test-Path $lnkPath) {
             Show-ProcessingProgress -Activity "Processing Shellbags" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
             try {
+                # First pass - Last Write Time
                 $shellRows = Import-Csv $file.FullName | ForEach-Object {
                     $row = @{
                         DateTime    = $_."LastWriteTime"
                         DataPath    = $_."AbsolutePath"
                         DataDetails = $_."Value"
-                        Description =  "File & Folder Access"
+                        Description = "File & Folder Access"
                         Info        = "Last Write"
                     }
                     Normalize-Row -Fields $row -ArtifactName "Shellbags"
                 }
                 $MasterTimeline += $shellRows
-                Write-Host "  Added $($shellRows.Count) shellbag entries from $($file.Name)" -ForegroundColor Green
+                Write-Host "  Added $($shellRows.Count) shellbag Last Write entries from $($file.Name)" -ForegroundColor Green
+                
+                # Second pass - First Interacted
+                $shellRows = Import-Csv $file.FullName | Where-Object { -not [string]::IsNullOrEmpty($_."FirstInteracted") } | ForEach-Object {
+                    $row = @{
+                        DateTime    = $_."FirstInteracted"
+                        DataPath    = $_."AbsolutePath"
+                        DataDetails = $_."Value"
+                        Description = "File & Folder Access"
+                        Info        = "First Interacted"
+                    }
+                    Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                }
+                $MasterTimeline += $shellRows
+                Write-Host "  Added $($shellRows.Count) shellbag First Interacted entries from $($file.Name)" -ForegroundColor Green
+                
+                # Third pass - Last Interacted
+                $shellRows = Import-Csv $file.FullName | Where-Object { -not [string]::IsNullOrEmpty($_."LastInteracted") } | ForEach-Object {
+                    $row = @{
+                        DateTime    = $_."LastInteracted"
+                        DataPath    = $_."AbsolutePath"
+                        DataDetails = $_."Value"
+                        Description = "File & Folder Access"
+                        Info        = "Last Interacted"
+                    }
+                    Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                }
+                $MasterTimeline += $shellRows
+                Write-Host "  Added $($shellRows.Count) shellbag Last Interacted entries from $($file.Name)" -ForegroundColor Green
+                
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
