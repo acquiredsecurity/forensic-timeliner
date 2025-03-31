@@ -4,26 +4,19 @@ DISCLAIMER: This script is provided as-is, without warranty or guarantee of fitn
 <img width="790" alt="image" src="https://github.com/user-attachments/assets/4276088c-c7cc-4610-85f1-04fb328dc402" />
 
 
-Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifacts from [Chainsaw](https://github.com/WithSecureLabs/chainsaw) and KAPE / [EZTools](https://github.com/EricZimmerman) into a structured **MINI** **Master Timeline** in Excel. This is obviously not comprehensive but a great way to take some high value artifacts and get a real quick snapshot using powershell!
-
-## Field Mappings by Artifact Module
-
-<img width="1002" alt="image" src="https://github.com/user-attachments/assets/60ab3f12-ab54-4157-8f41-88eb43d9aaef" />
-<img width="992" alt="image" src="https://github.com/user-attachments/assets/49023386-f4cc-4cfc-8915-cc31f7fc28d8" />
-<img width="1002" alt="image" src="https://github.com/user-attachments/assets/1925e215-6fd8-46f6-b8a7-9ba23959f94a" />
+Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifacts from [Chainsaw](https://github.com/WithSecureLabs/chainsaw) and KAPE / [EZTools](https://github.com/EricZimmerman) into a structured **MINI** **Master Timeline** and can output to CSV, JSON and XLSX. Use this tool to quickly get your analysis started on a host by combining the output of Kape/EZ Tools and Chiansaw output. Use the VB macro to color code the artifacts and once you have formatted the Date/Time Column you can sort by Date/Time and start the anlaysis. This tool is designed for forensic analysts who need to quickly timeline and triage using output from Kape, EZTools WebHistoryView and Chainsaw mainly focused on standard !Sans Kape output.
 
 
 
 
 
-This tool is designed for forensic analysts who need to quickly timeline and triage using output from Kape, EZTools WebHistoryView and Chainsaw mainly focused on standard !Sans Kape output.
 
-I have made design decisions on what date fields to use for certain artifacts. You can always for this and add more modules but it is designed as a starting point.
-- MFT Uses Date created Filter and Search for Executables and Compression Extensions in c:\Users and C:\temp edit the script to add more!
-- Shellbags Uses Last Write time only
-- Event logs run both Chainsaw Rules and Sigma as an option and I have also added a filter for EZ Tools event log out based on certian event Ids.
-- LNK files uses the target created time timestamp, this will result in some items with empty date/time
-More to come!
+
+
+
+
+
+
 
 
 <img width="1763" alt="image" src="https://github.com/user-attachments/assets/e2c17563-8400-41b5-ab04-f10edc891598" />
@@ -40,34 +33,296 @@ Anybody who uses this!
 
 ---
 sample commandline:
-.\forensic_timeliner.ps1 -CsvDirectory "C:\chainsaw" -OutputFile "C:\chainsaw\Master_Timeline.xlsx"
+.\forensic_timeliner.ps1 -CsvDirectory "C:\timeine" -OutputFile "C:\chainsaw\Master_Timeline.xlsx"
 
--CsvDirectory  - the path to your kape and chainsaw output
--OutputFile - the path to save your timeline to
+-CsvDirectory  - the path to your kape and chainsaw output, by default I have output all of my parsed forensic artifact CSV files to a folder "c:\kape\timeline"
+-OutputFile - the path to save your timeline to. By default this saves to "C:\kape\timeline\Master_Timeline.xlsx"
 
 ## Features
-- Automatically combines all **Chainsaw CSV outputs** and into a single **Excel timeline**.
-- **Normalizes timestamps** into a readable format (MM/DD/YYYY HH:MM:SS).
+- Automatically combines all **Chainsaw CSV outputs** into a single csv
+- **Normalizes timestamps** into a readable format (yyyy-mm-dd hh:mm:ss) When you open excel you will need to select column A and use format > cutom format to fix the Date/Time field.
 - Assigns an **artifact name** to each row for easy identification.
 - Supports **color-coding** for different artifacts (see `color_macro.vbs` for details).
-- Preserves **important metadata** like event IDs, source addresses, user information, and service details.
-- Sorts the final timeline by **Date/Time**.
 
-## Known Issues
---- date aren't asigned as a value in excel you will have to reformat them as a date. = value (A2) or cut and past them out as values
+
+
 
 ## Requirements
 ### Windows:
 1. **PowerShell** (Version 5.1 or later)
 2. **ImportExcel PowerShell Module** (for Excel support)
-   ```powershell
+   powershell
    Install-Module ImportExcel -Force -Scope CurrentUser
 3. Chainsaw (https://github.com/WithSecureLabs/chainsaw)
 Optional:
-Excel Macro for Color Coding:
+4. Excel Macro for Color Coding:
 The file color_macro.vbs can be used to apply color coding to each row based on the artifact type.
 
-Color Coding (Excel)
-The following artifact types are color-coded for better visibility: use the macro in this repo to apply the color coding schema. Macro only runs in excel in Windows machines!
+
+# Forensic Timeliner
+
+A mini forensic timeline builder for KAPE outputs, Chainsaw+Sigma results, and web history data. This tool helps investigators build comprehensive timelines from diverse digital forensic artifacts.
+
+![Forensic Timeliner](https://raw.githubusercontent.com/yourusername/forensic_timeliner/main/images/banner.png)
+
+## Features
+
+- Processes forensic artifacts from multiple sources:
+  - KAPE/EZ Tools outputs
+  - Chainsaw CSV results
+  - Web browsing history
+- Normalizes data from different sources into a consistent timeline format
+- Categorizes web browsing history by type (Search, Download, File Access)
+- Supports filtering by date ranges
+- Deduplicates timeline entries
+- Exports to multiple formats (CSV, JSON, XLSX)
+- Interactive setup mode
+- Batch processing for large datasets
+
+## Requirements
+
+- Windows environment with PowerShell 5.1+
+- Optional: ImportExcel module (auto-installed if needed for XLSX export)
+
+## Usage
+
+### Quick Start
+
+```powershell
+.\forensic_timeliner.ps1 -Interactive
+```
+
+### Command-Line Options
+
+```powershell
+.\forensic_timeliner.ps1 -ChainsawDirectory "C:\kape\chainsaw" -OutputFile "C:\kape\timeline\Master_Timeline.csv"
+```
+
+### Parameters
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| -BaseDir | Base directory for KAPE output | C:\kape |
+| -KapeDirectory | Path to main KAPE timeline folder | $BaseDir\timeline |
+| -WebResultsPath | Path to webResults.csv | $BaseDir\browsinghistory\webResults.csv |
+| -ChainsawDirectory | Directory containing Chainsaw CSV files | $BaseDir\chainsaw |
+| -OutputFile | Output timeline file | $BaseDir\timeline\Master_Timeline.csv |
+| -ExportFormat | Output format (csv, json, xlsx) | csv |
+| -SkipEventLogs | Skip event logs processing | False |
+| -Deduplicate | Enable deduplication of timeline entries | False |
+| -Interactive | Launch interactive prompt | False |
+| -Help | Show help menu | False |
+
+## Field Mappings
+
+The tool normalizes various forensic artifacts into a consistent timeline format. Below is how fields from different sources map to the standardized timeline fields:
+
+### Common Timeline Fields
+
+| Field | Description |
+|-------|-------------|
+| DateTime | Timestamp of the event (normalized to yyyy/MM/dd HH:mm:ss) |
+| ArtifactName | Source artifact type (Amcache, MFT, Registry, etc.) |
+| EventId | Event ID (mostly for Windows Event Logs) |
+| Description | Category of activity (File System, Web Activity, Program Execution, etc.) |
+| Info | Additional contextual information |
+| DataPath | Primary path or URL information |
+| DataDetails | Details about the artifact (filename, title, etc.) |
+| User | User account related to the event |
+| Computer | Computer name |
+| FileSize | Size of the file (if applicable) |
+| FileExtension | Extension of the file (if applicable) |
+| UserSID | User Security Identifier |
+| MemberSID | Member Security Identifier (for group membership) |
+| ProcessName | Process name (if applicable) |
+| IPAddress | IP address (if applicable) |
+| LogonType | Logon type (for authentication events) |
+| Count | Count of occurrences (for aggregated events) |
+| SourceAddress | Source network address |
+| DestinationAddress | Destination network address |
+| ServiceType | Service type (for service-related events) |
+| CommandLine | Command line (for process execution) |
+| SHA1 | SHA1 hash (if available) |
+| EvidencePath | Path to the source evidence file |
+
+### Source-Specific Mappings
+
+#### Amcache (Program Execution)
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| FileKeyLastWriteTimestamp | DateTime |
+| FullPath | DataPath |
+| ProductName | Info |
+| Name | DataDetails |
+| FileExtension | FileExtension |
+| SHA1 | SHA1 |
+
+#### AppCompatCache
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| LastModifiedTimeUTC | DateTime |
+| Path | DataPath |
+| Path (filename extraction) | DataDetails |
+| "Last Modified" | Info |
+| SourceFile | EvidencePath |
+
+#### Jump Lists (AutomaticDestinations)
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| SourceCreated | DateTime |
+| Path | DataPath |
+| AppIdDescription | DataDetails |
+| "Source Created" | Info |
+| Hostname | Computer |
+| FileSize | FileSize |
+| SourceFile | EvidencePath |
+
+#### Event Logs
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| TimeCreated | DateTime |
+| EventId | EventId |
+| Channel | Description |
+| MapDescription | Info |
+| PayloadData1 | DataDetails |
+| PayloadData2 | DataPath |
+| Computer | Computer |
+| SourceFile | EvidencePath |
+
+#### File Deletion
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| DeletedOn | DateTime |
+| FileName | DataPath |
+| FileName (extracted) | DataDetails |
+| FileType | Info |
+| FileSize | FileSize |
+| SourceName | EvidencePath |
+
+#### LNK Files
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| TargetCreated/SourceCreated/TargetModified | DateTime |
+| LocalPath/TargetIDAbsolutePath/NetworkPath | DataPath |
+| Extracted filename | DataDetails |
+| "Target Created"/"Source Created"/"Target Modified" | Info |
+| FileSize | FileSize |
+| SourceFile | EvidencePath |
+
+#### MFT
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| Created0x10 | DateTime |
+| ParentPath | DataPath |
+| FileName | DataDetails |
+| "File Created" | Info |
+| FileSize | FileSize |
+| Extension | FileExtension |
+
+#### Prefetch Files
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| LastRun | DateTime |
+| SourceFilename | DataPath |
+| "Last Run" | Info |
+| ExecutableName | DataDetails |
+
+#### Registry
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| LastWriteTimestamp | DateTime |
+| ValueData | DataPath |
+| Category | Description |
+| Description | DataDetails |
+| Comment | Info |
+| HivePath | EvidencePath |
+
+#### Shellbags
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| LastWriteTime | DateTime |
+| AbsolutePath | DataPath |
+| Value | DataDetails |
+| "Last Write" | Info |
+
+#### Web History
+| EZ Tool Field | Timeline Field |
+|--------------|----------------|
+| Visit Time | DateTime |
+| URL | DataPath |
+| Web Browser | Info |
+| Title / Extracted Filename | DataDetails |
+| Description | Description (categorized as "Web Search", "Web Download", "File & Folder Access", or "Web Activity") |
+| User Profile | User |
+
+URL Categorization for Web History:
+- URLs starting with "file:///" are categorized as "File & Folder Access" with filename extraction
+- URLs containing search terms are categorized as "Web Search"
+- URLs containing download indicators are categorized as "Web Download" 
+- Other URLs are categorized as "Web Activity"
+
+#### Chainsaw CSV Files
+| Chainsaw Field | Timeline Field |
+|--------------|----------------|
+| timestamp | DateTime |
+| Event ID | EventId |
+| "Chainsaw" | Description |
+| detections | Info |
+| Various fields | DataPath (prioritized based on availability) |
+| Various fields | DataDetails (prioritized based on availability) |
+| User/User Name | User |
+| Computer | Computer |
+| User SID | UserSID |
+| Member SID | MemberSID |
+| Process Name | ProcessName |
+| IP Address | IPAddress |
+| Logon Type | LogonType |
+| count | Count |
+| Source Address | SourceAddress |
+| Dest Address | DestinationAddress |
+| Service Type | ServiceType |
+| CommandLine | CommandLine |
+| SHA1 | SHA1 |
+| path | EvidencePath |
+
+## Output Examples
+
+The timeline entries are formatted as follows:
+
+```
+DateTime,ArtifactName,Description,Info,DataDetails,DataPath,FileExtension,EvidencePath,EventId,User,Computer,CommandLine,ProcessName,FileSize,IPAddress,SourceAddress,DestinationAddress,LogonType,UserSID,MemberSID,ServiceType,SHA1,Count
+2023/02/15 08:43:22,WebHistory,Web Search,Chrome,How to create PowerShell script,https://www.google.com/search?q=how+to+create+powershell+script,,,,admin,DESKTOP-ABC123,,,,,,,,,,,
+2023/02/15 09:12:45,MFT,File System,File Created,script.ps1,C:\Users\admin\Documents,.ps1,,,,,,2048,,,,,,,,,,
+2023/02/15 09:15:33,Prefetch Files,Program Execution,Last Run,POWERSHELL.EXE,C:\Windows\Prefetch\POWERSHELL.EXE-1A2B3C4D.pf,,,,,,,,,,,,,,,,,
+```
+
+## Advanced Usage
+
+### MFT Filtering
+
+The tool provides options to filter MFT entries by file extension and path. Default filters include:
+
+- Extensions: .identifier, .exe, .ps1, .zip, .rar, .7z
+- Paths: Users, tmp
+
+These can be customized in interactive mode or by modifying the script parameters.
+
+### Event Log Filtering
+
+Event logs are filtered by channel and event ID. You can customize the filtering criteria in the script by modifying the `$EventChannelFilters` hashtable.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Built by [Your Name/Organization]
+- Thanks to Eric Zimmerman and the Kroll team for creating KAPE and EZ Tools
+- Inspired by the needs of DFIR practitioners everywhere
 
 
