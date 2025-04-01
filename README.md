@@ -10,7 +10,7 @@ Forensic Timeliner is a PowerShell-based tool that automates the process of aggr
 - Processes forensic artifacts from multiple sources:
   - KAPE/EZ Tools outputs
   - Chainsaw CSV results
-  - Web browsing history
+  - Web History View (Nirsoft)
 - Normalizes data from different sources into a consistent timeline format
 - Applies custom mapping and logic for several forensic artifacts
 - Prefilters MFT file and allows for custom path and file extension filters. 
