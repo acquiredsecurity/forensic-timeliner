@@ -204,7 +204,7 @@ Filter by file path looking for executables and file compression. Can be configu
 | LastWriteTime/FirstInteracted/LastInteracted | DateTime |
 | AbsolutePath | DataPath |
 | Value | DataDetails |
-| "Last Write" | Info |
+| Last Write, First/Last Interacted | Info |
 
 #### Web History
 | EZ Tool Field | Timeline Field |
