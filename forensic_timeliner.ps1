@@ -562,7 +562,7 @@ if (Test-Path $AmCachePath) {
                                     FileExtension  = $_."FileExtension"
                                     SHA1           = $_."SHA1"
                                 }
-                                Normalize-Row -Fields $row -ArtifactName "AmcacheExecution"
+                                Normalize-Row -Fields $row -ArtifactName "Amcache"
                             }
                             
                             # Add to master timeline
@@ -607,7 +607,7 @@ if (Test-Path $AmCachePath) {
                                 FileExtension  = $_."FileExtension"
                                 SHA1           = $_."SHA1"
                             }
-                            Normalize-Row -Fields $row -ArtifactName "AmcacheExecution"
+                            Normalize-Row -Fields $row -ArtifactName "Amcache"
                         }
                         
                         $MasterTimeline += $amRows
