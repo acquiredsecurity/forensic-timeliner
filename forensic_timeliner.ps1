@@ -556,9 +556,9 @@ if (Test-Path $AmCachePath) {
                                 $row = @{
                                     DateTime       = $_."FileKeyLastWriteTimestamp"
                                     DataPath       = $_."FullPath"
-                                    Info           = $_."ProductName"
+                                    Info           = $_."Last Write"
                                     Description    = "Program Execution"
-                                    DataDetails    = $_."Name"
+                                    DataDetails    = $_."ApplicationName"
                                     FileExtension  = $_."FileExtension"
                                     SHA1           = $_."SHA1"
                                 }
@@ -601,9 +601,9 @@ if (Test-Path $AmCachePath) {
                             $row = @{
                                 DateTime       = $_."FileKeyLastWriteTimestamp"
                                 DataPath       = $_."FullPath"
-                                Info           = $_."ProductName"
+                                Info           = $_."Last Write"
                                 Description    = "Program Execution"
-                                DataDetails    = $_."Name"
+                                DataDetails    = $_."ApplicationName"
                                 FileExtension  = $_."FileExtension"
                                 SHA1           = $_."SHA1"
                             }
@@ -1972,7 +1972,7 @@ if (Test-Path $RegistryPath) {
                                 DataPath     = $_."ValueData"
                                 Description  =  $_."Category"
                                 DataDetails  = $_."Description"
-                                Info         = $_."Comment"
+                                Info         = "Last Write"
                                 EvidencePath = $_."HivePath"
                             }
                             Normalize-Row -Fields $row -ArtifactName "Registry"
@@ -2004,8 +2004,8 @@ if (Test-Path $RegistryPath) {
                                 DateTime     = $_."LastWriteTimestamp"
                                 DataPath     = $_."ValueData"
                                 Description  =  $_."Category"
-                                DataDetails  = $_."HiveType"
-                                Info         = $_."Description"
+                                DataDetails  = $_."Description"
+                                Info         = "Last Write"
                                 EvidencePath = $_."HivePath"
                         }
                         Normalize-Row -Fields $row -ArtifactName "Registry"
