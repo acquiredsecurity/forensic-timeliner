@@ -4,7 +4,7 @@ Forensic Timeliner is a PowerShell-based tool that automates the process of aggr
 Quickstart:
 
 Download Sample Data and unzip to the root of C.
-Sample Data: https://drive.google.com/file/d/1iiRbfYwlEmrEM_JSALbcJd_iqHAIWTD8/view?usp=sharing
+https://drive.google.com/file/d/1iiRbfYwlEmrEM_JSALbcJd_iqHAIWTD8/view?usp=sharing
 Run this command in PowerShell and use all default prompts.
 .\forensic_timeliner.ps1 -i
 
