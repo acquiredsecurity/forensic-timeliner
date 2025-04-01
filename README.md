@@ -1,13 +1,14 @@
 ## Forensic Timeliner
 Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifact CSV data output from [Chainsaw](https://github.com/WithSecureLabs/chainsaw) and KAPE / [EZTools](https://github.com/EricZimmerman) into a structured **MINI** **Master Timeline** and can output to CSV, JSON and XLSX. Use this tool to quickly get your analysis started on a host by combining the output of Kape/EZ Tools and Chainsaw output. Use the VB macro to color code the artifacts and once you have formatted the Date/Time Column you can sort by Date/Time and start the anlaysis. This tool is designed for forensic analysts who need to quickly timeline and triage using output from Kape, EZTools WebHistoryView and Chainsaw mainly focused on standard !Sans Kape output.
 
-Quickstart:
+## Quick Start
 
-Download Sample Data and unzip to the root of C.
-https://drive.google.com/file/d/1iiRbfYwlEmrEM_JSALbcJd_iqHAIWTD8/view?usp=sharing
-Run this command in PowerShell and use all default prompts.
-.\forensic_timeliner.ps1 -i
+1. Download [Sample Data](https://drive.google.com/file/d/1iiRbfYwlEmrEM_JSALbcJd_iqHAIWTD8/view?usp=sharing) and unzip to the root of C:
 
+2. Run the script with interactive mode:
+```powershell
+.\forensic_timeliner.ps1 -Interactive
+```
 
 
 Video:
