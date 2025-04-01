@@ -13,6 +13,8 @@ Forensic Timeliner is a PowerShell-based tool that automates the process of aggr
   - Web browsing history
 - Normalizes data from different sources into a consistent timeline format
 - Applies custom mapping and logic for several forensic artifacts
+- Prefilters MFT file and allows for custom path and file extension filters. 
+- Prefilters Event log data for high priority Event IDs. Can adjust as needed.
 - Categorizes web browsing history by type (Search, Download, File Access)
 - Supports filtering by date ranges
 - Deduplicates timeline entries
