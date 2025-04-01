@@ -37,7 +37,7 @@ Sub ColorRowsByArtifactName_Simple()
 
     ' Assign background colors - SORTED ALPHABETICALLY
     colorMap.Add "account_tampering", RGB(0, 0, 255) ' Blue
-    colorMap.Add "AmcacheExecution", RGB(135, 206, 235) ' Sky Blue
+    colorMap.Add "Amcache", RGB(135, 206, 235) ' Sky Blue
     colorMap.Add "antivirus", RGB(0, 128, 0) ' Green
     colorMap.Add "AppCompatCache", RGB(176, 224, 230) ' Powder Blue
     colorMap.Add "EventLogs", RGB(153, 50, 204) ' Dark Orchid
@@ -63,7 +63,7 @@ Sub ColorRowsByArtifactName_Simple()
 
     ' Assign contrasting font colors - SORTED ALPHABETICALLY
     fontColorMap.Add "account_tampering", RGB(255, 255, 255) ' White
-    fontColorMap.Add "AmcacheExecution", RGB(0, 0, 0) ' Black
+    fontColorMap.Add "Amcache", RGB(0, 0, 0) ' Black
     fontColorMap.Add "antivirus", RGB(255, 255, 255) ' White
     fontColorMap.Add "AppCompatCache", RGB(0, 0, 0) ' Black
     fontColorMap.Add "EventLogs", RGB(255, 255, 255) ' White
