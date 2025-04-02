@@ -553,8 +553,20 @@ if (Test-Path $AmCachePath) {
                             
                             # Process batch data
                             $amRows = $batchData | ForEach-Object {
+                                # Format the DateTime properly
+                                $dateTimeString = $_."FileKeyLastWriteTimestamp"
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                }
+                                catch {
+                                    # Handle potential parsing errors
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                                }
+                                
                                 $row = @{
-                                    DateTime       = $_."FileKeyLastWriteTimestamp"
+                                    DateTime       = $dateTimeFormatted 
                                     DataPath       = $_."FullPath"
                                     Info           = $_."Last Write"
                                     Description    = "Program Execution"
@@ -598,8 +610,20 @@ if (Test-Path $AmCachePath) {
                         $batchData = Import-Csv $tempFile
                         
                         $amRows = $batchData | ForEach-Object {
+                            # Format the DateTime properly
+                            $dateTimeString = $_."FileKeyLastWriteTimestamp"
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            catch {
+                                # Handle potential parsing errors
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                            }
+
                             $row = @{
-                                DateTime       = $_."FileKeyLastWriteTimestamp"
+                                DateTime       = $dateTimeFormatted 
                                 DataPath       = $_."FullPath"
                                 Info           = $_."Last Write"
                                 Description    = "Program Execution"
@@ -1985,28 +2009,53 @@ if (Test-Path $RegistryPath) {
                     
                     if ($batchCount -ge $BatchSize) {
                         $tempFile = [System.IO.Path]::GetTempFileName()
-                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
-                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
                         
-                        $batchData = Import-Csv $tempFile
-                        
-                        $regRows = $batchData | ForEach-Object {
-                            $row = @{
-                                DateTime     = $_."LastWriteTimestamp"
-                                DataPath     = $_."ValueData"
-                                Description  =  $_."Category"
-                                DataDetails  = $_."Description"
-                                Info         = "Last Write"
-                                EvidencePath = $_."HivePath"
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            $batchData = Import-Csv $tempFile
+                            
+                            $regRows = $batchData | ForEach-Object {
+                                # Format the DateTime properly
+                               $dateTimeString = $_."LastWriteTimestamp"
+								try {
+									# Only attempt to parse if the string is not empty
+									if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+										$dateTime = [datetime]::Parse($dateTimeString)
+										$dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+									} else {
+										# Handle empty date strings
+										$dateTimeFormatted = "N/A"
+									}
+								}
+								catch {
+									# Handle potential parsing errors with more detail
+									Write-Host "    Error parsing date: '$dateTimeString' in registry entry" -ForegroundColor Yellow
+									$dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+									}                       
+                                $row = @{
+                                    DateTime     = $dateTimeFormatted
+                                    DataPath     = $_."ValueData"
+                                    Description  = $_."Category"
+                                    DataDetails  = $_."Description"
+                                    Info         = "Last Write"
+                                    EvidencePath = $_."HivePath"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Registry"
                             }
-                            Normalize-Row -Fields $row -ArtifactName "Registry"
+                            
+                            $MasterTimeline += $regRows
+                            $totalRowsAdded += $regRows.Count
+                            $totalProcessed += $batchCount
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
                         }
                         
-                        $MasterTimeline += $regRows
-                        $totalRowsAdded += $regRows.Count
-                        $totalProcessed += $batchCount
-                        
-                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
                         $batch.Clear()
                         $batchCount = 0
                         
@@ -2018,34 +2067,60 @@ if (Test-Path $RegistryPath) {
                 # Process remaining entries
                 if ($batch.Count -gt 0) {
                     $tempFile = [System.IO.Path]::GetTempFileName()
-                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
-                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
                     
-                    $batchData = Import-Csv $tempFile
-                    
-                    $regRows = $batchData | ForEach-Object {
-                        $row = @{
-                                DateTime     = $_."LastWriteTimestamp"
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        $batchData = Import-Csv $tempFile
+                        
+                        $regRows = $batchData | ForEach-Object {
+                            # Format the DateTime properly
+                             $dateTimeString = $_."LastWriteTimestamp"
+								try {
+									# Only attempt to parse if the string is not empty
+									if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+										$dateTime = [datetime]::Parse($dateTimeString)
+										$dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+									} else {
+										# Handle empty date strings
+										$dateTimeFormatted = "N/A"
+									}
+								}
+								catch {
+									# Handle potential parsing errors with more detail
+									Write-Host "    Error parsing date: '$dateTimeString' in registry entry" -ForegroundColor Yellow
+									$dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+									}
+                            
+                            $row = @{
+                                DateTime     = $dateTimeFormatted
                                 DataPath     = $_."ValueData"
-                                Description  =  $_."Category"
+                                Description  = $_."Category"
                                 DataDetails  = $_."Description"
                                 Info         = "Last Write"
                                 EvidencePath = $_."HivePath"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Registry"
                         }
-                        Normalize-Row -Fields $row -ArtifactName "Registry"
+                        
+                        $MasterTimeline += $regRows
+                        $totalRowsAdded += $regRows.Count
+                        $totalProcessed += $batch.Count
                     }
-                    
-                    $MasterTimeline += $regRows
-                    $totalRowsAdded += $regRows.Count
-                    $totalProcessed += $batch.Count
-                    
-                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    catch {
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    }
                 }
                 
                 $reader.Close()
                 
                 Write-Host "  Processed $totalProcessed registry entries, added $totalRowsAdded to timeline from $($file.Name)" -ForegroundColor Green
-            } catch {
+            } 
+            catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
             
@@ -2058,7 +2133,6 @@ if (Test-Path $RegistryPath) {
     Write-Host "  Registry path not found: $RegistryPath" -ForegroundColor Yellow
 }
 
-# Process Shellbags
 # Process Shellbags
 Write-Host "Processing Shellbags" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
