@@ -400,7 +400,7 @@ function Process-EventLogBatch {
         # Process filtered entries
         $results = @()
         foreach ($entry in $filtered) {
-            $dt = try { [datetime]::Parse($entry.TimeCreated).ToString("yyyy/MM/dd HH:mm:ss") } catch { $entry.TimeCreated }
+            $dt = try { [datetime]::Parse($entry.TimeCreated).ToString("yyyy-MM-dd HH:mm:ss") } catch { $entry.TimeCreated }
             $row = @{
                 DateTime       = $dt
                 EventId        = $entry."EventId"
@@ -941,7 +941,7 @@ if (!$SkipEventLogs) {
                                         # Format full timestamps and drop microseconds
                                         else {
                                             $dateTime = [datetime]::Parse($dateTimeString)
-                                            $dateTimeFormatted = $dateTime.ToString("yyyy/MM/dd HH:mm:ss")
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
                                         }
                                     } catch {
                                         # Keep original string if parsing fails
@@ -1051,7 +1051,7 @@ if (!$SkipEventLogs) {
                                     # Format full timestamps and drop microseconds
                                     else {
                                         $dateTime = [datetime]::Parse($dateTimeString)
-                                        $dateTimeFormatted = $dateTime.ToString("yyyy/MM/dd HH:mm:ss")
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
                                     }
                                 } catch {
                                     # Keep original string if parsing fails
@@ -1676,7 +1676,7 @@ if (Test-Path $MFTPath) {
                         
                         # Process filtered entries
                         $mftRows = $filteredData | ForEach-Object {
-                            $dt = try { [datetime]::Parse($_.Created0x10).ToString("yyyy/MM/dd HH:mm:ss") } catch { $_.Created0x10 }
+                            $dt = try { [datetime]::Parse($_.Created0x10).ToString("yyyy-MM-dd HH:mm:ss") } catch { $_.Created0x10 }
                             $row = @{
                                 DateTime       = $dt
                                 DataPath       = $_."ParentPath"
@@ -1737,7 +1737,7 @@ if (Test-Path $MFTPath) {
                     }
                     
                     $mftRows = $filteredData | ForEach-Object {
-                        $dt = try { [datetime]::Parse($_.Created0x10).ToString("yyyy/MM/dd HH:mm:ss") } catch { $_.Created0x10 }
+                        $dt = try { [datetime]::Parse($_.Created0x10).ToString("yyyy-MM-dd HH:mm:ss") } catch { $_.Created0x10 }
                         $row = @{
                             DateTime       = $dt
                             DataPath       = $_."ParentPath"
@@ -2470,7 +2470,7 @@ if ($fileCount -gt 0) {
                                     # Try parsing with timezone handling
                                     $dateObj = [datetime]::Parse($_.$timestampField, [System.Globalization.CultureInfo]::InvariantCulture, 
                                         [System.Globalization.DateTimeStyles]::AdjustToUniversal)
-                                    $dateObj.ToString("yyyy/MM/dd HH:mm:ss")
+                                    $dateObj.ToString("yyyy-MM-dd HH:mm:ss")
                                 } 
                                 catch { 
                                     # If parsing fails, keep the original string
@@ -2478,7 +2478,7 @@ if ($fileCount -gt 0) {
                                 }
                             } else {
                                 # If no timestamp, use current date/time
-                                (Get-Date).ToString("yyyy/MM/dd HH:mm:ss")
+                                (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
                             }
                         
                             $row = @{
@@ -2576,7 +2576,7 @@ if ($fileCount -gt 0) {
                                 # Try parsing with timezone handling
                                 $dateObj = [datetime]::Parse($_.$timestampField, [System.Globalization.CultureInfo]::InvariantCulture, 
                                     [System.Globalization.DateTimeStyles]::AdjustToUniversal)
-                                $dateObj.ToString("yyyy/MM/dd HH:mm:ss")
+                                $dateObj.ToString("yyyy-MM-dd HH:mm:ss")
                             } 
                             catch { 
                                 # If parsing fails, keep the original string
@@ -2584,7 +2584,7 @@ if ($fileCount -gt 0) {
                             }
                         } else {
                             # If no timestamp, use current date/time
-                            (Get-Date).ToString("yyyy/MM/dd HH:mm:ss")
+                            (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
                         }
                     
                         $row = @{
