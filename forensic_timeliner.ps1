@@ -1792,7 +1792,7 @@ if (Test-Path $MFTPath) {
     Write-Host "  MFT path not found: $MFTPath" -ForegroundColor Yellow
 }
 # Process Prefetch Files
-# Process PECmd (Prefetch Files)
+
 Write-Host "Processing Prefetch Files" -ForegroundColor Cyan
 $PECmdPath = Join-Path $KapeDirectory $ProgramExecSubDir
 if (Test-Path $PECmdPath) {
@@ -1841,8 +1841,20 @@ if (Test-Path $PECmdPath) {
                             
                             # Process batch data using exact same field mappings as your original code
                             $peRows = $batchData | ForEach-Object {
+                                        # Format the DateTime properly
+                                        $dateTimeString = $_."LastRun"
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        }
+                                        catch {
+                                            # Handle potential parsing errors
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                            $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                                        }
+
                                 $row = @{
-                                    DateTime     = $_."LastRun"
+                                    DateTime     = $dateTimeFormatted
                                     DataPath     = $_."SourceFilename"
                                     Info         = "Last Run"
                                     DataDetails  = $_."ExecutableName"
@@ -1887,8 +1899,20 @@ if (Test-Path $PECmdPath) {
                         
                         # Process remaining batch with same field mappings
                         $peRows = $batchData | ForEach-Object {
+                                 # Format the DateTime properly
+                            $dateTimeString = $_."LastRun"
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            catch {
+                                # Handle potential parsing errors
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                            }
+
                             $row = @{
-                                DateTime     = $_."LastRun"
+                                DateTime     = $dateTimeFormatted 
                                 DataPath     = $_."SourceFilename"
                                 Info         = "Last Run"
                                 DataDetails  = $_."ExecutableName"
@@ -2223,7 +2247,7 @@ if (Test-Path $lnkPath) {
     Write-Host "  Shellbags path not found: $lnkPath" -ForegroundColor Yellow
 }
 
-# Web History
+
 # Web History
 Write-Host "Processing Web History" -ForegroundColor Cyan
 if (Test-Path $WebResultsPath) {
@@ -2268,7 +2292,17 @@ if (Test-Path $WebResultsPath) {
                         # Extract filename if URL starts with file://
                         $dataDetails = $_."Title"
                         $url = $_."URL"
-                        
+                        # Format the DateTime properly
+                    $dateTimeString = $_."Visit Time"
+                        try {
+                            $dateTime = [datetime]::Parse($dateTimeString)
+                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                        }
+                        catch {
+                            # Handle potential parsing errors
+                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                            $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                        }
                         # Default description
                         $description = "Web Activity"
                         
@@ -2293,7 +2327,7 @@ if (Test-Path $WebResultsPath) {
                         }
                         
                         $row = @{
-                            DateTime     = $_."Visit Time"
+                            DateTime     = $dateTimeFormatted
                             DataPath     = $url
                             Info         = $_."Web Browser"
                             DataDetails  = $dataDetails
@@ -2343,6 +2377,16 @@ if (Test-Path $WebResultsPath) {
                     $dataDetails = $_."Title"
                     $url = $_."URL"
                     
+                    $dateTimeString = $_."Visit Time"
+                    try {
+                        $dateTime = [datetime]::Parse($dateTimeString)
+                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                    }
+                    catch {
+                        # Handle potential parsing errors
+                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                        $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                    }
                     # Default description
                     $description = "Web Activity"
                     
@@ -2367,7 +2411,7 @@ if (Test-Path $WebResultsPath) {
                     }
                     
                     $row = @{
-                        DateTime     = $_."Visit Time"
+                        DateTime     = $dateTimeFormatted 
                         DataPath     = $url
                         Info         = $_."Web Browser"
                         DataDetails  = $dataDetails
@@ -2402,7 +2446,7 @@ if (Test-Path $WebResultsPath) {
 } else {
     Write-Host "  Web history file not found: $WebResultsPath" -ForegroundColor Yellow
 }
-# Process Chainsaw CSV files
+
 # Process Chainsaw CSV files
 Write-Host "Processing Chainsaw CSV Files" -ForegroundColor Cyan
 $ChainsawFiles = Get-ChildItem -Path $ChainsawDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "webResults.csv" }
