@@ -5,8 +5,8 @@ Forensic Timeliner is a PowerShell-based tool that automates the process of aggr
 
 Use this tool to quickly get your analysis started on a host by combining the output of:
 - Kape/EZ Tools 
-- Chainsaw 
-- Hayabusa output
+- Chainsaw + Rules + Sigma
+- Hayabusa + Rules + Sigma
 
 Use the VB macro to color code the artifacts and once you have formatted the Date/Time Column you can sort by Date/Time and start the analysis. 
 
