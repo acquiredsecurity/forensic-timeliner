@@ -8,6 +8,8 @@ param (
     [ValidateSet("xlsx", "csv", "json")]
     [string]$ExportFormat = "csv",                                                           # Output Format  CSV for timeline creation with Json and Xlsx Options
     [switch]$SkipEventLogs,                                                                  # Skip event logs processing
+	[string]$HayabusaDirectory = "$BaseDir\hayabusa",                                        # Directory containing Hayabusa CSV files
+	[switch]$SkipHayabusa,                                                                   # Skip Hayabusa processing
     [string]$RegistrySubDir = "Registry",                                                    # Registry subdirectory under KapeDirectory
     [string]$ProgramExecSubDir = "ProgramExecution",                                         # Program execution subdirectory
     [string]$FileFolderSubDir = "FileFolderAccess",                                          # File/Folder access subdirectory
@@ -78,6 +80,8 @@ if ($Help) {
     Write-Host "Parameters:" -ForegroundColor Yellow
     Write-Host "  -KapeDirectory       Default path for Kape CSV Output Registry/FileSystem/EventLogs/etc.. (default: $BaseDir\timeline)"
     Write-Host "  -ChainsawDirectory   Default path to Chainsaw CSVs (default: $BaseDir\chainsaw)"
+	Write-Host "  -HayabusaDirectory   Default path to Hayabusa CSVs (default: $BaseDir\hayabusa)"
+	Write-Host "  -SkipHayabusa        Skip Hayabusa processing"
     Write-Host "  -WebResultsPath      Default path to webResults.csv **Include file name** (default: $BaseDir\browsinghistory\webResults.csv)"
     Write-Host "  -RegistrySubDir      Default name of Registry subdirectory under KapeDirectory (default: Registry)"
     Write-Host "  -ProgramExecSubDir   Default name of Program Execution subdirectory under KapeDirectory (default: ProgramExecution)"
@@ -115,12 +119,27 @@ if ($Interactive) {
 
     $ChainsawDirectory = Read-Host "Path to Chainsaw CSVs [Default: $BaseDir\chainsaw]"
     if (-not $ChainsawDirectory) { $ChainsawDirectory = "$BaseDir\chainsaw" }
+	
+	$HayabusaDirectory = Read-Host "Path to Hayabusa CSVs [Default: $BaseDir\hayabusa]"
+	if (-not $HayabusaDirectory) { $HayabusaDirectory = "$BaseDir\hayabusa" }
+
+
+		# Ask if User would like to process Hayabusa results
+		$processHayabusaPrompt = Read-Host "Include Hayabusa processing? (Hayabusa provides additional event log analysis) (y/n) [Default: n]"
+		if ($processHayabusaPrompt -eq "y") {
+			$SkipHayabusa = $false
+			Write-Host "  Hayabusa processing will be included" -ForegroundColor Green
+		} else {
+			$SkipHayabusa = $true
+			Write-Host "  Hayabusa processing will be skipped" -ForegroundColor Yellow
+		}
 
     $WebResultsPath = Read-Host "Path to BrowsingHistoryView output file webResults.csv [Default: $BaseDir\browsinghistory\webResults.csv]"
     if (-not $WebResultsPath) { 
         $WebResultsPath = "$BaseDir\browsinghistory\webResults.csv" 
     }
     
+	
     # Validate the web history path to ensure it includes a filename
     if (-not [string]::IsNullOrEmpty($WebResultsPath) -and (Test-Path $WebResultsPath -PathType Container)) {
         # If user entered a directory, append the default filename
@@ -173,8 +192,10 @@ if ($Interactive) {
                 Write-Host "  Updated MFT path filter: $($MFTPathFilter -join ", ")" -ForegroundColor Green
             }
         }
+	
 
-        # safely change the extension if needed
+		
+		# safely change the extension if needed
     if (-not $OutputFile.EndsWith($fileExtension)) {
         $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $fileExtension.TrimStart('.'))
     }
@@ -268,6 +289,7 @@ if (-not $ChainsawDirectory) { $ChainsawDirectory = "$BaseDir\chainsaw" }
 if (-not $OutputFile) { $OutputFile = "$BaseDir\timeline\Master_Timeline.csv" }
 if (-not $WebResultsPath) { $WebResultsPath = "$BaseDir\browsinghistory\webResults.csv" }
 if (-not $KapeDirectory) { $KapeDirectory = "$BaseDir\timeline" }
+if (-not $HayabusaDirectory) { $HayabusaDirectory = "$BaseDir\hayabusa" }
 
 # Adjust extension based on export format
 $desiredExtension = "." + $ExportFormat.ToLower()
@@ -501,6 +523,14 @@ if (Test-Path $WebResultsPath) {
 # Check for Chainsaw Files
 $ChainsawFiles = @(Get-ChildItem -Path $ChainsawDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "webResults.csv" })
 $script:totalSources += $ChainsawFiles.Count
+
+
+# Check Hayabusa
+if (-not $SkipHayabusa) {
+    $HayabusaFiles = @(Get-ChildItem -Path $HayabusaDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue)
+    $script:totalSources += $HayabusaFiles.Count
+}
+
 
 # Start overall progress tracking
 Write-Progress -Activity "Building Forensic Timeline" -Status "Initializing" -PercentComplete 0 -Id 0
@@ -2403,7 +2433,7 @@ if (Test-Path $WebResultsPath) {
                         $row = @{
                             DateTime     = $dateTimeFormatted
                             DataPath     = $url
-                            Info         = $_."Web Browser"
+                            Info         = "EventTime"
                             DataDetails  = $dataDetails
                             Description  = $description
                             User         = $_."User Profile"
@@ -2487,7 +2517,7 @@ if (Test-Path $WebResultsPath) {
                     $row = @{
                         DateTime     = $dateTimeFormatted 
                         DataPath     = $url
-                        Info         = $_."Web Browser"
+                        Info         = "EventTime"
                         DataDetails  = $dataDetails
                         Description  = $description
                         User         = $_."User Profile"
@@ -2603,7 +2633,7 @@ if ($fileCount -gt 0) {
                                 DateTime           = $dt
                                 EventId            = $_."Event ID"
                                 Description        = "Chainsaw"
-                                Info               = $_."detections"
+                                Info               = "EventTime"
                                 DataPath = $(if ($_."Threat Path") { 
                                     $_."Threat Path" 
                                 } elseif ($_."Scheduled Task Name") { 
@@ -2621,13 +2651,7 @@ if ($fileCount -gt 0) {
                                 } else {
                                     ""
                                 })
-                                DataDetails = $(if ($_."Threat Name") { 
-                                    $_."Threat Name" 
-                                } elseif ($_."Service Name") { 
-                                    $_."Service Name" 
-                                } else {
-                                    ""  
-                                })
+                                DataDetails = $_."detections"
                                 User = $(if ($_."User") { 
                                     $_."User" 
                                 } elseif ($_."User Name") { 
@@ -2635,6 +2659,7 @@ if ($fileCount -gt 0) {
                                 } else {
                                     "Unknown User"
                                 })
+							
                                 Computer           = $_."Computer"
                                 UserSID            = $_."User SID"
                                 MemberSID          = $_."Member SID"
@@ -2709,7 +2734,7 @@ if ($fileCount -gt 0) {
                             DateTime           = $dt
                             EventId            = $_."Event ID"
                             Description        = "Chainsaw"
-                            Info               = $_."detections"
+                            Info               = "EventTime"
                             DataPath = $(if ($_."Threat Path") { 
                                 $_."Threat Path" 
                             } elseif ($_."Scheduled Task Name") { 
@@ -2727,13 +2752,7 @@ if ($fileCount -gt 0) {
                             } else {
                                 ""
                             })
-                            DataDetails = $(if ($_."Threat Name") { 
-                                $_."Threat Name" 
-                            } elseif ($_."Service Name") { 
-                                $_."Service Name" 
-                            } else {
-                                ""  
-                            })
+                            DataDetails = $_."detections"
                             User = $(if ($_."User") { 
                                 $_."User" 
                             } elseif ($_."User Name") { 
@@ -2741,6 +2760,7 @@ if ($fileCount -gt 0) {
                             } else {
                                 "Unknown User"
                             })
+						
                             Computer           = $_."Computer"
                             UserSID            = $_."User SID"
                             MemberSID          = $_."Member SID"
@@ -2784,6 +2804,189 @@ if ($fileCount -gt 0) {
 } else {
     Write-Host "  No Chainsaw CSV files found in $ChainsawDirectory" -ForegroundColor Yellow
 }
+
+# Process Hayabusa CSV files
+if (-not $SkipHayabusa) {
+    Write-Host "Processing Hayabusa CSV Files" -ForegroundColor Cyan
+    $HayabusaFiles = Get-ChildItem -Path $HayabusaDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue
+    $fileCount = $HayabusaFiles.Count
+
+    if ($fileCount -gt 0) {
+        $fileCounter = 0
+        foreach ($hayabusaFile in $HayabusaFiles) {
+            $fileCounter++
+            Show-ProcessingProgress -Activity "Processing Hayabusa Files" -Status "File: $($hayabusaFile.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+            
+            try {
+               $artifactName = "EventLogs"
+                
+                # Use streaming approach for large files
+                $reader = New-Object System.IO.StreamReader($hayabusaFile.FullName)
+                $headerLine = $reader.ReadLine()
+                
+                # Check column headers to determine format
+                $headers = $headerLine -split ','
+                # Select appropriate timestamp field - will need adjustment for actual Hayabusa format
+                $timestampField = "Timestamp" # Default field name, adjust as needed for Hayabusa
+                
+                $batchCount = 0
+                $totalProcessed = 0
+                $totalAdded = 0
+                $batch = New-Object System.Collections.ArrayList
+                
+                # Process the file line by line in batches
+                while (-not $reader.EndOfStream) {
+                    $line = $reader.ReadLine()
+                    
+                    # Skip empty lines
+                    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                    
+                    [void]$batch.Add($line)
+                    $batchCount++
+                    $totalProcessed++
+                    
+                    # Process in batches of the specified size
+                    if ($batchCount -ge $BatchSize) {
+                        # Create temp CSV file for the batch
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        
+                        try {
+                            # Write header and batch to temp file
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            # Import batch data
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Process batch data - this is placeholder code, you'll need to adjust for actual Hayabusa fields
+                            $hayabusaRows = $batchData | ForEach-Object {
+                                # Improved timestamp parsing that handles ISO 8601 format with timezone info
+                                $dt = if ($_.$timestampField) {
+                                    try { 
+                                        # Try parsing with timezone handling
+                                        $dateObj = [datetime]::Parse($_.$timestampField, [System.Globalization.CultureInfo]::InvariantCulture, 
+                                            [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+                                        $dateObj.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } 
+                                    catch { 
+                                        # If parsing fails, keep the original string
+                                        $_.$timestampField 
+                                    }
+                                } else {
+                                    # If no timestamp, use current date/time
+                                    (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+                                }
+                            
+                                # These field mappings will need to be adjusted based on actual Hayabusa CSV format
+                                $row = @{
+                                    DateTime          = $dt
+                                    EventId           = $_."EventID"
+                                    Description       = "Hayabusa"
+                                    Info              = $_."EventTime" 
+                                    DataPath          = $_."Details" 
+                                    DataDetails       = $_."RuleTitle" 
+                                    Computer          = $_."Computer"
+                                    EvidencePath      = $_."Channel"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "EventLogs"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $hayabusaRows
+                            $totalAdded += $hayabusaRows.Count
+                            
+                            # Update progress
+                            if ($totalProcessed % 5000 -eq 0) {
+                                Show-ProcessingProgress -Activity "Processing Hayabusa: $($hayabusaFile.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            # Clean up temp file
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        
+                        # Reset batch
+                        $batch.Clear()
+                        $batchCount = 0
+                    }
+                }
+                
+                # Process any remaining lines
+                if ($batch.Count -gt 0) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        $batchData = Import-Csv $tempFile
+                        
+                        # Process remaining batch with same logic - placeholder code
+                        $hayabusaRows = $batchData | ForEach-Object {
+                            # Timestamp parsing
+                            $dt = if ($_.$timestampField) {
+                                try { 
+                                    $dateObj = [datetime]::Parse($_.$timestampField, [System.Globalization.CultureInfo]::InvariantCulture, 
+                                        [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+                                    $dateObj.ToString("yyyy-MM-dd HH:mm:ss")
+                                } 
+                                catch { 
+                                    $_.$timestampField 
+                                }
+                            } else {
+                                (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                        
+                            # These field mappings will need to be adjusted based on actual Hayabusa CSV format
+                            $row = @{
+									DateTime          = $dt
+                                    EventId           = $_."EventID"
+                                    Description       = "Hayabusa"
+                                    Info              = $_."EventTime" 
+                                    DataPath          = $_."Details" 
+                                    DataDetails       = $_."RuleTitle" 
+                                    Computer          = $_."Computer"
+                                    EvidencePath      = $_."Channel"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "EventLogs"
+                        }
+                        
+                        $MasterTimeline += $hayabusaRows
+                        $totalAdded += $hayabusaRows.Count
+                    }
+                    catch {
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
+                
+                $reader.Close()
+                
+                # Report on processing results
+                Write-Host "  Added $totalAdded entries from $($hayabusaFile.Name)" -ForegroundColor Green
+            } catch {
+                Write-Host "  Error processing $($hayabusaFile.Name): $_" -ForegroundColor Red
+            }
+            
+            Update-OverallProgress -CurrentSource "Hayabusa"
+        }
+    } else {
+        Write-Host "  No Hayabusa CSV files found in $HayabusaDirectory" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Hayabusa processing skipped" -ForegroundColor Yellow
+}
+
+
+
 # Complete the overall progress bar
 Write-Progress -Activity "Building Forensic Timeline" -Status "Processing Complete" -PercentComplete 100 -Id 0 -Completed
 
