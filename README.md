@@ -68,18 +68,32 @@ https://www.youtube.com/watch?v=xyzViEKzLEk
 
 ### Parameters
 
-| Parameter | Description | Default |
+    | Parameter | Description | Default |
 |-----------|-------------|---------|
 | -BaseDir | Base directory for KAPE output | C:\kape |
 | -KapeDirectory | Path to main KAPE timeline folder | $BaseDir\timeline |
-| -WebResultsPath | Path to webResults.csv | $BaseDir\browsinghistory\webResults.csv |
+| -WebResultsPath | Path to webResults.csv (Nirsoft WebHistoryView) | $BaseDir\browsinghistory\webResults.csv |
 | -ChainsawDirectory | Directory containing Chainsaw CSV files | $BaseDir\chainsaw |
 | -OutputFile | Output timeline file | $BaseDir\timeline\Master_Timeline.csv |
 | -ExportFormat | Output format (csv, json, xlsx) | csv |
 | -SkipEventLogs | Skip event logs processing | False |
+| -HayabusaDirectory | Directory containing Hayabusa CSV files | $BaseDir\hayabusa |
 | -Deduplicate | Enable deduplication of timeline entries | False |
 | -Interactive | Launch interactive prompt | False |
 | -Help | Show help menu | False |
+| -RegistrySubDir | Directory containing Kape registry CSV files | $BaseDir\timeline\Registry |
+| -ProgramExecSubDir | Directory containing Kape program execution CSV files | $BaseDir\timeline\ProgramExecution |
+| -FileFolderSubDir | Directory containing Kape file/folder access CSV files | $BaseDir\timeline\FileFolderAccess |
+| -FileSystemSubDir | Directory containing Kape file system CSV files | $BaseDir\timeline\FileSystem |
+| -EventLogsSubDir | Directory containing Kape event log CSV files | $BaseDir\timeline\EventLogs |
+| -MFTExtensionFilter | set the file extnsions to filter by for the MFT | .identifier, .exe, .ps1, .zip, .rar, .7z |
+| -MFTPathFilter | set the file paths to filter by for the MFT | Users, TMP |
+| -BatchSize | Set how many rows are processed in each CSV at once | 10000 |
+| -StartDate | Filter by a Start Date to drop all records before that date | yyyy-mm-dd |
+| -EndDate | Filter by a End Date to drop all records after that date | yyyy-mm-dd |
+| Deduplicate | Remove Duplicate rows | off by default |
+| -Interactive | Bring up an interactive menu to guide you through these parameters | ... |
+| -Help | Display the help menu | Help, h |
 
 ## Field Mappings
 
