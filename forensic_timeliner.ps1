@@ -2199,16 +2199,28 @@ if (Test-Path $RegistryPath) {
 
 
 
+
 # Process Shellbags
 Write-Host "Processing Shellbags" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
 if (Test-Path $lnkPath) {
-    $shellbags = Get-ChildItem $lnkPath -Filter "*_UsrClass.csv" -ErrorAction SilentlyContinue
-    $fileCount = $shellbags.Count
+    # Get ALL CSV files first
+    $allCsvFiles = Get-ChildItem $lnkPath -Filter "*.csv" -Recurse -ErrorAction SilentlyContinue
+    
+    # Then filter for both types with explicit conditions
+    $allShellbags = $allCsvFiles | Where-Object { 
+        $_.Name -match '_UsrClass\.csv$' -or $_.Name -match '_NTUSER\.csv$'
+    }
+    
+    # Log what we found
+    Write-Host "Found $($allShellbags.Count) shellbag files:" -ForegroundColor Green
+    $allShellbags | ForEach-Object { Write-Host "  $($_.Name)" -ForegroundColor Gray }
+    
+    $fileCount = $allShellbags.Count
     
     if ($fileCount -gt 0) {
         $fileCounter = 0
-        foreach ($file in $shellbags) {
+        foreach ($file in $allShellbags) {
             $fileCounter++
             Show-ProcessingProgress -Activity "Processing Shellbags" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
@@ -2254,6 +2266,7 @@ if (Test-Path $lnkPath) {
                                     DataDetails = $_."Value"
                                     Description = "File & Folder Access"
                                     Info        = "Last Write"
+									EvidencePath = $file.Name 
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "Shellbags"
                             }
@@ -2268,6 +2281,7 @@ if (Test-Path $lnkPath) {
                                     DataDetails = $_."Value"
                                     Description = "File & Folder Access"
                                     Info        = "First Interacted"
+									EvidencePath = $file.Name 
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "Shellbags"
                             }
@@ -2282,6 +2296,7 @@ if (Test-Path $lnkPath) {
                                     DataDetails = $_."Value"
                                     Description = "File & Folder Access"
                                     Info        = "Last Interacted"
+									EvidencePath = $file.Name 
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "Shellbags"
                             }
@@ -2326,6 +2341,7 @@ if (Test-Path $lnkPath) {
                                 DataDetails = $_."Value"
                                 Description = "File & Folder Access"
                                 Info        = "Last Write"
+								EvidencePath = $file.Name 
                             }
                             Normalize-Row -Fields $row -ArtifactName "Shellbags"
                         }
@@ -2340,6 +2356,7 @@ if (Test-Path $lnkPath) {
                                 DataDetails = $_."Value"
                                 Description = "File & Folder Access"
                                 Info        = "First Interacted"
+								EvidencePath = $file.Name 
                             }
                             Normalize-Row -Fields $row -ArtifactName "Shellbags"
                         }
@@ -2354,6 +2371,7 @@ if (Test-Path $lnkPath) {
                                 DataDetails = $_."Value"
                                 Description = "File & Folder Access"
                                 Info        = "Last Interacted"
+								EvidencePath = $file.Name 
                             }
                             Normalize-Row -Fields $row -ArtifactName "Shellbags"
                         }
