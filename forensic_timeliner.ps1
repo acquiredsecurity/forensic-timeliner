@@ -695,6 +695,9 @@ if (Test-Path $AmCachePath) {
 }
 
 
+
+
+
 # Process AppCompatCache
 Write-Host "Processing AppCompatCache" -ForegroundColor Cyan
 $AppCompatCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
@@ -845,6 +848,9 @@ $EventChannelFilters = @{
     "SentinelOne/Operational" = @(1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110)
     "System" = @(7045)
 }
+
+
+
 
 # process event logs
 if (!$SkipEventLogs) {
@@ -1179,6 +1185,12 @@ if (!$SkipEventLogs) {
 }
 
 
+
+# After processing each artifact, perform garbage collection to free up resources
+[System.GC]::Collect()
+[System.GC]::WaitForPendingFinalizers()
+
+
 # Process File Deletion records
 Write-Host "Processing Deleted Files" -ForegroundColor Cyan
 $FileDeletionFiles = Get-ChildItem -Path $KapeDirectory -Recurse -Filter "*RBCmd*.csv" -ErrorAction SilentlyContinue
@@ -1335,7 +1347,11 @@ if ($fileCount -gt 0) {
     Write-Host "  No file deletion records found" -ForegroundColor Yellow
 }
 
-# Process LNK Files
+
+
+
+
+
 # Process LNK Files
 Write-Host "Processing LNK Files" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
@@ -1608,6 +1624,9 @@ if (Test-Path $lnkPath) {
     Write-Host "  LNK files path not found: $lnkPath" -ForegroundColor Yellow
 }
 
+
+
+
 # Process MFT Created with batching for large files
 Write-Host "Processing MFT File" -ForegroundColor Cyan
 
@@ -1845,6 +1864,14 @@ if (Test-Path $MFTPath) {
 } else {
     Write-Host "  MFT path not found: $MFTPath" -ForegroundColor Yellow
 }
+
+
+# After processing each artifact, perform garbage collection to free up resources
+[System.GC]::Collect()
+[System.GC]::WaitForPendingFinalizers()
+
+
+
 # Process Prefetch Files
 
 Write-Host "Processing Prefetch Files" -ForegroundColor Cyan
@@ -2005,6 +2032,8 @@ if (Test-Path $PECmdPath) {
     Write-Host "  Prefetch path not found: $PECmdPath" -ForegroundColor Yellow
 }
 
+
+
 # Process Registry
 Write-Host "Processing Registry" -ForegroundColor Cyan
 $RegistryPath = Join-Path $KapeDirectory $RegistrySubDir
@@ -2162,6 +2191,13 @@ if (Test-Path $RegistryPath) {
 } else {
     Write-Host "  Registry path not found: $RegistryPath" -ForegroundColor Yellow
 }
+
+
+# After processing each artifact, perform garbage collection to free up resources
+[System.GC]::Collect()
+[System.GC]::WaitForPendingFinalizers()
+
+
 
 # Process Shellbags
 Write-Host "Processing Shellbags" -ForegroundColor Cyan
@@ -2550,6 +2586,7 @@ if (Test-Path $WebResultsPath) {
 } else {
     Write-Host "  Web history file not found: $WebResultsPath" -ForegroundColor Yellow
 }
+
 
 # Process Chainsaw CSV files
 Write-Host "Processing Chainsaw CSV Files" -ForegroundColor Cyan
@@ -2984,7 +3021,9 @@ if (-not $SkipHayabusa) {
     Write-Host "  Hayabusa processing skipped" -ForegroundColor Yellow
 }
 
-
+# After processing each artifact, perform garbage collection to free up resources
+[System.GC]::Collect()
+[System.GC]::WaitForPendingFinalizers()
 
 # Complete the overall progress bar
 Write-Progress -Activity "Building Forensic Timeline" -Status "Processing Complete" -PercentComplete 100 -Id 0 -Completed
@@ -3055,18 +3094,39 @@ if ($Deduplicate) {
     
     # Create a hashtable to track unique entries
     $uniqueEntries = @{}
-    $uniqueTimeline = @()
+    $uniqueTimeline = [System.Collections.Generic.List[object]]::new()
     
-    foreach ($entry in $MasterTimeline) {
-        # Create a key based on date, path, and event details
-        $key = "$($entry.DateTime)_$($entry.DataPath)_$($entry.DataDetails)_$($entry.EventID)_$($entry.ArtifactName)"
+    # Batch processing parameters
+    $batchSize = 1000
+    $totalBatches = [Math]::Ceiling($MasterTimeline.Count / $batchSize)
+    
+    # Create a progress bar
+    for ($batch = 0; $batch -lt $totalBatches; $batch++) {
+        # Calculate the start and end indices for the current batch
+        $startIndex = $batch * $batchSize
+        $endIndex = [Math]::Min($startIndex + $batchSize - 1, $MasterTimeline.Count - 1)
         
-        # Only add unique entries
-        if (-not $uniqueEntries.ContainsKey($key)) {
-            $uniqueEntries[$key] = $true
-            $uniqueTimeline += $entry
+        # Progress bar
+        $percentComplete = [Math]::Floor(($batch / $totalBatches) * 100)
+        Write-Progress -Activity "Deduplicating Timeline" -Status "$percentComplete% Complete" -PercentComplete $percentComplete
+        
+        # Process the current batch
+        for ($i = $startIndex; $i -le $endIndex; $i++) {
+            $entry = $MasterTimeline[$i]
+            
+            # Create a key based on date, path, and event details
+            $key = "$($entry.DateTime)_$($entry.DataPath)_$($entry.DataDetails)_$($entry.EventID)_$($entry.ArtifactName)"
+            
+            # Only add unique entries
+            if (-not $uniqueEntries.ContainsKey($key)) {
+                $uniqueEntries[$key] = $true
+                $uniqueTimeline.Add($entry)
+            }
         }
     }
+    
+    # Complete the progress bar
+    Write-Progress -Activity "Deduplicating Timeline" -Status "Complete" -Completed
     
     # Replace the master timeline with the deduplicated version
     $MasterTimeline = $uniqueTimeline
