@@ -83,7 +83,7 @@ https://www.youtube.com/watch?v=xyzViEKzLEk
 | -BatchSize | Set how many rows are processed in each CSV at once | 10000 |
 | -StartDate | Filter by a Start Date to drop all records before that date | False|
 | -EndDate | Filter by a End Date to drop all records after that date | False |
-| Deduplicate | Remove Duplicate rows | False |
+| -Deduplicate | Remove Duplicate rows | False |
 | -Interactive | Launch interactive prompt  | False |
 | -Help | Display the help menu | False|
 
