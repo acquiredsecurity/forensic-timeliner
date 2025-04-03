@@ -137,7 +137,7 @@ Sub ColorRowsByArtifactName_Simple()
     For i = 2 To lastRow
         If InStr(1, ws.Cells(i, 3).Value, "Hayabusa", vbTextCompare) > 0 Then
             With ws.Range("A" & i & ":AC" & i)
-                .Interior.Color = RGB(0, 100, 0)  ' Dark Green
+                .Interior.Color = RGB(99, 100, 0)  ' Dark Green
                 .Font.Color = RGB(255, 255, 255)  ' White text
             End With
         End If
