@@ -148,7 +148,7 @@ if ($Interactive) {
     }
     
     # Handle output file path validation
-    $OutputFile = Read-Host "Path to Forensic Timeline output file [Default: $defaultOutputPath]"
+    $OutputFile = Read-Host "Path to save Forensic Timeline output file to [Default: $defaultOutputPath]"
     if (-not $OutputFile) { 
         $OutputFile = $defaultOutputPath 
     }
