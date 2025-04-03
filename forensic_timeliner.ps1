@@ -598,7 +598,7 @@ if (Test-Path $AmCachePath) {
                                 $row = @{
                                     DateTime       = $dateTimeFormatted 
                                     DataPath       = $_."FullPath"
-                                    Info           = $_."Last Write"
+                                    Info           = "Last Write"
                                     Description    = "Program Execution"
                                     DataDetails    = $_."ApplicationName"
                                     FileExtension  = $_."FileExtension"
@@ -655,7 +655,7 @@ if (Test-Path $AmCachePath) {
                             $row = @{
                                 DateTime       = $dateTimeFormatted 
                                 DataPath       = $_."FullPath"
-                                Info           = $_."Last Write"
+                                Info           = "Last Write"
                                 Description    = "Program Execution"
                                 DataDetails    = $_."ApplicationName"
                                 FileExtension  = $_."FileExtension"
