@@ -39,6 +39,7 @@ https://www.youtube.com/watch?v=xyzViEKzLEk
 - Processes forensic artifacts from multiple sources:
   - KAPE/EZ Tools outputs
   - Chainsaw CSV results
+  - Hayabusa CSV results
   - Web History View (Nirsoft)
 - Normalizes data from different sources into a consistent timeline format
 - Applies custom mapping and logic for several forensic artifacts
