@@ -68,7 +68,7 @@ https://www.youtube.com/watch?v=xyzViEKzLEk
 
 ### Parameters
 
-    | Parameter | Description | Default |
+ | Parameter | Description | Default |
 |-----------|-------------|---------|
 | -BaseDir | Base directory for KAPE output | C:\kape |
 | -KapeDirectory | Path to main KAPE timeline folder | $BaseDir\timeline |
