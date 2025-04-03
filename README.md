@@ -9,7 +9,7 @@ Use this tool to quickly get your analysis started on a host by combining the ou
 
 Use the VB macro to color code the artifacts and once you have formatted the Date/Time Column you can sort by Date/Time and start the analysis. This tool is designed for forensic analysts who need to quickly timeline and triage using output from:
 
-Main focused on standard !Sans Kape module output..
+!Sans Kape artifact module csv output..
 
 ## Quick Start
 
