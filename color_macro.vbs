@@ -15,7 +15,7 @@ Sub ColorRowsByArtifactName_Simple()
     ' Exit if no data
     If lastRow < 2 Then Exit Sub
     
-    ' Find the Info column (normally column D, but let's verify)
+    ' Find the Info column
     infoColumn = 0
     For col = 1 To 10 ' Search first 10 columns
         If ws.Cells(1, col).Value = "Info" Then
@@ -121,9 +121,9 @@ Sub ColorRowsByArtifactName_Simple()
             End If
             
             ' Format the entire row
-            With ws.Range("A" & i & ":AC" & i)
-                .Interior.Color = rowColor
-                .Font.Color = fontColorMap(artifactName)
+            With ws.Range("A" & i & ":W" & i)
+                .Interior.color = rowColor
+                .Font.color = fontColorMap(artifactName)
             End With
         End If
         
@@ -136,9 +136,9 @@ Sub ColorRowsByArtifactName_Simple()
     ' NEW: Color Hayabusa rows with dark green after initial coloring
     For i = 2 To lastRow
         If InStr(1, ws.Cells(i, 3).Value, "Hayabusa", vbTextCompare) > 0 Then
-            With ws.Range("A" & i & ":AC" & i)
-                .Interior.Color = RGB(99, 100, 0)  ' Dark Green
-                .Font.Color = RGB(255, 255, 255)  ' White text
+            With ws.Range("A" & i & ":W" & i)
+                .Interior.color = RGB(99, 100, 0)  ' Dark Green
+                .Font.color = RGB(255, 255, 255)  ' White text
             End With
         End If
     Next i
@@ -148,9 +148,9 @@ Sub ColorRowsByArtifactName_Simple()
     Application.Calculation = xlCalculationAutomatic
     
     ' Format header row with black background and white text
-    With ws.Range("A1:AC1")
-        .Interior.Color = RGB(0, 0, 0)
-        .Font.Color = RGB(255, 255, 255)
+    With ws.Range("A1:W1")
+        .Interior.color = RGB(0, 0, 0)
+        .Font.color = RGB(255, 255, 255)
         .Font.Bold = True
     End With
 
