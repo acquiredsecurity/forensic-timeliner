@@ -2882,11 +2882,10 @@ if (-not $SkipHayabusa) {
                                     DateTime          = $dt
                                     EventId           = $_."EventID"
                                     Description       = "Hayabusa"
-                                    Info              = $_."EventTime" 
+                                    Info              = $_."Channel"
                                     DataPath          = $_."Details" 
                                     DataDetails       = $_."RuleTitle" 
                                     Computer          = $_."Computer"
-                                    EvidencePath      = $_."Channel"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "EventLogs"
                             }
@@ -2946,11 +2945,11 @@ if (-not $SkipHayabusa) {
 									DateTime          = $dt
                                     EventId           = $_."EventID"
                                     Description       = "Hayabusa"
-                                    Info              = $_."EventTime" 
+                                    Info              = $_."Channel" 
                                     DataPath          = $_."Details" 
                                     DataDetails       = $_."RuleTitle" 
                                     Computer          = $_."Computer"
-                                    EvidencePath      = $_."Channel"
+                                 
                             }
                             Normalize-Row -Fields $row -ArtifactName "EventLogs"
                         }
