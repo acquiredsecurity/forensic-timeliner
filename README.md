@@ -1,4 +1,5 @@
 ## Forensic Timeliner
+![image](https://github.com/user-attachments/assets/ddc7a7d7-a67b-45e5-bb06-983d37529fbc)
 
 Forensic Timeliner is a PowerShell-based tool that automates the process of aggregating and formatting forensic artifact CSV data output from KAPE / [EZTools](https://github.com/EricZimmerman) / [Chainsaw](https://github.com/WithSecureLabs/chainsaw) / [Hayabusa](https://github.com/Yamato-Security/hayabusa) into a structured **MINI Timeline** and can output to CSV, JSON and XLSX. 
 
