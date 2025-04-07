@@ -8,11 +8,13 @@ into a single unified forensic timeline.
 
 ```powershell
 .\forensic_timeliner.ps1 -Interactive
+.\forensic_timeliner.ps1 -i
+.\forensic_timeliner.ps1 -help
 .\forensic_timeliner.ps1 -ProcessKape -ProcessAxiom -ExportFormat json
 
  
 
-Use the VB macro to color code the artifacts in excel. This tool is designed for forensic analysts who need to quickly timeline and triage using output from Axiom, EZ parsers / Kape, Chainsaw and Hayabusa. Correlate tool output across different tools!
+Use the VB macro to color code the artifacts in excel. This tool is designed to quickly timeline and triage using output from Axiom, EZ parsers / Kape, Chainsaw and Hayabusa. Correlate tool output across different tools!
 
 ## Quick Start
 
