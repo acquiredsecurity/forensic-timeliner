@@ -12,7 +12,7 @@ into a single unified forensic timeline.
 
  
 
-Use the VB macro to color code the artifacts in excel. This tool is designed for forensic analysts who need to quickly timeline and triage using output from EZ parsers or Kape and other leading forensic tools. 
+Use the VB macro to color code the artifacts in excel. This tool is designed for forensic analysts who need to quickly timeline and triage using output from Axiom, EZ parsers / Kape, Chainsaw and Hayabusa. Correlate tool output across different tools!
 
 ## Quick Start
 
