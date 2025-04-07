@@ -51,7 +51,7 @@ Sub ColorRowsByArtifactName_Simple()
     If Not colorMap.Exists("Registry - AutoRun Items") Then colorMap.Add "Registry - AutoRun Items", RGB(139, 0, 0) ' Dark Red
     If Not colorMap.Exists("Registry - MRU Folder Access") Then colorMap.Add "Registry - MRU Folder Access", RGB(255, 223, 186) ' Peach
     If Not colorMap.Exists("Registry - MRU Opened-Saved Files") Then colorMap.Add "Registry - MRU Opened-Saved Files", RGB(70, 130, 180) ' Steel Blue
-    If Not colorMap.Exists("Registry - MRU Recent Files & Folders") Then colorMap.Add "Registry - MRU Recent Files & Folders", RGB(255, 0, 0) ' Red
+    If Not colorMap.Exists("Registry - MRU Recent Files & Folders") Then colorMap.Add "Registry - MRU Recent Files & Folders", RGB(255, 102, 102) ' Light Red
     If Not colorMap.Exists("Registry - UserAssist") Then colorMap.Add "Registry - UserAssist", RGB(135, 206, 250) ' Light Sky Blue
     If Not colorMap.Exists("RecycleBin") Then colorMap.Add "RecycleBin", RGB(0, 0, 255) ' Blue
     If Not colorMap.Exists("Shellbags") Then colorMap.Add "Shellbags", RGB(255, 99, 0) ' Vivid Orange
