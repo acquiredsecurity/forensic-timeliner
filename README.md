@@ -28,7 +28,7 @@ Use the VB macro to color code the artifacts in excel. This tool is designed to 
 ---
 ![image](https://github.com/user-attachments/assets/ddc7a7d7-a67b-45e5-bb06-983d37529fbc)
 
-Forensic Timeliner is a PowerShell-based tool that automates the process of combining csv output from forensic tools into a single timeline that is easy and quick to review! Quickly parse through CSV data output from KAPE / [EZTools](https://github.com/EricZimmerman) / [Chainsaw](https://github.com/WithSecureLabs/chainsaw) / [Hayabusa](https://github.com/Yamato-Security/hayabusa) and Axiom (coming soon) into a structured **MINI Timeline**. Export data to CSV, JSON and XLSX. 
+Forensic Timeliner is a PowerShell-based tool that automates the process of combining csv output from forensic tools into a single timeline that is easy and quick to review! Quickly parse through CSV data output from KAPE / [EZTools](https://github.com/EricZimmerman) / [Chainsaw](https://github.com/WithSecureLabs/chainsaw) / [Hayabusa](https://github.com/Yamato-Security/hayabusa) and [Axiom](https://www.magnetforensics.com/products/magnet-axiom/) into a structured **MINI Timeline**. Export data to CSV, JSON and XLSX. 
 
 Output suported:
 - Axiom
