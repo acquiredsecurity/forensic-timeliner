@@ -4,7 +4,7 @@ This tool consolidates and normalizes digital forensic artifact data
 from multiple tools (**EZ Tools**, **Nirsoft**, **Hayabusa**, **Axiom**, etc.)  
 into a single unified forensic timeline.
 
-## 🚀 Example Usage
+## Example Usage
 
 ```powershell
 .\forensic_timeliner.ps1 -Interactive
