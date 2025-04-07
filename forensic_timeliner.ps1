@@ -1,15 +1,21 @@
 # Parameter Block
 param (
-    [string]$BaseDir = "C:\kape", 
-    [string]$KapeDirectory = "$BaseDir\timeline",                                            # Path to main KAPE timeline folder and csv output from EZ Tools
-    [string]$WebResultsPath = "$BaseDir\browsinghistory\webResults.csv",                     # Path to webResults.csv
+    [string]$BaseDir = "C:\triage", 
+    [string]$KapeDirectory = "$BaseDir\kape_out",                                            # Path to main KAPE timeline folder and csv output from EZ Tools
     [string]$ChainsawDirectory = "$BaseDir\chainsaw",                                        # Directory containing Chainsaw CSV files
-    [string]$OutputFile = "$BaseDir\timeline\Master_Timeline.csv",                           # Output timeline file
+    [string]$HayabusaDirectory = "$BaseDir\hayabusa", 
+    [string]$NirsoftDirectory = "$BaseDir\browsinghistory",                                  # Directory containing Hayabusa CSV files                                                                # Skip Hayabusa processing
+	[string]$AxiomDirectory = "$BaseDir\axiom",
+    [string]$OutputFile = "$BaseDir\timeline\Forensic_Timeliner.csv",                        # Output timeline file
     [ValidateSet("xlsx", "csv", "json")]
     [string]$ExportFormat = "csv",                                                           # Output Format  CSV for timeline creation with Json and Xlsx Options
-    [switch]$SkipEventLogs,                                                                  # Skip event logs processing
-	[string]$HayabusaDirectory = "$BaseDir\hayabusa",                                        # Directory containing Hayabusa CSV files
-	[switch]$SkipHayabusa,                                                                   # Skip Hayabusa processing
+    [switch]$SkipEventLogs,                                                                  # Skip event logs processing in EZ tools
+    [switch]$ProcessKape,
+    [switch]$ProcessChainsaw,
+    [switch]$ProcessHayabusa,	
+    [switch]$ProcessAxiom,                                                                   # Process Axiom CSV output
+    [switch]$ProcessNirsoftWebHistory,
+    [string]$FileDeletionSubDir = "FileDeletion", 
     [string]$RegistrySubDir = "Registry",                                                    # Registry subdirectory under KapeDirectory
     [string]$ProgramExecSubDir = "ProgramExecution",                                         # Program execution subdirectory
     [string]$FileFolderSubDir = "FileFolderAccess",                                          # File/Folder access subdirectory
@@ -22,6 +28,7 @@ param (
     [datetime]$EndDate,                                                                      # End date for filtering (inclusive)
     [switch]$Deduplicate,                                                                    # Enable deduplication of timeline entries
     [switch]$Interactive,                                                                    # Launch interactive prompt
+    [Alias("h")]
     [switch]$Help                                                                            # Show help menu
 )
 
@@ -64,43 +71,108 @@ function Update-OverallProgress {
     Write-Progress -Activity "Building Forensic Timeline" -Status "Processing $CurrentSource" -PercentComplete $overallPercent -Id 0
 }
 
-# Help menu
-if ($Help) {
-    Write-Host "" -ForegroundColor Cyan
-    Write-Host "========================= Forensic Timeliner Help =========================" -ForegroundColor Cyan
-    Write-Host "" 
-    Write-Host "Description:" -ForegroundColor Yellow
-    Write-Host "  This script builds a mini forensic timeline from Chainsaw, EZTools/KAPE,"
-    Write-Host "  and optional web history CSVs. Use it after running KapeSaw.ps1 or stand-alone."
-    Write-Host "" 
-    Write-Host "Usage Examples:" -ForegroundColor Yellow
-    Write-Host "  .\forensic_timeliner.ps1 -ChainsawDirectory '$BaseDir\chainsaw' -OutputFile '$BaseDir\timeline\Master_Timeline.csv'"
-    Write-Host "  .\forensic_timeliner.ps1 -Interactive" 
-    Write-Host "" 
+
+function Show-Help {
+    Write-Host ""
+    Write-Host "Forensic Timeliner Help Menu" -ForegroundColor Cyan
+    Write-Host "----------------------------------------------------" -ForegroundColor Cyan
+    Write-Host "This tool consolidates and normalizes digital forensic artifact data"
+    Write-Host "from multiple tools (EZ Tools, Nirsoft, Hayabusa, Axiom, etc.)"
+    Write-Host "into a single forensic timeline."
+    Write-Host ""
+
     Write-Host "Parameters:" -ForegroundColor Yellow
-    Write-Host "  -KapeDirectory       Default path for Kape CSV Output Registry/FileSystem/EventLogs/etc.. (default: $BaseDir\timeline)"
-    Write-Host "  -ChainsawDirectory   Default path to Chainsaw CSVs (default: $BaseDir\chainsaw)"
-	Write-Host "  -HayabusaDirectory   Default path to Hayabusa CSVs (default: $BaseDir\hayabusa)"
-	Write-Host "  -SkipHayabusa        Skip Hayabusa processing"
-    Write-Host "  -WebResultsPath      Default path to webResults.csv **Include file name** (default: $BaseDir\browsinghistory\webResults.csv)"
-    Write-Host "  -RegistrySubDir      Default name of Registry subdirectory under KapeDirectory (default: Registry)"
-    Write-Host "  -ProgramExecSubDir   Default name of Program Execution subdirectory under KapeDirectory (default: ProgramExecution)"
-    Write-Host "  -FileFolderSubDir    Default name of File/Folder access subdirectory under KapeDirectory (default: FileFolderAccess)"
-    Write-Host "  -FileSystemSubDir    Default name of FileSystem subdirectory under KapeDirectory (default: FileSystem)"
-    Write-Host "  -EventLogsSubDir     Default name of Event logs subdirectory under KapeDirectory (default: EventLogs)"
-    Write-Host "  -OutputFile          Default path to timeline output file (default: $BaseDir\timeline\Master_Timeline.csv)"
-    Write-Host "  -BatchSize           Batch processing chunk size for large datasets (default: 10,000 records per batch - increase for" 
-               "                       faster processing on powerful systems or decrease for memory-constrained environments)(default: 10,000)"
-    Write-Host "  -Interactive         Get assistance with the setup process when running this script locally"
-    Write-Host "  -Help                Display this help screen"
-    Write-Host "" 
-    exit 0
+    Write-Host "  -BaseDir <path>              Base output path (Default: C:\triage)"
+    Write-Host "  -OutputFile <path>           Timeline output file (Default: $BaseDir\timeline\Forensic_Timeliner.csv)"
+    Write-Host "  -ExportFormat <csv|json|xlsx> Output format (Default: csv)"
+    Write-Host "  -BatchSize <int>             Number of lines to process per batch (Default: 10000)"
+    Write-Host "  -StartDate <datetime>        Only include events after this date"
+    Write-Host "  -EndDate <datetime>          Only include events before this date"
+    Write-Host "  -Deduplicate                 Enable deduplication of timeline entries"
+    Write-Host "  -Interactive                 Launch interactive configuration menu"
+    Write-Host "  -Help                        Display this help menu"
+    Write-Host ""
+
+    Write-Host "Tool Switches:" -ForegroundColor Yellow
+    Write-Host "  -ProcessKape                 Process EZ Tools KAPE output"
+    Write-Host "  -ProcessChainsaw             Process Chainsaw CSV exports"
+    Write-Host "  -ProcessHayabusa             Process Hayabusa CSV exports"
+    Write-Host "  -ProcessAxiom                Process Magnet Axiom CSV exports"
+    Write-Host "  -ProcessNirsoftWebHistory    Process Nirsoft BrowsingHistoryView CSV"
+    Write-Host "  -SkipEventLogs               Skip EZ Tools Event Log processing"
+    Write-Host ""
+
+    Write-Host "Supported Artifacts:" -ForegroundColor Yellow
+    Write-Host "  EZ Tools (KAPE):"
+    Write-Host "      Artifact                                         Searches default path for:" -ForegroundColor Yellow
+    Write-Host "    - Amcache (AmcacheParser)                          $BaseDir\kape_out\ProgramExecution\*ssociatedFileEntries.csv"
+    Write-Host "    - AppCompatCache (Shim)                            $BaseDir\kape_out\ProgramExecution\*AppCompatCache*.csv"
+    Write-Host "    - Deleted Files (RBCmd)                            $BaseDir\kape_out\FileDeletion\*RBCmd*.csv"
+    Write-Host "    - Event Logs (EvtxECmd)                            $BaseDir\kape_out\EventLogs\*.csv"
+    Write-Host "    - Jump Lists (JLECmd)                              $BaseDir\kape_out\FileFolderAccess\*_AutomaticDestinations.csv"
+    Write-Host "    - LNK Files (LECmd)                                $BaseDir\kape_out\FileFolderAccess\*_LECmd_Output.csv"
+    Write-Host "    - MFT (MFTECmd)                                    $BaseDir\kape_out\FileSystem\*MFT_Out*.csv"
+    Write-Host "    - Prefetch (PECmd)                                 $BaseDir\kape_out\ProgramExecution\*_PECmd_Output.csv"
+    Write-Host "    - Registry (RECmd)                                 $BaseDir\kape_out\Registry\*_RECmd_Batch_Kroll_Batch_Output.csv"
+    Write-Host "    - Shellbags (SBECmd)                               $BaseDir\kape_out\FileFolderAccess\*_UsrClass\.csv OR _NTUSER\.csv"
+    
+    Write-Host ""
+
+    Write-Host "  Axiom (Magnet):"
+    Write-Host "      Artifact                                         Searches default path for:" -ForegroundColor Yellow
+    Write-Host "    - Amcache                                          $BaseDir\axiom\AmCache File Entries.csv"
+    Write-Host "    - AppCompatCache (Shim)                            $BaseDir\axiom\Shim Cache.csv"
+    Write-Host "    - AutoRuns                                         $BaseDir\axiom\AutoRun Items.csv"
+    Write-Host "    - Chrome Web History                               $BaseDir\axiom\Chrome Web History.csv"
+    Write-Host "    - Edge/IE Main History                             $BaseDir\axiom\Edge-Internet Explorer 10-11 Main History.csv"
+    Write-Host "    - Jump Lists                                       $BaseDir\axiom\Jump Lists.csv"
+    Write-Host "    - LNK Files                                        $BaseDir\axiom\LNK Files.csv"
+    Write-Host "    - MRU (Folder Access)                              $BaseDir\axiom\MRU Folder Access.csv"
+    Write-Host "    - MRU (Open-Saved Files)                           $BaseDir\axiom\MRU Opened-Saved Files.csv"
+    Write-Host "    - MRU (Recent Files, Folder Access)                $BaseDir\axiom\MRU Recent Files & Folders.csv"
+    Write-Host "    - Prefetch                                         $BaseDir\axiom\Prefetch Files*.csv"
+    Write-Host "    - Recycle Bin                                      $BaseDir\axiom\Recycle Bin.csv"
+    Write-Host "    - Shellbags                                        $BaseDir\axiom\Shellbags.csv"
+    Write-Host "    - UserAssist                                       $BaseDir\axiom\UserAssist.csv"
+    Write-Host ""
+
+    Write-Host "  Hayabusa:"
+    Write-Host "    - Event Logs with Sigma rule matching              $BaseDir\hayabusa\hayabusa.csv"
+    Write-Host ""
+
+    Write-Host "  Chainsaw:"
+    Write-Host "    - Sigma-correlated event logs                      $BaseDir\chainsaw\*.csv"
+    Write-Host ""
+
+    Write-Host "  Nirsoft:"
+    Write-Host "    - Web Browsing History (via BrowsingHistoryView)   $BaseDir\nirsoft\*.csv"
+    Write-Host ""
+
+    Write-Host "Other Info:" -ForegroundColor Yellow
+    Write-Host "  - Supports batch processing for large CSVs"
+    Write-Host "  - Progress indicators for each source"
+    Write-Host "  - Source count and export stats included"
+    Write-Host ""
+
+    Write-Host "Example Usage:" -ForegroundColor Cyan
+    Write-Host "  .\forensic_timeliner.ps1 -i"
+    Write-Host "  .\forensic_timeliner.ps1 -ProcessKape -ProcessAxiom -ExportFormat json"
+    Write-Host ""
+
+    Write-Host "For best results, organize tool exports into the default paths under BaseDir, and use interactive mode to specify custom paths."
+    Write-Host ""
+}
+
+# Help Menu function
+if ($Help) {
+    Show-Help
+    return
 }
 
 # Interactive Mode
 if ($Interactive) {
     Write-Host "" -ForegroundColor Cyan
-    Write-Host "====== Forensic Timeliner Interactive Configuration ======" -ForegroundColor Cyan
+    Write-Host "====== Forensic Timeliner Interactive Configuration - which sources you would like to process and where they are located! ======" -ForegroundColor Cyan
 
     # Ask for export format first
     $exportFormatPrompt = Read-Host "Select output format: xlsx, csv, or json [Default: csv]"
@@ -109,99 +181,190 @@ if ($Interactive) {
     } else {
         $ExportFormat = "csv"
     }
-    
-    # Set default extension based on selected format
+
     $fileExtension = ".$ExportFormat"
-    $defaultOutputPath = "$BaseDir\timeline\Master_Timeline$fileExtension"
+    $defaultOutputPath = "$BaseDir\timeline\Forensic_Timeliner$fileExtension"
     
-    $KapeDirectory = Read-Host "Path to KAPE Processed CSV Files [Default: $BaseDir\timeline]"
-    if (-not $KapeDirectory) { $KapeDirectory = "$BaseDir\timeline" }
-
-    $ChainsawDirectory = Read-Host "Path to Chainsaw CSVs [Default: $BaseDir\chainsaw]"
-    if (-not $ChainsawDirectory) { $ChainsawDirectory = "$BaseDir\chainsaw" }
-	
-	$HayabusaDirectory = Read-Host "Path to Hayabusa CSVs [Default: $BaseDir\hayabusa]"
-	if (-not $HayabusaDirectory) { $HayabusaDirectory = "$BaseDir\hayabusa" }
-
-
-		# Ask if User would like to process Hayabusa results
-		$processHayabusaPrompt = Read-Host "Include Hayabusa processing? (Hayabusa provides additional event log analysis) (y/n) [Default: n]"
-		if ($processHayabusaPrompt -eq "y") {
-			$SkipHayabusa = $false
-			Write-Host "  Hayabusa processing will be included" -ForegroundColor Green
-		} else {
-			$SkipHayabusa = $true
-			Write-Host "  Hayabusa processing will be skipped" -ForegroundColor Yellow
-		}
-
-    $WebResultsPath = Read-Host "Path to BrowsingHistoryView output file webResults.csv [Default: $BaseDir\browsinghistory\webResults.csv]"
-    if (-not $WebResultsPath) { 
-        $WebResultsPath = "$BaseDir\browsinghistory\webResults.csv" 
-    }
-    
-	
-    # Validate the web history path to ensure it includes a filename
-    if (-not [string]::IsNullOrEmpty($WebResultsPath) -and (Test-Path $WebResultsPath -PathType Container)) {
-        # If user entered a directory, append the default filename
-        $WebResultsPath = Join-Path $WebResultsPath "webResults.csv"
-        Write-Host "  Note: Directory path detected. Using file: $WebResultsPath" -ForegroundColor Yellow
-    }
-    
-    # Handle output file path validation
-    $OutputFile = Read-Host "Path to save Forensic Timeline output file to [Default: $defaultOutputPath]"
-    if (-not $OutputFile) { 
-        $OutputFile = $defaultOutputPath 
-    }
-
-    # Check if the path is a directory
-    if (Test-Path $OutputFile -PathType Container) {
-        # User provided only a directory, append default filename
-        $OutputFile = Join-Path $OutputFile "Master_Timeline.$ExportFormat"
-        Write-Host "  Note: Directory path detected. Using file: $OutputFile" -ForegroundColor Yellow
-    }
-    # Ask if User would like t process Event Logs
-        $processEventLogsPrompt = Read-Host "Include Windows Event Log processing? (Chainsaw with Sigma already provides analysis for these logs. Enabling this will significantly increase processing time and timeline size) (y/n) [Default: y]"
-    if ($processEventLogsPrompt -eq "n") {
-        $SkipEventLogs = $true
-        Write-Host "  Event log processing will be skipped" -ForegroundColor Yellow
+    # Ask if User would like to process Kape/EZ Tool CSV Output
+    $processKapePrompt = Read-Host "Include Kape / EZ Tool CSV Output? (y/n) [Default: n]"
+    if ($processKapePrompt -eq "y") {
+        $ProcessKape = $true
+        
+        # Prompt for Kape/EZ Tool directory
+        $KapeDirectory = Read-Host "Enter the path to the Kape/EZ Tool CSV files"
+        
+        # Validate directory exists
+        if (-not (Test-Path $KapeDirectory)) {
+            Write-Host "  Warning: Kape/EZ Tool directory not found: $KapeDirectory" -ForegroundColor Yellow
+            $createDir = Read-Host "  Create directory? (y/n) [Default: n]"
+            if ($createDir -eq "y") {
+                New-Item -Path $KapeDirectory -ItemType Directory -Force | Out-Null
+                Write-Host "  Directory created: $KapeDirectory" -ForegroundColor Green
+            } else {
+                Write-Host "  Kape/EZ Tool processing will be skipped as directory doesn't exist" -ForegroundColor Yellow
+                $ProcessKape = $false
+            }
+        } else {
+            Write-Host "  Kape/EZ Tool processing will be included" -ForegroundColor Green
+            
+            # Ask is the user would like to filter the MFT by file extension 
+            $currentExtensions = $MFTExtensionFilter -join ", "
+            Write-Host "  Current MFT extension filter: $currentExtensions" -ForegroundColor Yellow
+            $customizeMFTExtensions = Read-Host "Customize MFT file extension filter? (y/n) [Default: n]"
+            if ($customizeMFTExtensions -eq "y") {
+                $addExtensions = Read-Host "Enter additional extensions to include (comma-separated, include the dot, e.g. '.pdf,.docx,.bat')"
+                if (-not [string]::IsNullOrWhiteSpace($addExtensions)) {
+                    $newExtensions = $addExtensions -split ',' | ForEach-Object { $_.Trim() }
+                    $MFTExtensionFilter = $MFTExtensionFilter + $newExtensions
+                    Write-Host "  Updated MFT extension filter: $($MFTExtensionFilter -join ", ")" -ForegroundColor Green
+                }
+            }
+            
+            # Ask is the user would like to filter the MFT by file path
+            $currentPaths = $MFTPathFilter -join ", "
+            Write-Host "  Current MFT path filter: $currentPaths" -ForegroundColor Yellow
+            $customizeMFTPaths = Read-Host "Customize MFT path filters? (y/n) [Default: n]"
+            if ($customizeMFTPaths -eq "y") {
+                $addPaths = Read-Host "Enter additional paths to include (comma-separated, e.g. 'Windows\System32,Program Files')"
+                if (-not [string]::IsNullOrWhiteSpace($addPaths)) {
+                    $newPaths = $addPaths -split ',' | ForEach-Object { $_.Trim() }
+                    $MFTPathFilter = $MFTPathFilter + $newPaths
+                    Write-Host "  Updated MFT path filter: $($MFTPathFilter -join ", ")" -ForegroundColor Green
+                }
+            }
+            
+            # Ask if User would like to process Event Logs
+            $processEventLogsPrompt = Read-Host "Include Windows Event Log processing from EZ/Kape tool output? (Chainsaw with Sigma already provides analysis for these logs. Enabling this will significantly increase processing time and timeline size) (y/n) [Default: y]"
+            if ($processEventLogsPrompt -eq "n") {
+                $SkipEventLogs = $true
+                Write-Host "  Event log processing will be skipped" -ForegroundColor Yellow
+            } else {
+                $SkipEventLogs = $false
+            }
+        }
     } else {
-        $SkipEventLogs = $false
+        $ProcessKape = $false
+        Write-Host "  Kape/EZ Tool processing will be skipped" -ForegroundColor Yellow
     }
-    # Ask is the user would like to filter the MFT by file extension 
-        $currentExtensions = $MFTExtensionFilter -join ", "
-        Write-Host "  Current MFT extension filter: $currentExtensions" -ForegroundColor Yellow
-        $customizeMFTExtensions = Read-Host "Customize MFT file extension filter? (y/n) [Default: n]"
-        if ($customizeMFTExtensions -eq "y") {
-            $addExtensions = Read-Host "Enter additional extensions to include (comma-separated, include the dot, e.g. '.pdf,.docx,.bat')"
-            if (-not [string]::IsNullOrWhiteSpace($addExtensions)) {
-                $newExtensions = $addExtensions -split ',' | ForEach-Object { $_.Trim() }
-                $MFTExtensionFilter = $MFTExtensionFilter + $newExtensions
-                Write-Host "  Updated MFT extension filter: $($MFTExtensionFilter -join ", ")" -ForegroundColor Green
-            }
-        }
-    
-    # Ask is the user would like to filter the MFT by file path
-        $currentPaths = $MFTPathFilter -join ", "
-        Write-Host "  Current MFT path filter: $currentPaths" -ForegroundColor Yellow
-        $customizeMFTPaths = Read-Host "Customize MFT path filters? (y/n) [Default: n]"
-        if ($customizeMFTPaths -eq "y") {
-            $addPaths = Read-Host "Enter additional paths to include (comma-separated, e.g. 'Windows\System32,Program Files')"
-            if (-not [string]::IsNullOrWhiteSpace($addPaths)) {
-                $newPaths = $addPaths -split ',' | ForEach-Object { $_.Trim() }
-                $MFTPathFilter = $MFTPathFilter + $newPaths
-                Write-Host "  Updated MFT path filter: $($MFTPathFilter -join ", ")" -ForegroundColor Green
-            }
-        }
-	
 
-		
-		# safely change the extension if needed
+
+# Ask if User would like to process Chainsaw CSV Output
+$processChainsawPrompt = Read-Host "Include Chainsaw CSV Output? (y/n) [Default: n]"
+if ($processChainsawPrompt -eq "y") {
+    $ProcessChainsaw = $true
+    
+    # Prompt for Chainsaw directory
+    $ChainsawDirectory = Read-Host "Enter the path to the Chainsaw CSV files"
+    
+    # Validate directory exists
+    if (-not (Test-Path $ChainsawDirectory)) {
+        Write-Host "  Warning: Chainsaw directory not found: $ChainsawDirectory" -ForegroundColor Yellow
+        $createDir = Read-Host "  Create directory? (y/n) [Default: n]"
+        if ($createDir -eq "y") {
+            New-Item -Path $ChainsawDirectory -ItemType Directory -Force | Out-Null
+            Write-Host "  Directory created: $ChainsawDirectory" -ForegroundColor Green
+        } else {
+            Write-Host "  Chainsaw processing will be skipped as directory doesn't exist" -ForegroundColor Yellow
+            $ProcessChainsaw = $false
+        }
+    } else {
+        Write-Host "  Chainsaw processing will be included" -ForegroundColor Green
+    }
+} else {
+    $ProcessChainsaw = $false
+    Write-Host "  Chainsaw processing will be skipped" -ForegroundColor Yellow
+}
+
+# Ask if User would like to process Hayabusa CSV Output
+$processHayabusaPrompt = Read-Host "Include Hayabusa CSV Output? (y/n) [Default: n]"
+if ($processHayabusaPrompt -eq "y") {
+    $ProcessHayabusa = $true
+    
+    # Prompt for Hayabusa directory
+    $HayabusaDirectory = Read-Host "Enter the path to the Hayabusa CSV files"
+    
+    # Validate directory exists
+    if (-not (Test-Path $HayabusaDirectory)) {
+        Write-Host "  Warning: Hayabusa directory not found: $HayabusaDirectory" -ForegroundColor Yellow
+        $createDir = Read-Host "  Create directory? (y/n) [Default: n]"
+        if ($createDir -eq "y") {
+            New-Item -Path $HayabusaDirectory -ItemType Directory -Force | Out-Null
+            Write-Host "  Directory created: $HayabusaDirectory" -ForegroundColor Green
+        } else {
+            Write-Host "  Hayabusa processing will be skipped as directory doesn't exist" -ForegroundColor Yellow
+            $ProcessHayabusa = $false
+        }
+    } else {
+        Write-Host "  Hayabusa processing will be included" -ForegroundColor Green
+    }
+} else {
+    $ProcessHayabusa = $false
+    Write-Host "  Hayabusa processing will be skipped" -ForegroundColor Yellow
+}
+
+# Ask if User would like to process Nirsoft Web History
+$ProcessNirsoftWebHistoryPrompt = Read-Host "Include Nirsoft Web History (Nirsoft BrowsingHistoryView)? (y/n) [Default: n]"
+if ($ProcessNirsoftWebHistoryPrompt -eq "y") {
+    $ProcessNirsoftWebHistory = $true
+
+    # Prompt for Nirsoft directory
+    $NirsoftDirectory = Read-Host "Enter the path to the Nirsoft output directory"
+    if (-not $NirsoftDirectory) {
+        $NirsoftDirectory = "$BaseDir\browsinghistory"
+    }
+
+    # Try to find a CSV file and set WebResultsPath
+    $fileMatch = Get-ChildItem -Path $NirsoftDirectory -Filter "*.csv" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($fileMatch) {
+        $WebResultsPath = $fileMatch.FullName
+        Write-Host "  Nirsoft Web History processing will be included" -ForegroundColor Green
+    } else {
+        Write-Host "  Warning: No CSV file found in: $NirsoftDirectory" -ForegroundColor Yellow
+        $ProcessNirsoftWebHistory = $false
+    }
+} else {
+    $ProcessNirsoftWebHistory = $false
+    Write-Host "  Nirsoft Web History processing will be skipped" -ForegroundColor Yellow
+}
+
+
+# Ask if User would like to process Axiom CSV Output
+$processAxiomPrompt = Read-Host "Include Axiom CSV Output? (y/n) [Default: n]"
+if ($processAxiomPrompt -eq "y") {
+    $ProcessAxiom = $true
+    
+    # Prompt for Axiom directory
+    $AxiomDirectory = Read-Host "Enter the path to the Axiom CSV files"
+    
+    # Validate directory exists
+    if (-not (Test-Path $AxiomDirectory)) {
+        Write-Host "  Warning: Axiom directory not found: $AxiomDirectory" -ForegroundColor Yellow
+        $createDir = Read-Host "  Create directory? (y/n) [Default: n]"
+        if ($createDir -eq "y") {
+            New-Item -Path $AxiomDirectory -ItemType Directory -Force | Out-Null
+            Write-Host "  Directory created: $AxiomDirectory" -ForegroundColor Green
+        } else {
+            Write-Host "  Axiom processing will be skipped as directory doesn't exist" -ForegroundColor Yellow
+            $ProcessAxiom = $false
+        }
+    } else {
+        Write-Host "  Axiom processing will be included" -ForegroundColor Green
+        
+
+    }
+} else {
+    $ProcessAxiom = $false
+    Write-Host "  Axiom processing will be skipped" -ForegroundColor Yellow
+}
+    
+
+# safely change the extension if needed
     if (-not $OutputFile.EndsWith($fileExtension)) {
         $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $fileExtension.TrimStart('.'))
     }
 
     # Advanced directory configuration (optional)
-    $configureSubDirs = Read-Host "Configure subdirectories? This script expects you will be using standard kape !SansTriage output with EZParsers.. (y/n) [Default: n]"
+    $configureSubDirs = Read-Host "Configure Kape/EZ Tool subdirectories? Expected Kape/EZ Tool subdirectories are EventLogs, FileDeletion, FileFolderAccess, FileSystem, ProgramExecution, Registry (y/n) [Default: n]"
     if ($configureSubDirs -eq "y") {
         $RegistrySubDir = Read-Host "Registry subdirectory [Default: Registry]"
         if (-not $RegistrySubDir) { $RegistrySubDir = "Registry" }
@@ -270,40 +433,37 @@ if ($Interactive) {
         }
     }
 
-    Write-Host "Interactive configuration complete. Running timeline build..." -ForegroundColor Green
-}
+        # Path to save timeline to
+        Write-Host "Where would you like to Save your Forensic Timeline to?? [Default: $defaultOutputPath]" -ForegroundColor Yellow
 
-# SentinelOne Auto Mode - Identifies if running by SentinelOne remote ops
-$calledWithArgs = ($PSBoundParameters.Count -gt 0)
-$s1EnvDetected = $Env:S1_PACKAGE_DIR_PATH -and (Test-Path $Env:S1_PACKAGE_DIR_PATH)
+        # Actual input
+        $OutputFile = Read-Host 
+        if (-not $OutputFile) {
+            $OutputFile = $defaultOutputPath
+        } 
+        }
+        # Check if the path is a directory
+        if (Test-Path $OutputFile -PathType Container) {
+            # User provided only a directory, append default filename
+            $OutputFile = Join-Path $OutputFile "Forensic_Timeliner.$ExportFormat"
+            Write-Host "  Note: Directory path detected. Using file: $OutputFile" -ForegroundColor Yellow
+        }
 
-if (-not $calledWithArgs -and -not $s1EnvDetected -and -not $Interactive) {
-    Write-Host "" -ForegroundColor Yellow
-    Write-Warning "No parameters provided and not running in SentinelOne."
-    Write-Host "Use -Interactive for guided setup or -Help for options."
-    exit 1
-}
+        # Set Log File Path to the same directory as the OutputFile
+        $LogFilePath = Join-Path -Path (Split-Path $OutputFile -Parent) -ChildPath "ForensicTimeliner_Log_$(Get-Date -Format 'yyyy-MM-dd_HHmmss').txt"
+        Write-Host "Log file will be saved to: $LogFilePath" -ForegroundColor Cyan
 
-# Default Fallbacks if Running in S1 or Param Partial
-if (-not $ChainsawDirectory) { $ChainsawDirectory = "$BaseDir\chainsaw" }
-if (-not $OutputFile) { $OutputFile = "$BaseDir\timeline\Master_Timeline.csv" }
-if (-not $WebResultsPath) { $WebResultsPath = "$BaseDir\browsinghistory\webResults.csv" }
-if (-not $KapeDirectory) { $KapeDirectory = "$BaseDir\timeline" }
-if (-not $HayabusaDirectory) { $HayabusaDirectory = "$BaseDir\hayabusa" }
+        Write-Host "Interactive configuration complete. Running timeline build..." -ForegroundColor Green
 
-# Adjust extension based on export format
-$desiredExtension = "." + $ExportFormat.ToLower()
-$OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $desiredExtension)
+        # Adjust extension based on export format
+        $desiredExtension = "." + $ExportFormat.ToLower()
+        $OutputFile = [System.IO.Path]::ChangeExtension($OutputFile, $desiredExtension)
 
 
 
-# Set Timeline Log Path
-$TimelineDirectory = "$BaseDir\timeline\"
-$LogFilePath = Join-Path -Path $TimelineDirectory -ChildPath "ForensicTimeliner_Log_$(Get-Date -Format 'yyyy-MM-dd_HHmmss').txt"
 
 # Start transcript to capture console output
 Start-Transcript -Path $LogFilePath -Append
-
 
 # ASCII Art Banner
 Write-Host @"
@@ -320,10 +480,11 @@ Write-Host @"
     | |  | | | | | | |  __/ | | | | |  __/ |     
     |_|  |_|_| |_| |_|\___|_|_|_| |_|\___|_|
                                                                                            
-Mini Timeline Builder for Kape Output, Chainsaw +Sigma & WebhistoryView
+Mini Timeline Builder for Kape Output, Chainsaw +Sigma, WebhistoryView, Axiom and more ?!?!
 | Made by https://github.com/acquiredsecurity 
 | with help from the robots [o_o] 
-- Build powerful timelines from digital forensic artifacts!
+| Review your evidence for unkown unknowns :-] !!!
+- Build powerful timelines by combining output from digital forensic tools into a single timeline!!!
 =) Happy Timelining!
 "@ -ForegroundColor Cyan
 
@@ -343,7 +504,7 @@ if ($ExportFormat -eq "xlsx") {
 
 # Standard field order
 $StandardFields = @(
-    "DateTime", "ArtifactName", "EventId", "Description", "Info", "DataPath", "DataDetails",
+    "DateTime", "Tool", "ArtifactName", "EventId", "Description", "TimestampInfo", "DataPath", "DataDetails",
     "User", "Computer", "FileSize", "FileExtension", "UserSID", "MemberSID", "ProcessName", "IPAddress", "LogonType", "Count",
     "SourceAddress", "DestinationAddress", "ServiceType", "CommandLine", "SHA1", "EvidencePath"
     
@@ -351,10 +512,11 @@ $StandardFields = @(
 
 # Define preferred field order for output
 $PreferredFieldOrder = @(
-    "DateTime", 
+    "DateTime",
+    "TimestampInfo", 
     "ArtifactName",
+    "Tool",
     "Description",
-    "Info",
     "DataDetails",
     "DataPath",
     "FileExtension",
@@ -390,134 +552,30 @@ function Normalize-Row {
     return [PSCustomObject]$row
 }
 
-# Function to process event log batches
-function Process-EventLogBatch {
-    param (
-        [string]$HeaderLine,
-        [System.Collections.ArrayList]$DataLines,
-        [hashtable]$HeaderMap
-    )
-    
-    # Create temp file for Import-Csv
-    $tempFile = [System.IO.Path]::GetTempFileName()
-    
-    try {
-        # Write header and data to temp file
-        $HeaderLine | Out-File -FilePath $tempFile -Encoding utf8
-        $DataLines | Out-File -FilePath $tempFile -Encoding utf8 -Append
-        
-        # Import and filter
-        $batchData = Import-Csv $tempFile
-        $filtered = $batchData | Where-Object {
-            $channel = $_.Channel
-            $eventId = [int]$_.EventId
-            if ($EventChannelFilters.ContainsKey($channel)) {
-                $allowed = $EventChannelFilters[$channel]
-                ($allowed.Count -eq 0) -or ($allowed -contains $eventId)
-            } else {
-                $false
-            }
-        }
-        
-        # Process filtered entries
-        $results = @()
-        foreach ($entry in $filtered) {
-            $dt = try { [datetime]::Parse($entry.TimeCreated).ToString("yyyy-MM-dd HH:mm:ss") } catch { $entry.TimeCreated }
-            $row = @{
-                DateTime       = $dt
-                EventId        = $entry."EventId"
-                Description    = $entry."Channel"
-                Info           = $entry."MapDescription"
-                DataPath       = $entry."PayloadData1"
-                DataDetails    = $entry."PayloadData2"
-                Computer       = $entry."Computer"
-                EvidencePath   = $entry."SourceFile"
-            }
-            $results += Normalize-Row -Fields $row -ArtifactName "EventLogs"
-        }
-        
-        return $results
-    }
-    finally {
-        # Clean up temp file
-        if (Test-Path $tempFile) {
-            Remove-Item $tempFile -Force
-        }
-    }
-}
-
 # Count the number of sources to process for overall progress tracking
 $script:totalSources = 0
 
-# Check Amcache
-$AmCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
-if (Test-Path $AmCachePath) {
-    $AmcacheFiles = @(Get-ChildItem -Path $AmCachePath -Filter "*ssociatedFileEntries.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $AmcacheFiles.Count
+# Count EZ Tools CSV sources (matching Axiom-style block)
+if ($ProcessKape) {
+    $ezToolsCsvFiles = @(Get-ChildItem -Path $KapeDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue | Where-Object {
+        $_.Name -match "Amcache.*ssociatedFileEntries\.csv" -or
+        $_.Name -match "AppCompatCache.*\.csv" -or
+        $_.Name -match "_PECmd_Output\.csv" -or
+        $_.Name -match "_LECmd_Output\.csv" -or
+        $_.Name -match "_UsrClass\.csv" -or
+        $_.Name -match "AutomaticDestinations.*\.csv" -or
+        $_.Name -match "_RECmd_Batch_Kroll_Batch_Output\.csv" -or
+        $_.Name -match "EvtxECmd.*\.csv" -or
+        $_.Name -match "MFT_Out.*\.csv" -or
+        $_.Name -match "RBCmd.*\.csv"
+    })
+    $script:totalSources += $ezToolsCsvFiles.Count
 }
 
-# Check AppCompatCache
-$AppCompatCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
-if (Test-Path $AppCompatCachePath) {
-    $AppCompatCacheFiles = @(Get-ChildItem -Path $AppCompatCachePath -Filter "*AppCompatCache*.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $AppCompatCacheFiles.Count
-}
-
-# Check AutomaticDestinations
-$AutoDestPath = Join-Path $KapeDirectory $FileFolderSubDir
-if (Test-Path $AutoDestPath) {
-    $AutoDestFiles = @(Get-ChildItem -Path $AutoDestPath -Filter "*AutomaticDestinations*.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $AutoDestFiles.Count
-}
-
-# Check Event Logs
-$EVTPath = Join-Path $KapeDirectory $EventLogsSubDir
-if (Test-Path $EVTPath) {
-    $evtFiles = @(Get-ChildItem $EVTPath -Filter "*EvtxECmd*.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $evtFiles.Count
-}
-
-# Check File Deletion
-$FileDeletionFiles = @(Get-ChildItem -Path $KapeDirectory -Recurse -Filter "*RBCmd*.csv" -ErrorAction SilentlyContinue)
-$script:totalSources += $FileDeletionFiles.Count
-
-# Check LNK Files
-$lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
-if (Test-Path $lnkPath) {
-    $lnkFiles = @(Get-ChildItem $lnkPath -Filter "*_LECmd_Output.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $lnkFiles.Count
-}
-
-# Check MFT Files
-$MFTPath = Join-Path $KapeDirectory $FileSystemSubDir
-if (Test-Path $MFTPath) {
-    $mftFiles = @(Get-ChildItem $MFTPath -Filter "*MFT_Out*.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $mftFiles.Count
-}
-
-# Check Prefetch Files
-$PECmdPath = Join-Path $KapeDirectory $ProgramExecSubDir
-if (Test-Path $PECmdPath) {
-    $PECmdFiles = @(Get-ChildItem -Path $PECmdPath -Filter "*_PECmd_Output.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $PECmdFiles.Count
-}
-
-# Check Registry
-$RegistryPath = Join-Path $KapeDirectory $RegistrySubDir
-if (Test-Path $RegistryPath) {
-    $RegistryFiles = @(Get-ChildItem -Path $RegistryPath -Filter "*_RECmd_Batch_Kroll_Batch_Output.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $RegistryFiles.Count
-}
-
-# Check Shellbags
-if (Test-Path $lnkPath) {
-    $shellbags = @(Get-ChildItem $lnkPath -Filter "*_UsrClass.csv" -ErrorAction SilentlyContinue)
-    $script:totalSources += $shellbags.Count
-}
-
-# Check Web History
-if (Test-Path $WebResultsPath) {
-    $script:totalSources++
+# Check Nirsoft
+if (-not $SkipNirsoftWebHistory) {
+    $NirsoftFiles = @(Get-ChildItem -Path $NirsoftDirectory -Filter *.csv -ErrorAction SilentlyContinue)
+    $script:totalSources += $NirsoftFiles.Count
 }
 
 # Check for Chainsaw Files
@@ -531,12 +589,201 @@ if (-not $SkipHayabusa) {
     $script:totalSources += $HayabusaFiles.Count
 }
 
+# Check Axiom - Count each artifact individually for accurate progress tracking
+if ($ProcessAxiom) {
+    $axiomArtifactFilters = @(
+        "LNK Files.csv",
+        "Jump Lists.csv",
+        "UserAssist.csv",
+        "Prefetch*.csv",
+        "Shim Cache.csv",
+        "Shellbags.csv",
+        "AutoRun Items.csv",
+        "MRU Opened-Saved Files.csv",
+        "MRU Recent Files & Folders.csv",
+        "MRU Folder Access.csv",
+        "Chrome History.csv",
+        "Edge History.csv",
+        "Amcache.csv",
+        "Recycle Bin.csv"
+    )
+
+    foreach ($filter in $axiomArtifactFilters) {
+        $files = @(Get-ChildItem -Path $AxiomDirectory -Filter $filter -ErrorAction SilentlyContinue)
+        $script:totalSources += $files.Count
+    }
+}
 
 # Start overall progress tracking
 Write-Progress -Activity "Building Forensic Timeline" -Status "Initializing" -PercentComplete 0 -Id 0
 
-# Process Amcache
-Write-Host "Processing Amcache" -ForegroundColor Cyan
+# Nirsoft Web History
+if ($ProcessNirsoftWebHistory -and (Test-Path $WebResultsPath)) {
+    Write-Host "Processing Nirsoft Web History" -ForegroundColor Cyan
+    Show-ProcessingProgress -Activity "Processing Web History" -Status "File: $([System.IO.Path]::GetFileName($WebResultsPath))" -Current 1 -Total 1 -NestedLevel 1
+
+    try {
+        $reader = New-Object System.IO.StreamReader($WebResultsPath)
+        $headerLine = $reader.ReadLine()
+        $batchCount = 0
+        $totalProcessed = 0
+        $totalAdded = 0
+        $batch = New-Object System.Collections.ArrayList
+
+        while (-not $reader.EndOfStream) {
+            $line = $reader.ReadLine()
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+            [void]$batch.Add($line)
+            $batchCount++
+            $totalProcessed++
+
+            if ($batchCount -ge $BatchSize) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    $batchData = Import-Csv $tempFile
+
+                    $webRows = $batchData | ForEach-Object {
+                        $url = $_."URL"
+                        $dataDetails = $_."Title"
+                        $dateTimeString = $_."Visit Time"
+
+                        try {
+                            $dateTime = [datetime]::ParseExact($dateTimeString, "M/d/yyyy h:mm:ss tt", $null)
+                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                        }
+                        catch {
+                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                            $dateTimeFormatted = ""
+                        }
+
+                        $description = "Web Activity"
+                        if ($url -match "^file:///") {
+                            if ($url -match "/([^/]+)$") {
+                                $filename = $matches[1]
+                                $dataDetails = $filename
+                            }
+                            $description = "File & Folder Access"
+                        } elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                            $description = "Web Search"
+                        } elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                            $description = "Web Download"
+                        }
+
+                        $row = @{
+                            DateTime      = $dateTimeFormatted
+                            Tool          = "Nirsoft"
+                            DataPath      = $url
+                            TimestampInfo = "EventTime"
+                            DataDetails   = $dataDetails
+                            Description   = $description
+                            User          = $_."User Profile"
+                            EvidencePath  = $_."History File"
+                        }
+
+                        $browser = $_."Web Browser"
+                        $artifactName = if ($browser) { "WebHistory - $browser" } else { "WebHistory" }
+                        
+                        Normalize-Row -Fields $row -ArtifactName $artifactName
+                    }
+
+                    $MasterTimeline += $webRows
+                    $totalAdded += $webRows.Count
+                }
+                finally {
+                    if (Test-Path $tempFile) {
+                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    }
+                }
+
+                $batch.Clear()
+                $batchCount = 0
+            }
+        }
+
+        # Process remaining lines
+        if ($batch.Count -gt 0) {
+            $tempFile = [System.IO.Path]::GetTempFileName()
+            try {
+                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                $batchData = Import-Csv $tempFile
+
+                $webRows = $batchData | ForEach-Object {
+                    $url = $_."URL"
+                    $dataDetails = $_."Title"
+                    $dateTimeString = $_."Visit Time"
+
+                    try {
+                        $dateTime = [datetime]::ParseExact($dateTimeString, "M/d/yyyy h:mm:ss tt", $null)
+                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                    }
+                    catch {
+                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                        $dateTimeFormatted = ""
+                    }
+
+                    $description = "Web Activity"
+                    if ($url -match "^file:///") {
+                        if ($url -match "/([^/]+)$") {
+                            $filename = $matches[1]
+                            $dataDetails = $filename
+                        }
+                        $description = "File & Folder Access"
+                    } elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                        $description = "Web Search"
+                    } elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                        $description = "Web Download"
+                    }
+
+                    $row = @{
+                        DateTime      = $dateTimeFormatted
+                        Tool          = "Nirsoft"
+                        DataPath      = $url
+                        TimestampInfo = "EventTime"
+                        DataDetails   = $dataDetails
+                        Description   = $description
+                        User          = $_."User Profile"
+                        EvidencePath  = $_."History File"
+                    }
+
+                        $browser = $_."Web Browser"
+                        $artifactName = if ($browser) { "WebHistory - $browser" } else { "WebHistory" }
+
+                        Normalize-Row -Fields $row -ArtifactName $artifactName
+                }
+
+                $MasterTimeline += $webRows
+                $totalAdded += $webRows.Count
+            }
+            finally {
+                if (Test-Path $tempFile) {
+                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                }
+            }
+        }
+
+        $reader.Close()
+        Write-Host "  Added $totalAdded web history entries from $([System.IO.Path]::GetFileName($WebResultsPath))" -ForegroundColor Green
+        Update-OverallProgress -CurrentSource "Web History"
+    }
+    catch {
+        Write-Host "  Error processing Nirsoft Web History: $_" -ForegroundColor Red
+    }
+}
+else {
+    Write-Host "Skipping Nirsoft Web History processing (either disabled or file not found)" -ForegroundColor Yellow
+}
+
+
+
+# Process ez Amcache 
+
+
+if ($ProcessKape) {
+Write-Host "Processing EZ Tools Amcache" -ForegroundColor Cyan
 $AmCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
 if (Test-Path $AmCachePath) {
     $AmcacheFiles = Get-ChildItem -Path $AmCachePath -Filter "*ssociatedFileEntries.csv" -ErrorAction SilentlyContinue
@@ -546,7 +793,7 @@ if (Test-Path $AmCachePath) {
         $fileCounter = 0
         foreach ($file in $AmcacheFiles) {
             $fileCounter++
-            Show-ProcessingProgress -Activity "Processing Amcache Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+            Show-ProcessingProgress -Activity "Processing EZ Tools Amcache Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
             
             try {
                 # Use streaming approach for large files
@@ -597,8 +844,9 @@ if (Test-Path $AmCachePath) {
                                 
                                 $row = @{
                                     DateTime       = $dateTimeFormatted 
+                                    Tool           = "EZ Tools"
                                     DataPath       = $_."FullPath"
-                                    Info           = "Last Write"
+                                    TimestampInfo  = "Last Write"
                                     Description    = "Program Execution"
                                     DataDetails    = $_."ApplicationName"
                                     FileExtension  = $_."FileExtension"
@@ -654,8 +902,9 @@ if (Test-Path $AmCachePath) {
 
                             $row = @{
                                 DateTime       = $dateTimeFormatted 
+                                Tool           = "EZ Tools"
                                 DataPath       = $_."FullPath"
-                                Info           = "Last Write"
+                                TimestampInfo  = "Last Write"
                                 Description    = "Program Execution"
                                 DataDetails    = $_."ApplicationName"
                                 FileExtension  = $_."FileExtension"
@@ -679,26 +928,26 @@ if (Test-Path $AmCachePath) {
                 
                 $reader.Close()
                 
-                # Report on processing results
-                Write-Host "  Added $totalAdded Amcache entries from $($file.Name)" -ForegroundColor Green
-            } catch {
-                Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
-            }
-            
-            Update-OverallProgress -CurrentSource "Amcache"
+            # Report on processing results
+            Write-Host "  Added $totalAdded Amcache entries from $($file.Name)" -ForegroundColor Green
+        } catch {
+            Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
         }
-    } else {
-        Write-Host "  No Amcache files found" -ForegroundColor Yellow
+        
+        Update-OverallProgress -CurrentSource "Amcache"
     }
 } else {
-    Write-Host "  Amcache path not found: $AmCachePath" -ForegroundColor Yellow
+    Write-Host "  No Amcache files found" -ForegroundColor Yellow
+}
+} else {
+Write-Host "  Amcache path not found: $AmCachePath" -ForegroundColor Yellow
+}
+} else {
+Write-Host "Skipping EZ Tools Amcache (ProcessKape is disabled)" -ForegroundColor Yellow
 }
 
-
-
-
-
-# Process AppCompatCache
+# Process ez AppCompatCache -Shim
+if ($ProcessKape) {
 Write-Host "Processing AppCompatCache" -ForegroundColor Cyan
 $AppCompatCachePath = Join-Path $KapeDirectory $ProgramExecSubDir
 if (Test-Path $AppCompatCachePath) {
@@ -749,9 +998,10 @@ if (Test-Path $AppCompatCachePath) {
                             $accRows = $batchData | ForEach-Object {
                                 $row = @{
                                     DateTime       = $_."LastModifiedTimeUTC"
+                                    Tool           = "EZ Tools"
                                     DataPath       = $_."Path"
                                     DataDetails    = $_."Path" -replace '.*\\([^\\]+)$', '$1'
-                                    Info           = "Last Modified"
+                                    TimestampInfo  = "Last Modified"
                                     EvidencePath   = $_."SourceFile"
                                     Description    = "Program Execution"
                                 }
@@ -796,9 +1046,10 @@ if (Test-Path $AppCompatCachePath) {
                         $accRows = $batchData | ForEach-Object {
                             $row = @{
                                 DateTime       = $_."LastModifiedTimeUTC"
+                                Tool           = "EZ Tools"
                                 DataPath       = $_."Path"
                                 DataDetails    = $_."Path" -replace '.*\\([^\\]+)$', '$1'
-                                Info           = "Last Modified"
+                                TimestampInfo  = "Last Modified"
                                 EvidencePath   = $_."SourceFile"
                                 Description    = "Program Execution"
                             }
@@ -820,8 +1071,8 @@ if (Test-Path $AppCompatCachePath) {
                 
                 $reader.Close()
                 
-                # Report on processing results
-                Write-Host "  Added $totalAdded AppCompatCache entries from $($file.Name)" -ForegroundColor Green
+               # Report on processing results
+               Write-Host "  Added $totalAdded AppCompatCache entries from $($file.Name)" -ForegroundColor Green
             } catch {
                 Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
@@ -834,8 +1085,12 @@ if (Test-Path $AppCompatCachePath) {
 } else {
     Write-Host "  AppCompatCache path not found: $AppCompatCachePath" -ForegroundColor Yellow
 }
+} else {
+Write-Host "Skipping EZ Tools AppCompatCache (ProcessKape is disabled)" -ForegroundColor Yellow
+}
 
-# Define filtering criteria per channel for Event Logs
+
+# Define filtering criteria per channel for ez Event Logs
 $EventChannelFilters = @{
     "Application" = @(1000, 1001)
     "Microsoft-Windows-PowerShell/Operational" = @(4100, 4103, 4104)
@@ -850,9 +1105,9 @@ $EventChannelFilters = @{
 }
 
 
+# process ez event logs
 
-
-# process event logs
+if ($ProcessKape) {
 if (!$SkipEventLogs) {
     Write-Host "Processing Event Logs" -ForegroundColor Cyan
     
@@ -872,7 +1127,7 @@ if (!$SkipEventLogs) {
     Write-Host "  -----------------------------------------" -ForegroundColor Yellow
     
     Write-Host "  Warning: Event log processing may take significantly longer than other artifacts." -ForegroundColor Yellow
-    Write-Host "  Consider using -SkipEventLogs in the future if this step takes too long." -ForegroundColor Yellow
+    Write-Host "  Consider choosing NO in the interactive menu or using -SkipEventLogs in the future to skip event log processing." -ForegroundColor Yellow
     Write-Host "  Note: Some event log entries may be skipped due to formatting issues in the CSV." -ForegroundColor Yellow
     
     $EVTPath = Join-Path $KapeDirectory $EventLogsSubDir
@@ -1008,14 +1263,15 @@ if (!$SkipEventLogs) {
                                     }
                                     
                                     $row = @{
-                                        DateTime     = $dateTimeFormatted
-                                        EventId      = $entry."EventId"
-                                        Description  = $entry."Channel"
-                                        Info         = $entry."MapDescription"
-                                        DataDetails  = $entry."PayloadData1"
-                                        DataPath     = $entry."PayloadData2"
-                                        Computer     = $entry."Computer"
-                                        EvidencePath = $entry."SourceFile"
+                                        DateTime        = $dateTimeFormatted
+                                        Tool            = "EZ Tools"
+                                        EventId         = $entry."EventId"
+                                        Description     = $entry."Channel"
+                                        TimestampInfo   = "Event Time"
+                                        DataDetails     = $entry."MapDescription"
+                                        DataPath        = $entry."PayloadData1"
+                                        Computer        = $entry."Computer"
+                                        EvidencePath    = $entry."SourceFile"
                                     }
                                     $evtRows += Normalize-Row -Fields $row -ArtifactName "EventLogs"
                                 }
@@ -1118,14 +1374,15 @@ if (!$SkipEventLogs) {
                                 }
                                 
                                 $row = @{
-                                    DateTime     = $dateTimeFormatted
-                                    EventId      = $entry."EventId"
-                                    Description  = $entry."Channel"
-                                    Info         = $entry."MapDescription"
-                                    DataDetails  = $entry."PayloadData1"
-                                    DataPath     = $entry."PayloadData2"
-                                    Computer     = $entry."Computer"
-                                    EvidencePath = $entry."SourceFile"
+                                    DateTime         = $dateTimeFormatted
+                                    Tool             = "EZ Tools"
+                                    EventId          = $entry."EventId"
+                                    Description      = $entry."Channel"
+                                    TimestampInfo    = "Event Time"
+                                    DataDetails      = $entry."MapDescription"
+                                    DataPath         = $entry."PayloadData1"
+                                    Computer         = $entry."Computer"
+                                    EvidencePath     = $entry."SourceFile"
                                 }
                                 $evtRows += Normalize-Row -Fields $row -ArtifactName "EventLogs"
                             }
@@ -1183,7 +1440,9 @@ if (!$SkipEventLogs) {
         Write-Host "  Event Log path not found: $EVTPath" -ForegroundColor Yellow
     }
 }
-
+else {
+    Write-Host "Skipping EZ Tools EventLogs (ProcessKape is disabled)" -ForegroundColor Yellow
+}
 
 
 # After processing each artifact, perform garbage collection to free up resources
@@ -1191,168 +1450,431 @@ if (!$SkipEventLogs) {
 [System.GC]::WaitForPendingFinalizers()
 
 
-# Process File Deletion records
-Write-Host "Processing Deleted Files" -ForegroundColor Cyan
-$FileDeletionFiles = Get-ChildItem -Path $KapeDirectory -Recurse -Filter "*RBCmd*.csv" -ErrorAction SilentlyContinue
-$fileCount = $FileDeletionFiles.Count
-
-if ($fileCount -gt 0) {
-    $fileCounter = 0
-    foreach ($file in $FileDeletionFiles) {
-        $fileCounter++
-        Show-ProcessingProgress -Activity "Processing File Deletion Records" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+# Process ez File Deletion records
+if ($ProcessKape) {
+    Write-Host "Processing File Deletion Records" -ForegroundColor Cyan
+    $fileDeletionPath = Join-Path $KapeDirectory $FileDeletionSubDir
+    if (Test-Path $fileDeletionPath) {
+        $fileDeletionFiles = Get-ChildItem $fileDeletionPath -Filter "*RBCmd*" -Recurse -ErrorAction SilentlyContinue
+        $fileCount = $fileDeletionFiles.Count
         
-        try {
-            # Use streaming approach for large files
-            $reader = New-Object System.IO.StreamReader($file.FullName)
-            $headerLine = $reader.ReadLine()
-            
-            $batchCount = 0
-            $totalProcessed = 0
-            $totalAdded = 0
-            $batch = New-Object System.Collections.ArrayList
-            
-            # Process the file line by line in batches
-            while (-not $reader.EndOfStream) {
-                $line = $reader.ReadLine()
+        if ($fileCount -gt 0) {
+            $fileCounter = 0
+            foreach ($file in $fileDeletionFiles) {
+                $fileCounter++
+                Show-ProcessingProgress -Activity "Processing File Deletion Records" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
                 
-                # Skip empty lines
-                if ([string]::IsNullOrWhiteSpace($line)) { continue }
-                
-                [void]$batch.Add($line)
-                $batchCount++
-                $totalProcessed++
-                
-                # Process in batches of the specified size
-                if ($batchCount -ge $BatchSize) {
-                    # Create temp CSV file for the batch
-                    $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    # Use streaming approach for large files
+                    $reader = New-Object System.IO.StreamReader($file.FullName)
+                    $headerLine = $reader.ReadLine()
                     
+                    $batchCount = 0
+                    $totalProcessed = 0
+                    $totalAdded = 0
+                    $batch = New-Object System.Collections.ArrayList
+                    
+                    # Process the file line by line in batches
+                    while (-not $reader.EndOfStream) {
+                        $line = $reader.ReadLine()
+                        
+                        # Skip empty lines
+                        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                        
+                        [void]$batch.Add($line)
+                        $batchCount++
+                        $totalProcessed++
+                        
+                        # Process in batches of the specified size
+                        if ($batchCount -ge $BatchSize) {
+                            # Create temp CSV file for the batch
+                            $tempFile = [System.IO.Path]::GetTempFileName()
+                            
+                            try {
+                                # Write header and batch to temp file
+                                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                                
+                                # Import batch data
+                                $batchData = Import-Csv $tempFile
+                                
+                                # Process File Deletion entries
+                                $delRows = $batchData | ForEach-Object {
+                                    # Check if the path has a file extension (indicating it's a file, not a folder)
+                                    $isFile = $_."FileName" -match '.*\\[^\\]+\.[^\\\.]+$'
+                                    
+                                    $dataDetails = if ($isFile) {
+                                        # Extract just the filename if it's a file
+                                        $_."FileName" -replace '.*\\([^\\]+)$', '$1'
+                                    } else {
+                                        # It's a folder
+                                        "Folder Deletion"
+                                    }
+                                    
+                                    $row = @{
+                                        DateTime       = $_."DeletedOn"
+                                        Tool           = "EZ Tools"
+                                        DataPath       = $_."FileName"
+                                        Description    = "File System"
+                                        TimestampInfo  = "File Deleted On"
+                                        DataDetails    = $dataDetails
+                                        FileSize       = $_."FileSize"
+                                        EvidencePath   = $_."SourceName"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "FileDeletion"
+                                }
+                                $MasterTimeline += $delRows
+                                $totalAdded += $delRows.Count
+                               
+                                
+                                # Update progress
+                                if ($totalProcessed % 1000 -eq 0) {
+                                    Show-ProcessingProgress -Activity "Processing File Deletion: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                                }
+                            }
+                            catch {
+                                Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                            }
+                            finally {
+                                # Clean up temp file
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
+                            }
+                            
+                            # Reset batch
+                            $batch.Clear()
+                            $batchCount = 0
+                        }
+                    }
+                    
+                    # Process any remaining lines
+                    if ($batch.Count -gt 0) {
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Process remaining batch with same logic
+                            $delRows = $batchData | ForEach-Object {
+                                # Check if the path has a file extension (indicating it's a file, not a folder)
+                                $isFile = $_."FileName" -match '.*\\[^\\]+\.[^\\\.]+$'
+                                
+                                $dataDetails = if ($isFile) {
+                                    # Extract just the filename if it's a file
+                                    $_."FileName" -replace '.*\\([^\\]+)$', '$1'
+                                } else {
+                                    # It's a folder
+                                    "Folder Deletion"
+                                }
+                                
+                                $row = @{
+                                    DateTime       = $_."DeletedOn"
+                                    Tool           = "EZ Tools"
+                                    DataPath       = $_."FileName"
+                                    Description    = "File System"
+                                    TimestampInfo  = "File Deleted On"
+                                    DataDetails    = $dataDetails
+                                    FileSize       = $_."FileSize"
+                                    EvidencePath   = $_."SourceName"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "FileDeletion"
+                            }
+                            
+                            $MasterTimeline += $delRows
+                            $totalAdded += $delRows.Count
+                         
+                        }
+                        catch {
+                            Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+                    
+                    $reader.Close()
+                    
+                    # Report on processing results
+                    Write-Host "  Added $totalAdded file deletion entries from $($file.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+                
+                Update-OverallProgress -CurrentSource "File Deletion"
+            }
+        } else {
+            Write-Host "  No file deletion records found" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  File deletion records path not found: $fileDeletionPath" -ForegroundColor Yellow
+        }
+    } else { Write-Host "Skipping EZ Tools File Deletions (ProcessKape is disabled)" -ForegroundColor Yellow }
+        
+# Process ez Jump Lists
+if ($ProcessKape) {
+Write-Host "Processing Jump Lists" -ForegroundColor Cyan
+$jumpListPath = Join-Path $KapeDirectory $FileFolderSubDir
+if (Test-Path $jumpListPath) {
+    $jumpListFiles = Get-ChildItem $jumpListPath -Filter "*_AutomaticDestinations.csv" -ErrorAction SilentlyContinue
+    $fileCount = $jumpListFiles.Count
+    
+    if ($fileCount -gt 0) {
+        $fileCounter = 0
+        foreach ($file in $jumpListFiles) {
+            $fileCounter++
+            Show-ProcessingProgress -Activity "Processing Jump Lists" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+            
+            try {
+                # Use streaming approach for large files
+                $reader = New-Object System.IO.StreamReader($file.FullName)
+                $headerLine = $reader.ReadLine()
+                
+                $batchCount = 0
+                $totalProcessed = 0
+                $totalAdded = 0
+                $batch = New-Object System.Collections.ArrayList
+                
+                # Process the file line by line in batches
+                while (-not $reader.EndOfStream) {
+                    $line = $reader.ReadLine()
+                    
+                    # Skip empty lines
+                    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                    
+                    [void]$batch.Add($line)
+                    $batchCount++
+                    $totalProcessed++
+                    
+                    # Process in batches of the specified size
+                    if ($batchCount -ge $BatchSize) {
+                        # Create temp CSV file for the batch
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        
+                        try {
+                            # Write header and batch to temp file
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            # Import batch data
+                            $batchData = Import-Csv $tempFile
+                            
+                            # First pass - Creation Time
+                            $jumpListRows = $batchData | ForEach-Object {
+                                $dataPathValue = $(if ($_."LocalPath") { 
+                                                    $_."LocalPath" 
+                                                } elseif ($_."TargetIDAbsolutePath") { 
+                                                    $_."TargetIDAbsolutePath" 
+                                                } else { 
+                                                    "" 
+                                                })
+                            
+                                $dateTimeString = $_."CreationTime"
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                            $dateTimeFormatted = $dateTimeString
+                                        }
+
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "EZ Tools"
+                                    DataPath       = $dataPathValue
+                                    Description    = "File & Folder Access"
+                                    TimestampInfo  = "Creation Time"
+                                    DataDetails    = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                        "" 
+                                     } else { 
+                                        Split-Path -Leaf $dataPathValue 
+                                     })
+                                    FileSize       = $_."FileSize"
+                                    EvidencePath   = $_."SourceFile"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                            }
+                            $MasterTimeline += $jumpListRows
+                            $totalAdded += $jumpListRows.Count
+                            
+                            # Second pass - Last Modified
+                            $jumpListRows = $batchData | ForEach-Object {
+                                $dataPathValue = $(if ($_."LocalPath") { 
+                                                    $_."LocalPath" 
+                                                } elseif ($_."TargetIDAbsolutePath") { 
+                                                    $_."TargetIDAbsolutePath" 
+                                                } else { 
+                                                    "" 
+                                                })
+                                
+                            $dateTimeString = $_."LastModified"
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                            $dateTimeFormatted = $dateTimeString
+                                        }
+
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "EZ Tools"
+                                    DataPath       = $dataPathValue
+                                    Description    = "File & Folder Access"
+                                    TimestampInfo  = "Last Modified"
+                                    DataDetails    = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                        "" 
+                                     } else { 
+                                        Split-Path -Leaf $dataPathValue 
+                                     })
+                                    FileSize       = $_."FileSize"
+                                    EvidencePath   = $_."SourceFile"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                            }
+                            $MasterTimeline += $jumpListRows
+                            $totalAdded += $jumpListRows.Count
+                            
+                            # Update progress
+                            if ($totalProcessed % 1000 -eq 0) {
+                                Show-ProcessingProgress -Activity "Processing Jump Lists: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            # Clean up temp file
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        
+                        # Reset batch
+                        $batch.Clear()
+                        $batchCount = 0
+                    }
+                }
+                
+                # Process any remaining lines
+                if ($batch.Count -gt 0) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
                     try {
-                        # Write header and batch to temp file
                         $headerLine | Out-File -FilePath $tempFile -Encoding utf8
                         $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
                         
-                        # Import batch data
                         $batchData = Import-Csv $tempFile
                         
-                        # Process batch data using exact same logic as original code
-                        $delRows = $batchData | ForEach-Object {
-                            # Check if the path has a file extension (indicating it's a file, not a folder)
-                            $isFile = $_."FileName" -match '.*\\[^\\]+\.[^\\\.]+$'
+                        # First pass - Creation Time (for remaining batch)
+                        $jumpListRows = $batchData | ForEach-Object {
+                            $dataPathValue = $(if ($_."LocalPath") { 
+                                                $_."LocalPath" 
+                                            } elseif ($_."TargetIDAbsolutePath") { 
+                                                $_."TargetIDAbsolutePath" 
+                                            } else { 
+                                                "" 
+                                            })
                             
-                            $dataDetails = if ($isFile) {
-                                # Extract just the filename if it's a file
-                                $_."FileName" -replace '.*\\([^\\]+)$', '$1'
-                            } else {
-                                # It's a folder
-                                "Folder Deletion"
+                            $dateTimeString = $_."CreationTime"
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                            $dateTimeFormatted = $dateTimeString
+                                        }
+
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "EZ Tools"
+                                    DataPath       = $dataPathValue
+                                    Description    = "File & Folder Access"
+                                    TimestampInfo  = "Creation Time"
+                                DataDetails    = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                    "" 
+                                 } else { 
+                                    Split-Path -Leaf $dataPathValue 
+                                 })
+                                FileSize       = $_."FileSize"
+                                EvidencePath   = $_."SourceFile"
                             }
-                            
-                            $row = @{
-                                DateTime      = $_."DeletedOn"
-                                DataPath      = $_."FileName"
-                                Description   = "File System"
-                                DataDetails   = $dataDetails
-                                Info          = $_."FileType"
-                                FileSize      = $_."FileSize"
-                                EvidencePath  = $_."SourceName"
+                            Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                        }
+                        $MasterTimeline += $jumpListRows
+                        $totalAdded += $jumpListRows.Count
+                        
+                        # Second pass - Last Modified (for remaining batch)
+                        $jumpListRows = $batchData | ForEach-Object {
+                            $dataPathValue = $(if ($_."LocalPath") { 
+                                                $_."LocalPath" 
+                                            } elseif ($_."TargetIDAbsolutePath") { 
+                                                $_."TargetIDAbsolutePath" 
+                                            } else { 
+                                                "" 
+                                            })
+                            $dateTimeString = $_."LastModified"
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                            $dateTimeFormatted = $dateTimeString
+                                        }
+
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "EZ Tools"
+                                    DataPath       = $dataPathValue
+                                    Description    = "File & Folder Access"
+                                    TimestampInfo  = "Last Modified"
+                                    DataDetails    = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
+                                    "" 
+                                 } else { 
+                                    Split-Path -Leaf $dataPathValue 
+                                 })
+                                FileSize       = $_."FileSize"
+                                EvidencePath   = $_."SourceFile"
                             }
-                            Normalize-Row -Fields $row -ArtifactName "FileDeletion"
+                            Normalize-Row -Fields $row -ArtifactName "JumpLists"
                         }
-                        
-                        # Add to master timeline
-                        $MasterTimeline += $delRows
-                        $totalAdded += $delRows.Count
-                        
-                        # Update progress
-                        if ($totalProcessed % 5000 -eq 0) {
-                            Show-ProcessingProgress -Activity "Processing File Deletion: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
-                        }
+                        $MasterTimeline += $jumpListRows
+                        $totalAdded += $jumpListRows.Count
                     }
                     catch {
-                        Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
                     }
                     finally {
-                        # Clean up temp file
                         if (Test-Path $tempFile) {
                             Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
                         }
                     }
-                    
-                    # Reset batch
-                    $batch.Clear()
-                    $batchCount = 0
                 }
+                
+                $reader.Close()
+                
+                # Report on processing results
+                Write-Host "  Added $totalAdded Jump List entries from $($file.Name)" -ForegroundColor Green
+            } catch {
+                Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
             }
             
-            # Process any remaining lines
-            if ($batch.Count -gt 0) {
-                $tempFile = [System.IO.Path]::GetTempFileName()
-                try {
-                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
-                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
-                    
-                    $batchData = Import-Csv $tempFile
-                    
-                    # Process remaining batch with same logic
-                    $delRows = $batchData | ForEach-Object {
-                        # Check if the path has a file extension (indicating it's a file, not a folder)
-                        $isFile = $_."FileName" -match '.*\\[^\\]+\.[^\\\.]+$'
-                        
-                        $dataDetails = if ($isFile) {
-                            # Extract just the filename if it's a file
-                            $_."FileName" -replace '.*\\([^\\]+)$', '$1'
-                        } else {
-                            # It's a folder
-                            "Folder Deletion"
-                        }
-                        
-                        $row = @{
-                            DateTime      = $_."DeletedOn"
-                            DataPath      = $_."FileName"
-                            Description   = "File System"
-                            DataDetails   = $dataDetails
-                            Info          = $_."FileType"
-                            FileSize      = $_."FileSize"
-                            EvidencePath  = $_."SourceName"
-                        }
-                        Normalize-Row -Fields $row -ArtifactName "FileDeletion"
-                    }
-                    
-                    $MasterTimeline += $delRows
-                    $totalAdded += $delRows.Count
-                }
-                catch {
-                    Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
-                }
-                finally {
-                    if (Test-Path $tempFile) {
-                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
-                    }
-                }
-            }
-            
-            $reader.Close()
-            
-            # Report on processing results
-            Write-Host "  Added $totalAdded file deletion entries from $($file.Name)" -ForegroundColor Green
-        } catch {
-            Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+            Update-OverallProgress -CurrentSource "Jump Lists"
         }
-        
-        Update-OverallProgress -CurrentSource "File Deletion"
+    } else {
+        Write-Host "  No Jump List files found" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "  No file deletion records found" -ForegroundColor Yellow
-}
+    Write-Host "  Jump List files path not found: $jumpListPath" -ForegroundColor Yellow
+    }
+} else { Write-Host "Skipping EZ Tools Jump Lists (ProcessKape is disabled)" -ForegroundColor Yellow }
 
 
-
-
-
-
-# Process LNK Files
+# Process ez LNK Files
+if ($ProcessKape) {
 Write-Host "Processing LNK Files" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
 if (Test-Path $lnkPath) {
@@ -1411,11 +1933,12 @@ if (Test-Path $lnkPath) {
                                 
                                 $row = @{
                                     DateTime       = $_."TargetCreated"
+                                    Tool           = "EZ Tools"
                                     DataPath       = $dataPathValue
                                     Description    = "File & Folder Access"
-                                    Info           = "Target Created"
+                                    TimestampInfo  = "Target Created"
                                     DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                                        "Unknown Path" 
+                                        "" 
                                      } else { 
                                         Split-Path -Leaf $dataPathValue 
                                      })
@@ -1439,11 +1962,12 @@ if (Test-Path $lnkPath) {
                                 
                                 $row = @{
                                     DateTime       = $_."SourceCreated"
+                                    Tool           = "EZ Tools"
                                     DataPath       = $dataPathValue
                                     Description    = "File & Folder Access"
-                                    Info           = "Source Created"
+                                    TimestampInfo  = "Source Created"
                                     DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                                        "Unknown Path" 
+                                        "" 
                                      } else { 
                                         Split-Path -Leaf $dataPathValue 
                                      })
@@ -1467,11 +1991,12 @@ if (Test-Path $lnkPath) {
                                 
                                 $row = @{
                                     DateTime       = $_."TargetModified"
+                                    Tool           = "EZ Tools"
                                     DataPath       = $dataPathValue
                                     Description    = "File & Folder Access"
-                                    Info           = "Target Modified"
+                                    TimestampInfo  = "Target Modified"
                                     DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                                        "Unknown Path" 
+                                        "" 
                                      } else { 
                                         Split-Path -Leaf $dataPathValue 
                                      })
@@ -1525,11 +2050,12 @@ if (Test-Path $lnkPath) {
                             
                             $row = @{
                                 DateTime       = $_."TargetCreated"
+                                Tool           = "EZ Tools"
                                 DataPath       = $dataPathValue
                                 Description    = "File & Folder Access"
-                                Info           = "Target Created"
+                                TimestampInfo  = "Target Created"
                                 DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                                    "Unknown Path" 
+                                    "" 
                                  } else { 
                                     Split-Path -Leaf $dataPathValue 
                                  })
@@ -1553,11 +2079,12 @@ if (Test-Path $lnkPath) {
                             
                             $row = @{
                                 DateTime       = $_."SourceCreated"
+                                Tool           = "EZ Tools"
                                 DataPath       = $dataPathValue
                                 Description    = "File & Folder Access"
-                                Info           = "Source Created"
+                                TimestampInfo  = "Source Created"
                                 DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                                    "Unknown Path" 
+                                    "h" 
                                  } else { 
                                     Split-Path -Leaf $dataPathValue 
                                  })
@@ -1581,11 +2108,12 @@ if (Test-Path $lnkPath) {
                             
                             $row = @{
                                 DateTime       = $_."TargetModified"
+                                Tool           = "EZ Tools"
                                 DataPath       = $dataPathValue
                                 Description    = "File & Folder Access"
-                                Info           = "Target Modified"
+                                TimestampInfo  = "Target Modified"
                                 DataDetails = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
-                                    "Unknown Path" 
+                                    "" 
                                  } else { 
                                     Split-Path -Leaf $dataPathValue 
                                  })
@@ -1622,16 +2150,17 @@ if (Test-Path $lnkPath) {
     }
 } else {
     Write-Host "  LNK files path not found: $lnkPath" -ForegroundColor Yellow
-}
-
-
-
+    }
+} else { Write-Host "Skipping EZ Tools LNK Files (ProcessKape is disabled)" -ForegroundColor Yellow }
+    
 
 # Process MFT Created with batching for large files
+
+if ($ProcessKape) {
 Write-Host "Processing MFT File" -ForegroundColor Cyan
 
 
-# Display current MFT filter settings - ensure this completes before other output begins
+# Display current EZ MFT filter settings - ensure this completes before other output begins
 Write-Host ""
 Write-Host "  Current MFT Filters:" -ForegroundColor Yellow
 Write-Host "  (You can customize these filters by editing the MFT filter variables in the script)" -ForegroundColor Yellow
@@ -1749,13 +2278,14 @@ if (Test-Path $MFTPath) {
                         
                         # Process filtered entries
                         $mftRows = $filteredData | ForEach-Object {
-                            $dt = try { [datetime]::Parse($_.Created0x10).ToString("yyyy-MM-dd HH:mm:ss") } catch { $_.Created0x10 }
+                            $dt = try { [datetime]::Parse($_.Created0x30).ToString("yyyy-MM-dd HH:mm:ss") } catch { $_.Created0x30}
                             $row = @{
                                 DateTime       = $dt
+                                Tool           = "EZ Tools"
                                 DataPath       = $_."ParentPath"
                                 DataDetails    = $_."FileName"
                                 Description    = "File System"
-                                Info           = "File Created"
+                                TimestampInfo  = "File Created"
                                 FileSize       = $_."FileSize"
                                 FileExtension  = $_."Extension"
                             }
@@ -1810,13 +2340,14 @@ if (Test-Path $MFTPath) {
                     }
                     
                     $mftRows = $filteredData | ForEach-Object {
-                        $dt = try { [datetime]::Parse($_.Created0x10).ToString("yyyy-MM-dd HH:mm:ss") } catch { $_.Created0x10 }
+                        $dt = try { [datetime]::Parse($_.Created0x30).ToString("yyyy-MM-dd HH:mm:ss") } catch { $_.Created0x30 }
                         $row = @{
                             DateTime       = $dt
+                            Tool           = "EZ Tools"
                             DataPath       = $_."ParentPath"
                             DataDetails    = $_."FileName"
                             Description    = "File System"
-                            Info           = "File Created"
+                            TimestampInfo  = "File Created"
                             FileSize       = $_."FileSize"
                             FileExtension  = $_."Extension"
                         }
@@ -1864,6 +2395,9 @@ if (Test-Path $MFTPath) {
 } else {
     Write-Host "  MFT path not found: $MFTPath" -ForegroundColor Yellow
 }
+} else {
+Write-Host "Skipping EZ Tools MFT (ProcessKape is disabled)" -ForegroundColor Yellow
+}
 
 
 # After processing each artifact, perform garbage collection to free up resources
@@ -1872,8 +2406,8 @@ if (Test-Path $MFTPath) {
 
 
 
-# Process Prefetch Files
-
+# Process EZ Prefetch Files
+if ($ProcessKape) {
 Write-Host "Processing Prefetch Files" -ForegroundColor Cyan
 $PECmdPath = Join-Path $KapeDirectory $ProgramExecSubDir
 if (Test-Path $PECmdPath) {
@@ -1920,28 +2454,62 @@ if (Test-Path $PECmdPath) {
                             # Import batch data
                             $batchData = Import-Csv $tempFile
                             
-                            # Process batch data using exact same field mappings as your original code
+                            # First pass - LastRun timestamp
                             $peRows = $batchData | ForEach-Object {
-                                        # Format the DateTime properly
-                                        $dateTimeString = $_."LastRun"
-                                        try {
-                                            $dateTime = [datetime]::Parse($dateTimeString)
-                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
-                                        }
-                                        catch {
-                                            # Handle potential parsing errors
-                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
-                                            $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
-                                        }
+                                # Format the DateTime properly
+                                $dateTimeString = $_."LastRun"
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                }
+                                catch {
+                                    # Handle potential parsing errors
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                                }
 
                                 $row = @{
                                     DateTime     = $dateTimeFormatted
+                                    Tool           = "EZ Tools"
                                     DataPath     = $_."SourceFilename"
-                                    Info         = "Last Run"
+                                    TimestampInfo =  "Last Run"
                                     DataDetails  = $_."ExecutableName"
                                     Description  = "Program Execution"
+                                    EvidencePath = $file.Name
+                                    Count        = $_."RunCount"
                                 }
-                                Normalize-Row -Fields $row -ArtifactName "Prefetch Files"
+                                Normalize-Row -Fields $row -ArtifactName "PrefetchFiles"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $peRows
+                            $totalAdded += $peRows.Count
+                            
+                            # Second pass - SourceCreated timestamp
+                            $peRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."SourceCreated") } | ForEach-Object {
+                                # Format the DateTime properly
+                                $dateTimeString = $_."SourceCreated"
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                }
+                                catch {
+                                    # Handle potential parsing errors
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                                }
+
+                                $row = @{
+                                    DateTime     = $dateTimeFormatted
+                                    Tool           = "EZ Tools"
+                                    DataPath     = $_."SourceFilename"
+                                    TimestampInfo = "File Created"
+                                    DataDetails  = $_."ExecutableName"
+                                    Description  = "Program Execution"
+                                    EvidencePath = $file.Name
+                                    Count        = $_."RunCount"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "PrefetchFiles"
                             }
                             
                             # Add to master timeline
@@ -1978,9 +2546,9 @@ if (Test-Path $PECmdPath) {
                         
                         $batchData = Import-Csv $tempFile
                         
-                        # Process remaining batch with same field mappings
+                        # First pass - LastRun (for remaining batch)
                         $peRows = $batchData | ForEach-Object {
-                                 # Format the DateTime properly
+                            # Format the DateTime properly
                             $dateTimeString = $_."LastRun"
                             try {
                                 $dateTime = [datetime]::Parse($dateTimeString)
@@ -1994,12 +2562,45 @@ if (Test-Path $PECmdPath) {
 
                             $row = @{
                                 DateTime     = $dateTimeFormatted 
+                                Tool           = "EZ Tools"
                                 DataPath     = $_."SourceFilename"
-                                Info         = "Last Run"
+                                TimestampInfo = "Last Run"
                                 DataDetails  = $_."ExecutableName"
                                 Description  = "Program Execution"
+                                EvidencePath = $file.Name
+                                Count        = $_."RunCount"
                             }
-                            Normalize-Row -Fields $row -ArtifactName "Prefetch Files"
+                            Normalize-Row -Fields $row -ArtifactName "PrefetchFiles"
+                        }
+                        
+                        $MasterTimeline += $peRows
+                        $totalAdded += $peRows.Count
+                        
+                        # Second pass - SourceCreated (for remaining batch)
+                        $peRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."SourceCreated") } | ForEach-Object {
+                            # Format the DateTime properly
+                            $dateTimeString = $_."SourceCreated"
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            catch {
+                                # Handle potential parsing errors
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                            }
+
+                            $row = @{
+                                DateTime     = $dateTimeFormatted
+                                Tool           = "EZ Tools"
+                                DataPath     = $_."SourceFilename"
+                                TimestampInfo = "File Created"
+                                DataDetails  = $_."ExecutableName"
+                                Description  = "Program Execution"
+                                EvidencePath = $file.Name
+                                Count        = $_."RunCount"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "PrefetchFiles"
                         }
                         
                         $MasterTimeline += $peRows
@@ -2031,10 +2632,13 @@ if (Test-Path $PECmdPath) {
 } else {
     Write-Host "  Prefetch path not found: $PECmdPath" -ForegroundColor Yellow
 }
-
+} else {
+Write-Host "Skipping EZ Tools Prefetch (ProcessKape is disabled)" -ForegroundColor Yellow
+}
 
 
 # Process Registry
+if ($ProcessKape) {
 Write-Host "Processing Registry" -ForegroundColor Cyan
 $RegistryPath = Join-Path $KapeDirectory $RegistrySubDir
 if (Test-Path $RegistryPath) {
@@ -2085,7 +2689,7 @@ if (Test-Path $RegistryPath) {
 										$dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
 									} else {
 										# Handle empty date strings
-										$dateTimeFormatted = "N/A"
+										$dateTimeFormatted = ""
 									}
 								}
 								catch {
@@ -2095,10 +2699,11 @@ if (Test-Path $RegistryPath) {
 									}                       
                                 $row = @{
                                     DateTime     = $dateTimeFormatted
+                                    Tool           = "EZ Tools"
                                     DataPath     = $_."ValueData"
                                     Description  = $_."Category"
                                     DataDetails  = $_."Description"
-                                    Info         = "Last Write"
+                                    TimestampInfo = "Last Write"
                                     EvidencePath = $_."HivePath"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "Registry"
@@ -2143,7 +2748,7 @@ if (Test-Path $RegistryPath) {
 										$dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
 									} else {
 										# Handle empty date strings
-										$dateTimeFormatted = "N/A"
+										$dateTimeFormatted = ""
 									}
 								}
 								catch {
@@ -2154,10 +2759,11 @@ if (Test-Path $RegistryPath) {
                             
                             $row = @{
                                 DateTime     = $dateTimeFormatted
+                                Tool           = "EZ Tools"
                                 DataPath     = $_."ValueData"
                                 Description  = $_."Category"
                                 DataDetails  = $_."Description"
-                                Info         = "Last Write"
+                                TimestampInfo = "Last Write"
                                 EvidencePath = $_."HivePath"
                             }
                             Normalize-Row -Fields $row -ArtifactName "Registry"
@@ -2191,6 +2797,9 @@ if (Test-Path $RegistryPath) {
 } else {
     Write-Host "  Registry path not found: $RegistryPath" -ForegroundColor Yellow
 }
+} else {
+Write-Host "Skipping EZ Tools Registry (ProcessKape is disabled)" -ForegroundColor Yellow
+}
 
 
 # After processing each artifact, perform garbage collection to free up resources
@@ -2200,7 +2809,8 @@ if (Test-Path $RegistryPath) {
 
 
 
-# Process Shellbags
+# Process ez Shellbags
+if ($ProcessKape) {
 Write-Host "Processing Shellbags" -ForegroundColor Cyan
 $lnkPath = Join-Path $KapeDirectory $FileFolderSubDir
 if (Test-Path $lnkPath) {
@@ -2262,10 +2872,11 @@ if (Test-Path $lnkPath) {
                             $shellRows = $batchData | ForEach-Object {
                                 $row = @{
                                     DateTime    = $_."LastWriteTime"
+                                    Tool           = "EZ Tools"
                                     DataPath    = $_."AbsolutePath"
                                     DataDetails = $_."Value"
                                     Description = "File & Folder Access"
-                                    Info        = "Last Write"
+                                    TimestampInfo = "Last Write"
 									EvidencePath = $file.Name 
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "Shellbags"
@@ -2277,10 +2888,11 @@ if (Test-Path $lnkPath) {
                             $shellRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."FirstInteracted") } | ForEach-Object {
                                 $row = @{
                                     DateTime    = $_."FirstInteracted"
+                                    Tool           = "EZ Tools"
                                     DataPath    = $_."AbsolutePath"
                                     DataDetails = $_."Value"
                                     Description = "File & Folder Access"
-                                    Info        = "First Interacted"
+                                    TimestampInfo = "First Interaction"
 									EvidencePath = $file.Name 
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "Shellbags"
@@ -2292,10 +2904,11 @@ if (Test-Path $lnkPath) {
                             $shellRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."LastInteracted") } | ForEach-Object {
                                 $row = @{
                                     DateTime    = $_."LastInteracted"
+                                    Tool           = "EZ Tools"
                                     DataPath    = $_."AbsolutePath"
                                     DataDetails = $_."Value"
                                     Description = "File & Folder Access"
-                                    Info        = "Last Interacted"
+                                    TimestampInfo       = "Last Interacted"
 									EvidencePath = $file.Name 
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "Shellbags"
@@ -2337,10 +2950,11 @@ if (Test-Path $lnkPath) {
                         $shellRows = $batchData | ForEach-Object {
                             $row = @{
                                 DateTime    = $_."LastWriteTime"
+                                Tool           = "EZ Tools"
                                 DataPath    = $_."AbsolutePath"
                                 DataDetails = $_."Value"
                                 Description = "File & Folder Access"
-                                Info        = "Last Write"
+                                TimestampInfo = "Last Write"
 								EvidencePath = $file.Name 
                             }
                             Normalize-Row -Fields $row -ArtifactName "Shellbags"
@@ -2352,10 +2966,11 @@ if (Test-Path $lnkPath) {
                         $shellRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."FirstInteracted") } | ForEach-Object {
                             $row = @{
                                 DateTime    = $_."FirstInteracted"
+                                Tool           = "EZ Tools"
                                 DataPath    = $_."AbsolutePath"
                                 DataDetails = $_."Value"
                                 Description = "File & Folder Access"
-                                Info        = "First Interacted"
+                                TimestampInfo = "First Interaction"
 								EvidencePath = $file.Name 
                             }
                             Normalize-Row -Fields $row -ArtifactName "Shellbags"
@@ -2367,10 +2982,11 @@ if (Test-Path $lnkPath) {
                         $shellRows = $batchData | Where-Object { -not [string]::IsNullOrEmpty($_."LastInteracted") } | ForEach-Object {
                             $row = @{
                                 DateTime    = $_."LastInteracted"
+                                Tool           = "EZ Tools"
                                 DataPath    = $_."AbsolutePath"
                                 DataDetails = $_."Value"
                                 Description = "File & Folder Access"
-                                Info        = "Last Interacted"
+                                TimestampInfo = "Last Interacted"
 								EvidencePath = $file.Name 
                             }
                             Normalize-Row -Fields $row -ArtifactName "Shellbags"
@@ -2390,223 +3006,28 @@ if (Test-Path $lnkPath) {
                 
                 $reader.Close()
                 
-                # Report on processing results
-                Write-Host "  Added $totalAdded shellbag entries from $($file.Name)" -ForegroundColor Green
-            } catch {
-                Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                 # Report on processing results
+                 Write-Host "  Added $totalAdded shellbag entries from $($file.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+                
+                Update-OverallProgress -CurrentSource "Shellbags"
             }
-            
-            Update-OverallProgress -CurrentSource "Shellbags"
+        } else {
+            Write-Host "  No shellbag files found" -ForegroundColor Yellow
         }
     } else {
-        Write-Host "  No shellbag files found" -ForegroundColor Yellow
+        Write-Host "  Shellbags path not found: $lnkPath" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "  Shellbags path not found: $lnkPath" -ForegroundColor Yellow
+    Write-Host "Skipping EZ Tools Shellbags (ProcessKape is disabled)" -ForegroundColor Yellow
 }
 
-
-# Web History
-Write-Host "Processing Web History" -ForegroundColor Cyan
-if (Test-Path $WebResultsPath) {
-    Show-ProcessingProgress -Activity "Processing Web History" -Status "File: $([System.IO.Path]::GetFileName($WebResultsPath))" -Current 1 -Total 1 -NestedLevel 1
-    
-    try {
-        # Use streaming approach for large files
-        $reader = New-Object System.IO.StreamReader($WebResultsPath)
-        $headerLine = $reader.ReadLine()
-        
-        $batchCount = 0
-        $totalProcessed = 0
-        $totalAdded = 0
-        $batch = New-Object System.Collections.ArrayList
-        
-        # Process the file line by line in batches
-        while (-not $reader.EndOfStream) {
-            $line = $reader.ReadLine()
-            
-            # Skip empty lines
-            if ([string]::IsNullOrWhiteSpace($line)) { continue }
-            
-            [void]$batch.Add($line)
-            $batchCount++
-            $totalProcessed++
-            
-            # Process in batches of the specified size
-            if ($batchCount -ge $BatchSize) {
-                # Create temp CSV file for the batch
-                $tempFile = [System.IO.Path]::GetTempFileName()
-                
-                try {
-                    # Write header and batch to temp file
-                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
-                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
-                    
-                    # Import batch data
-                    $batchData = Import-Csv $tempFile
-                    
-                    # Process batch data with special URL handling
-                    $webRows = $batchData | ForEach-Object {
-                        # Extract filename if URL starts with file://
-                        $dataDetails = $_."Title"
-                        $url = $_."URL"
-                        # Format the DateTime properly
-                    $dateTimeString = $_."Visit Time"
-                        try {
-                            $dateTime = [datetime]::Parse($dateTimeString)
-                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
-                        }
-                        catch {
-                            # Handle potential parsing errors
-                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
-                            $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
-                        }
-                        # Default description
-                        $description = "Web Activity"
-                        
-                        # Check if the URL starts with file:// and extract the filename
-                        if ($url -match "^file:///") {
-                            # Extract filename after the last slash
-                            if ($url -match "/([^/]+)$") {
-                                $filename = $matches[1]
-                                # Use the filename as DataDetails
-                                $dataDetails = $filename
-                            }
-                            # Change description to File & Folder Access for file:// URLs
-                            $description = "File & Folder Access"
-                        }
-                        # Check for search URLs
-                        elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
-                            $description = "Web Search"
-                        }
-                        # Check for download URLs
-                        elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
-                            $description = "Web Download"
-                        }
-                        
-                        $row = @{
-                            DateTime     = $dateTimeFormatted
-                            DataPath     = $url
-                            Info         = "EventTime"
-                            DataDetails  = $dataDetails
-                            Description  = $description
-                            User         = $_."User Profile"
-                        }
-                        Normalize-Row -Fields $row -ArtifactName "WebHistory"
-                    }
-                    
-                    # Add to master timeline
-                    $MasterTimeline += $webRows
-                    $totalAdded += $webRows.Count
-                    
-                    # Update progress
-                    if ($totalProcessed % 5000 -eq 0) {
-                        Show-ProcessingProgress -Activity "Processing Web History" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
-                    }
-                }
-                catch {
-                    Write-Host "    Error processing batch: $_" -ForegroundColor Red
-                }
-                finally {
-                    # Clean up temp file
-                    if (Test-Path $tempFile) {
-                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
-                    }
-                }
-                
-                # Reset batch
-                $batch.Clear()
-                $batchCount = 0
-            }
-        }
-        
-        # Process any remaining lines
-        if ($batch.Count -gt 0) {
-            $tempFile = [System.IO.Path]::GetTempFileName()
-            try {
-                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
-                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
-                
-                $batchData = Import-Csv $tempFile
-                
-                # Process remaining batch with same logic
-                $webRows = $batchData | ForEach-Object {
-                    # Extract filename if URL starts with file://
-                    $dataDetails = $_."Title"
-                    $url = $_."URL"
-                    
-                    $dateTimeString = $_."Visit Time"
-                    try {
-                        $dateTime = [datetime]::Parse($dateTimeString)
-                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
-                    }
-                    catch {
-                        # Handle potential parsing errors
-                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
-                        $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
-                    }
-                    # Default description
-                    $description = "Web Activity"
-                    
-                    # Check if the URL starts with file:// and extract the filename
-                    if ($url -match "^file:///") {
-                        # Extract filename after the last slash
-                        if ($url -match "/([^/]+)$") {
-                            $filename = $matches[1]
-                            # Use the filename as DataDetails
-                            $dataDetails = $filename
-                        }
-                        # Change description to File & Folder Access for file:// URLs
-                        $description = "File & Folder Access"
-                    }
-                    # Check for search URLs
-                    elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
-                        $description = "Web Search"
-                    }
-                    # Check for download URLs
-                    elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
-                        $description = "Web Download"
-                    }
-                    
-                    $row = @{
-                        DateTime     = $dateTimeFormatted 
-                        DataPath     = $url
-                        Info         = "EventTime"
-                        DataDetails  = $dataDetails
-                        Description  = $description
-                        User         = $_."User Profile"
-                    }
-                    Normalize-Row -Fields $row -ArtifactName "WebHistory"
-                }
-                
-                $MasterTimeline += $webRows
-                $totalAdded += $webRows.Count
-            }
-            catch {
-                Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
-            }
-            finally {
-                if (Test-Path $tempFile) {
-                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
-                }
-            }
-        }
-        
-        $reader.Close()
-        
-        # Report on processing results
-        Write-Host "  Added $totalAdded web history entries from $([System.IO.Path]::GetFileName($WebResultsPath))" -ForegroundColor Green
-    } catch {
-        Write-Host "  Error processing web history: $_" -ForegroundColor Red
-    }
-    
-    Update-OverallProgress -CurrentSource "Web History"
-} else {
-    Write-Host "  Web history file not found: $WebResultsPath" -ForegroundColor Yellow
-}
 
 
 # Process Chainsaw CSV files
+if ($ProcessChainsaw) {
 Write-Host "Processing Chainsaw CSV Files" -ForegroundColor Cyan
 $ChainsawFiles = Get-ChildItem -Path $ChainsawDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "webResults.csv" }
 $fileCount = $ChainsawFiles.Count
@@ -2686,9 +3107,9 @@ if ($fileCount -gt 0) {
                         
                             $row = @{
                                 DateTime           = $dt
+                                Tool               = "Chainsaw"
                                 EventId            = $_."Event ID"
-                                Description        = "Chainsaw"
-                                Info               = "EventTime"
+                                TimestampInfo      = "EventTime"
                                 DataPath = $(if ($_."Threat Path") { 
                                     $_."Threat Path" 
                                 } elseif ($_."Scheduled Task Name") { 
@@ -2712,7 +3133,7 @@ if ($fileCount -gt 0) {
                                 } elseif ($_."User Name") { 
                                     $_."User Name" 
                                 } else {
-                                    "Unknown User"
+                                    ""
                                 })
 							
                                 Computer           = $_."Computer"
@@ -2787,9 +3208,9 @@ if ($fileCount -gt 0) {
                     
                         $row = @{
                             DateTime           = $dt
+                            Tool               = "Chainsaw"
                             EventId            = $_."Event ID"
-                            Description        = "Chainsaw"
-                            Info               = "EventTime"
+                            TimestampInfo      = "EventTime"
                             DataPath = $(if ($_."Threat Path") { 
                                 $_."Threat Path" 
                             } elseif ($_."Scheduled Task Name") { 
@@ -2813,7 +3234,7 @@ if ($fileCount -gt 0) {
                             } elseif ($_."User Name") { 
                                 $_."User Name" 
                             } else {
-                                "Unknown User"
+                                ""
                             })
 						
                             Computer           = $_."Computer"
@@ -2848,8 +3269,8 @@ if ($fileCount -gt 0) {
             
             $reader.Close()
             
-            # Report on processing results
-            Write-Host "  Added $totalAdded entries from $($chainsawFile.Name)" -ForegroundColor Green
+           # Report on processing results
+           Write-Host "  Added $totalAdded entries from $($chainsawFile.Name)" -ForegroundColor Green
         } catch {
             Write-Host "  Error processing $($chainsawFile.Name): $_" -ForegroundColor Red
         }
@@ -2859,9 +3280,15 @@ if ($fileCount -gt 0) {
 } else {
     Write-Host "  No Chainsaw CSV files found in $ChainsawDirectory" -ForegroundColor Yellow
 }
+} else {
+Write-Host "  Chainsaw directory not found: $ChainsawDirectory" -ForegroundColor Yellow
+}
+} else {
+Write-Host "Skipping Chainsaw processing (ProcessChainsaw is disabled)" -ForegroundColor Yellow
+}
 
 # Process Hayabusa CSV files
-if (-not $SkipHayabusa) {
+if ($ProcessHayabusa) {
     Write-Host "Processing Hayabusa CSV Files" -ForegroundColor Cyan
     $HayabusaFiles = Get-ChildItem -Path $HayabusaDirectory -Recurse -Filter *.csv -ErrorAction SilentlyContinue
     $fileCount = $HayabusaFiles.Count
@@ -2935,9 +3362,10 @@ if (-not $SkipHayabusa) {
                                 # These field mappings will need to be adjusted based on actual Hayabusa CSV format
                                 $row = @{
                                     DateTime          = $dt
+                                    Tool                = "Hayabusa"
                                     EventId           = $_."EventID"
-                                    Description       = "Hayabusa"
-                                    Info              = $_."Channel"
+                                    Description       = $_."Channel"
+                                    TimestampInfo     = "Event Time"
                                     DataPath          = $_."Details" 
                                     DataDetails       = $_."RuleTitle" 
                                     Computer          = $_."Computer"
@@ -2998,9 +3426,10 @@ if (-not $SkipHayabusa) {
                             # These field mappings will need to be adjusted based on actual Hayabusa CSV format
                             $row = @{
 									DateTime          = $dt
+                                    Tool              = "Hayabusa"
                                     EventId           = $_."EventID"
-                                    Description       = "Hayabusa"
-                                    Info              = $_."Channel" 
+                                    Description       = $_."Channel"
+                                    TimestampInfo     = "Event Time" 
                                     DataPath          = $_."Details" 
                                     DataDetails       = $_."RuleTitle" 
                                     Computer          = $_."Computer"
@@ -3024,8 +3453,8 @@ if (-not $SkipHayabusa) {
                 
                 $reader.Close()
                 
-                # Report on processing results
-                Write-Host "  Added $totalAdded entries from $($hayabusaFile.Name)" -ForegroundColor Green
+               # Report on processing results
+               Write-Host "  Added $totalAdded entries from $($hayabusaFile.Name)" -ForegroundColor Green
             } catch {
                 Write-Host "  Error processing $($hayabusaFile.Name): $_" -ForegroundColor Red
             }
@@ -3036,12 +3465,2386 @@ if (-not $SkipHayabusa) {
         Write-Host "  No Hayabusa CSV files found in $HayabusaDirectory" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "  Hayabusa processing skipped" -ForegroundColor Yellow
+    Write-Host "Skipping Hayabusa processing (ProcessHayabusa is disabled)" -ForegroundColor Yellow
 }
 
 # After processing each artifact, perform garbage collection to free up resources
 [System.GC]::Collect()
 [System.GC]::WaitForPendingFinalizers()
+
+
+#Axiom Processing Starts Here
+
+
+# Process Axiom AmCache
+if ($ProcessAxiom) {
+Write-Host "Processing Axiom AmCache" -ForegroundColor Cyan
+$AxiomAmCachePath = $AxiomDirectory
+if (Test-Path $AxiomAmCachePath) {
+    $AmcacheFiles = Get-ChildItem -Path $AxiomAmCachePath -Filter "AmCache File Entries.csv" -ErrorAction SilentlyContinue
+    $fileCount = $AmcacheFiles.Count
+    
+    if ($fileCount -gt 0) {
+        $fileCounter = 0
+        foreach ($file in $AmcacheFiles) {
+            $fileCounter++
+            Show-ProcessingProgress -Activity "Processing Axiom AmCache Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+            
+            try {
+                # Use streaming approach for large files
+                $reader = New-Object System.IO.StreamReader($file.FullName)
+                $headerLine = $reader.ReadLine()
+                $batchCount = 0
+                $totalProcessed = 0
+                $totalAdded = 0
+                $batch = New-Object System.Collections.ArrayList
+                
+                # Process the file line by line in batches
+                while (-not $reader.EndOfStream) {
+                    $line = $reader.ReadLine()
+                    
+                    # Skip empty lines
+                    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                    
+                    [void]$batch.Add($line)
+                    $batchCount++
+                    $totalProcessed++
+                    
+                    # Process in batches of the specified size
+                    if ($batchCount -ge $BatchSize) {
+                        # Create temp CSV file for the batch
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        
+                        try {
+                            # Write header and batch to temp file
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            # Import batch data
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Process batch data
+                            $amRows = $batchData | ForEach-Object {
+                                # Format the DateTime properly
+                                $dateTimeString = $_."Key Last Updated Date/Time - UTC+00:00 (M/d/yyyy)"
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                }
+                                catch {
+                                    # Handle potential parsing errors
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                                }
+                                
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "Axiom" 
+                                    DataPath       = $_."Full Path"
+                                    TimestampInfo  = "Last Write"
+                                    Description    = "Program Execution"
+                                    DataDetails    = $_."Associated Application Name"
+                                    FileExtension  = $_."File Extension"
+                                    SHA1           = $_."SHA1 Hash"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Amcache"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $amRows
+                            $totalAdded += $amRows.Count
+                            
+                            # Update progress
+                            Show-ProcessingProgress -Activity "Processing Axiom AmCache: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                        }
+                        catch {
+                            Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            # Clean up temp file
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                        
+                        # Reset batch
+                        $batch.Clear()
+                        $batchCount = 0
+                    }
+                }
+                
+                # Process any remaining lines
+                if ($batch.Count -gt 0) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        
+                        $batchData = Import-Csv $tempFile
+                        
+                        $amRows = $batchData | ForEach-Object {
+                            # Format the DateTime properly
+                            $dateTimeString = $_."Key Last Updated Date/Time - UTC+00:00 (M/d/yyyy)"
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            catch {
+                                # Handle potential parsing errors
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString # Keep original if parsing fails
+                            }
+
+                            $row = @{
+                                DateTime       = $dateTimeFormatted 
+                                Tool           = "Axiom"
+                                DataPath       = $_."Full Path"
+                                TimestampInfo  = "Last Write"
+                                Description    = "Program Execution"
+                                DataDetails    = $_."Associated Application Name"
+                                FileExtension  = $_."File Extension"
+                                SHA1           = $_."SHA1 Hash"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Amcache"
+                        }
+                        
+                        $MasterTimeline += $amRows
+                        $totalAdded += $amRows.Count
+                    }
+                    catch {
+                        Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                    }
+                    finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
+                
+                $reader.Close()
+                
+                # Report on processing results
+                Write-Host "  Added $totalAdded Axiom Amcache entries from $($file.Name)" -ForegroundColor Green
+            } catch {
+                Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+            }
+            
+            Update-OverallProgress -CurrentSource "Axiom Amcache"
+        }
+    } else {
+        Write-Host "  No Axiom Amcache files found" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Axiom Amcache path not found: $AxiomAmCachePath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Amcache Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow 
+    }
+
+# Process Axiom Jump Lists Artifacts
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Jump Lists" -ForegroundColor Cyan
+    $JumpListPath = Join-Path $AxiomDirectory "Jump Lists.csv"
+
+    if (Test-Path $JumpListPath) {
+        try {
+            $reader = New-Object System.IO.StreamReader($JumpListPath)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                        $batchData = Import-Csv $tempFile
+                        $jlRows = @()
+                        foreach ($entry in $batchData) {
+                            $targetPath = $entry."Linked Path"
+                            if ([string]::IsNullOrWhiteSpace($targetPath)) { continue }
+
+                            $fileName = Split-Path -Leaf $targetPath
+
+                            # Created Timestamp
+                            $createdString = $entry."Target File Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+
+                            if (![string]::IsNullOrWhiteSpace($createdString)) {
+                                try {
+                                    $created = [datetime]::Parse($createdString)
+                                    $dateTimeFormatted = $created.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $createdString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $createdString
+                                }
+                            }
+
+                            if ($dateTimeFormatted -ne "") {
+                                $row = @{
+                                    DateTime      = $dateTimeFormatted
+                                    Tool          = "Axiom"
+                                    DataPath      = $targetPath
+                                    Description   = "File & Folder Access"
+                                    TimestampInfo = "Creation Time"
+                                    DataDetails   = $entry."Potential App Name"
+                                    FileSize      = $entry."Target File Size (Bytes)"
+                                    EvidencePath  = $entry."Source"
+                                }
+                                $jlRows += Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                            }
+
+
+                            # Modified Timestamp
+                            $modifiedString = $entry."Target File Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+
+                            if (![string]::IsNullOrWhiteSpace($modifiedString)) {
+                                try {
+                                    $modified = [datetime]::Parse($modifiedString)
+                                    $dateTimeFormatted = $modified.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $modifiedString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $modifiedString
+                                }
+                            }
+
+                            if ($dateTimeFormatted -ne "") {
+                                $row = @{
+                                    DateTime      = $dateTimeFormatted
+                                    Tool          = "Axiom"
+                                    DataPath      = $targetPath
+                                    Description   = "File & Folder Access"
+                                    TimestampInfo = "Last Modified Time"
+                                    DataDetails   = $fileName
+                                    FileSize      = $entry."Target File Size (Bytes)"
+                                    EvidencePath  = $entry."Source"
+                                }
+                                $jlRows += Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                            }
+
+
+                            # Last Access Timestamp
+                            $accessedString = $entry."Last Access Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+
+                            if (![string]::IsNullOrWhiteSpace($accessedString)) {
+                                try {
+                                    $accessed = [datetime]::Parse($accessedString)
+                                    $dateTimeFormatted = $accessed.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $accessedString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $accessedString
+                                }
+                            }
+
+                            if ($dateTimeFormatted -ne "") {
+                                $row = @{
+                                    DateTime      = $dateTimeFormatted
+                                    Tool          = "Axiom"
+                                    DataPath      = $targetPath
+                                    Description   = "File & Folder Access"
+                                    TimestampInfo = "Last Access Time"
+                                    DataDetails   = $fileName
+                                    FileSize      = $entry."Target File Size (Bytes)"
+                                    EvidencePath  = $entry."Source"
+                                }
+                                $jlRows += Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                            }
+
+                        }
+                        $MasterTimeline += $jlRows
+                        $totalAdded += $jlRows.Count
+                    } finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Process remaining
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                    $batchData = Import-Csv $tempFile
+                    $jlRows = @()
+                    foreach ($entry in $batchData) {
+                        $targetPath = $entry."Linked Path"
+                        if ([string]::IsNullOrWhiteSpace($targetPath)) { continue }
+
+                        $fileName = Split-Path -Leaf $targetPath
+
+                        # Created Timestamp
+                        $createdString = $entry."Target File Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+
+                            if (![string]::IsNullOrWhiteSpace($createdString)) {
+                                try {
+                                    $created = [datetime]::Parse($createdString)
+                                    $dateTimeFormatted = $created.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $createdString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $createdString
+                                }
+                            }
+
+                            if ($dateTimeFormatted -ne "") {
+                                $row = @{
+                                    DateTime      = $dateTimeFormatted
+                                    Tool          = "Axiom"
+                                    DataPath      = $targetPath
+                                    Description   = "File & Folder Access"
+                                    TimestampInfo = "Creation Time"
+                                    DataDetails   = $entry."Potential App Name"
+                                    FileSize      = $entry."Target File Size (Bytes)"
+                                    EvidencePath  = $entry."Source"
+                                }
+                                $jlRows += Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                            }
+
+                        # Modified Timestamp
+                         $modifiedString = $entry."Target File Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                         $dateTimeFormatted = ""
+
+                         if (![string]::IsNullOrWhiteSpace($modifiedString)) {
+                             try {
+                                 $modified = [datetime]::Parse($modifiedString)
+                                 $dateTimeFormatted = $modified.ToString("yyyy-MM-dd HH:mm:ss")
+                             } catch {
+                                 Write-Host "    Error parsing date: $modifiedString" -ForegroundColor Yellow
+                                 $dateTimeFormatted = $modifiedString
+                             }
+                         }
+
+                         if ($dateTimeFormatted -ne "") {
+                             $row = @{
+                                 DateTime      = $dateTimeFormatted
+                                 Tool          = "Axiom"
+                                 DataPath      = $targetPath
+                                 Description   = "File & Folder Access"
+                                 TimestampInfo = "Last Modified Time"
+                                 DataDetails   = $fileName
+                                 FileSize      = $entry."Target File Size (Bytes)"
+                                 EvidencePath  = $entry."Source"
+                             }
+                             $jlRows += Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                         }
+
+                        # Last Access Timestamp
+                        $accessedString = $entry."Last Access Date/Time - UTC+00:00 (M/d/yyyy)"
+                        $dateTimeFormatted = ""
+
+                        if (![string]::IsNullOrWhiteSpace($accessedString)) {
+                            try {
+                                $accessed = [datetime]::Parse($accessedString)
+                                $dateTimeFormatted = $accessed.ToString("yyyy-MM-dd HH:mm:ss")
+                            } catch {
+                                Write-Host "    Error parsing date: $accessedString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $accessedString
+                            }
+                        }
+
+                        if ($dateTimeFormatted -ne "") {
+                            $row = @{
+                                DateTime      = $dateTimeFormatted
+                                Tool          = "Axiom"
+                                DataPath      = $targetPath
+                                Description   = "File & Folder Access"
+                                TimestampInfo = "Last Access Time"
+                                DataDetails   = $fileName
+                                FileSize      = $entry."Target File Size (Bytes)"
+                                EvidencePath  = $entry."Source"
+                            }
+                            $jlRows += Normalize-Row -Fields $row -ArtifactName "JumpLists"
+                        }
+                    }
+                    $MasterTimeline += $jlRows
+                    $totalAdded += $jlRows.Count
+                } finally {
+                    if (Test-Path $tempFile) {
+                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom Jump List entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom Jump Lists"
+
+        } catch {
+            Write-Host "  Error processing Axiom Jump Lists: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom Jump Lists file not found: $JumpListPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Jump List Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+
+
+# Process Axiom LNK Files
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom LNK Files" -ForegroundColor Cyan
+    $AxiomLNKPath = $AxiomDirectory
+    if (Test-Path $AxiomLNKPath) {
+        $LNKFiles = Get-ChildItem -Path $AxiomLNKPath -Filter "*LNK Files.csv" -ErrorAction SilentlyContinue
+        $fileCount = $LNKFiles.Count
+
+        if ($fileCount -gt 0) {
+            $fileCounter = 0
+            foreach ($file in $LNKFiles) {
+                $fileCounter++
+                Show-ProcessingProgress -Activity "Processing Axiom LNK Files" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+
+                try {
+                    $reader = New-Object System.IO.StreamReader($file.FullName)
+                    $headerLine = $reader.ReadLine()
+                    $batchCount = 0
+                    $totalProcessed = 0
+                    $totalAdded = 0
+                    $batch = New-Object System.Collections.ArrayList
+
+                    while (-not $reader.EndOfStream) {
+                        $line = $reader.ReadLine()
+                        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                        [void]$batch.Add($line)
+                        $batchCount++
+                        $totalProcessed++
+
+                        if ($batchCount -ge $BatchSize) {
+                            $tempFile = [System.IO.Path]::GetTempFileName()
+                            try {
+                                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                                $batchData = Import-Csv $tempFile
+
+                                # First pass - Target Created Date/Time
+                                $lnkRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Target File Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""
+
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        }
+                                    }
+
+                                    $row = @{
+                                        DateTime       = $dateTimeFormatted
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Linked Path"
+                                        TimestampInfo  = "Target Created"
+                                        Description    = "File & Folder Access"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                                }
+                                $MasterTimeline += $lnkRows
+                                $totalAdded += $lnkRows.Count
+
+                                # Second pass - Target Last Modified Date/Time
+                                $lnkRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Target File Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""
+
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        }
+                                    }
+
+                                    $row = @{
+                                        DateTime       = $dateTimeFormatted
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Linked Path"
+                                        TimestampInfo  = "Target Modified"
+                                        Description    = "File & Folder Access"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                                }
+                                $MasterTimeline += $lnkRows
+                                $totalAdded += $lnkRows.Count
+
+                                # Third pass - Source Created Date/Time
+                                $lnkRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""
+
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        }
+                                    }
+
+                                    $row = @{
+                                        DateTime       = $dateTimeFormatted
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Linked Path"
+                                        TimestampInfo  = "Source Created"
+                                        Description    = "File & Folder Access"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                                }
+                                $MasterTimeline += $lnkRows
+                                $totalAdded += $lnkRows.Count
+
+                                Show-ProcessingProgress -Activity "Processing Axiom LNK Files: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            } catch {
+                                Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                            } finally {
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
+                            }
+
+                            $batch.Clear()
+                            $batchCount = 0
+                        }
+                    }
+
+                    # Final batch
+                    if ($batch.Count -gt 0) {
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                            $batchData = Import-Csv $tempFile
+
+                            # First pass - Target Created Date/Time
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Target File Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""
+
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    }
+                                }
+
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "Axiom"
+                                    DataPath       = $_."Linked Path"
+                                    TimestampInfo  = "Target Created"
+                                    Description    = "File & Folder Access"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                            }
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
+
+                            # Second pass - Target Last Modified Date/Time
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Target File Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""
+
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    }
+                                }
+
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "Axiom"
+                                    DataPath       = $_."Linked Path"
+                                    TimestampInfo  = "Target Modified"
+                                    Description    = "File & Folder Access"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                            }
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
+
+                            # Third pass - Source Created Date/Time
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""
+
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    }
+                                }
+
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "Axiom"
+                                    DataPath       = $_."Linked Path"
+                                    TimestampInfo  = "Source Created"
+                                    Description    = "File & Folder Access"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "LNKFiles"
+                            }
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
+                        } catch {
+                            Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                        } finally {
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+
+                    $reader.Close()
+                    Write-Host "  Added $totalAdded Axiom LNK file entries from $($file.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+
+                Update-OverallProgress -CurrentSource "Axiom LNK Files"
+            }
+        } else {
+            Write-Host "  No Axiom LNK files found" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  Axiom LNK path not found: $AxiomLNKPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom LNK File Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+# Process Axiom MRU Opened-Saved Files
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom MRU Opened-Saved Files" -ForegroundColor Cyan
+    $mruPath = Join-Path $AxiomDirectory "MRU Opened-Saved Files.csv"
+
+    if (Test-Path $mruPath) {
+        try {
+            $reader = New-Object System.IO.StreamReader($mruPath)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                        $batchData = Import-Csv $tempFile
+                        $rows = $batchData | ForEach-Object {
+                            $dateTimeString = $_."Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+
+                            if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString
+                                }
+                            }
+
+                            if ($dateTimeFormatted -eq "") { return }
+
+                            $row = @{
+                                DateTime      = $dateTimeFormatted
+                                Tool          = "Axiom"
+                                DataPath      = $_."File Path"
+                                DataDetails   = $_."File Name"
+                                Description   = "File & Folder Access"
+                                TimestampInfo = "Registry Modified"
+                                EvidencePath  = $_."Source"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Registry - MRU Opened-Saved Files"
+                        }
+
+                        $MasterTimeline += $rows
+                        $totalAdded += $rows.Count
+                    } finally {
+                        if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                    }
+
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Final batch
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    $batchData = Import-Csv $tempFile
+
+                    $rows = $batchData | ForEach-Object {
+                        $dateTimeString = $_."Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                        $dateTimeFormatted = ""
+
+                        if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            } catch {
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString
+                            }
+                        }
+
+                        if ($dateTimeFormatted -eq "") { return }
+
+                        $row = @{
+                            DateTime      = $dateTimeFormatted
+                            Tool          = "Axiom"
+                            DataPath      = $_."File Path"
+                            DataDetails   = $_."File Name"
+                            Description   = "File & Folder Access"
+                            TimestampInfo = "Registry Modified"
+                            EvidencePath  = $_."Source"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "Registry - MRU Opened-Saved Files"
+                    }
+
+                    $MasterTimeline += $rows
+                    $totalAdded += $rows.Count
+                } finally {
+                    if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom MRU entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom MRU Opened-Saved Files"
+
+        } catch {
+            Write-Host "  Error processing Axiom MRU Opened-Saved Files: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom MRU CSV not found in: $AxiomDirectory" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom MRU Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+
+# Process Axiom MRU Recent Files & Folders
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom MRU Recent Files & Folders" -ForegroundColor Cyan
+    $recentPath = Join-Path $AxiomDirectory "MRU Recent Files & Folders.csv"
+
+    if (Test-Path $recentPath) {
+        try {
+            $reader = New-Object System.IO.StreamReader($recentPath)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                        $batchData = Import-Csv $tempFile
+                        $rows = $batchData | ForEach-Object {
+                            $dateTimeString = $_."Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+
+                            if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString
+                                }
+                            }
+
+                            if ($dateTimeFormatted -eq "") { return }
+
+                            $row = @{
+                                DateTime      = $dateTimeFormatted
+                                Tool          = "Axiom"
+                                DataPath      = $_."File/Folder Link"
+                                DataDetails   = $_."File/Folder Name"
+                                Description   = "File & Folder Access"
+                                TimestampInfo = "Registry Modified"
+                                EvidencePath  = $_."Source"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Registry - MRU Recent Files & Folders"
+                        }
+
+                        $MasterTimeline += $rows
+                        $totalAdded += $rows.Count
+                    } finally {
+                        if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                    }
+
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Final batch
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    $batchData = Import-Csv $tempFile
+
+                    $rows = $batchData | ForEach-Object {
+                        $dateTimeString = $_."Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                        $dateTimeFormatted = ""
+
+                        if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            } catch {
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString
+                            }
+                        }
+
+                        if ($dateTimeFormatted -eq "") { return }
+
+                        $row = @{
+                            DateTime      = $dateTimeFormatted
+                            Tool          = "Axiom"
+                            DataPath      = $_."File/Folder Link"
+                            DataDetails   = $_."File/Folder Name"
+                            Description   = "File & Folder Access"
+                            TimestampInfo = "Registry Modified"
+                            EvidencePath  = $_."Source"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "Registry - MRU Recent Files & Folders"
+                    }
+
+                    $MasterTimeline += $rows
+                    $totalAdded += $rows.Count
+                } finally {
+                    if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom Recent MRU entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom MRU Recent Files & Folders"
+
+        } catch {
+            Write-Host "  Error processing Axiom MRU Recent Files & Folders: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom MRU Recent Files & Folders CSV not found in: $AxiomDirectory" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom MRU Recent Files & Folders (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+# Process Axiom MRU Folder Access
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom MRU Folder Access" -ForegroundColor Cyan
+    $folderPath = Join-Path $AxiomDirectory "MRU Folder Access.csv"
+
+    if (Test-Path $folderPath) {
+        try {
+            $reader = New-Object System.IO.StreamReader($folderPath)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                        $batchData = Import-Csv $tempFile
+                        $rows = $batchData | ForEach-Object {
+                            $dateTimeString = $_."Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+
+                            if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString
+                                }
+                            }
+
+                            if ($dateTimeFormatted -eq "") { return }
+
+                            $row = @{
+                                DateTime      = $dateTimeFormatted
+                                Tool          = "Axiom"
+                                DataPath      = $_."Folder Accessed"
+                                DataDetails   = $_."Application Name"
+                                Description   = "File & Folder Access"
+                                TimestampInfo = "Registry Modified"
+                                EvidencePath  = $_."Source"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Registry - MRU Folder Access"
+                        }
+
+                        $MasterTimeline += $rows
+                        $totalAdded += $rows.Count
+                    } finally {
+                        if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                    }
+
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Final batch
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    $batchData = Import-Csv $tempFile
+
+                    $rows = $batchData | ForEach-Object {
+                        $dateTimeString = $_."Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                        $dateTimeFormatted = ""
+
+                        if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            } catch {
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString
+                            }
+                        }
+
+                        if ($dateTimeFormatted -eq "") { return }
+
+                        $row = @{
+                            DateTime      = $dateTimeFormatted
+                            Tool          = "Axiom"
+                            DataPath      = $_."Folder Accessed"
+                            DataDetails   = $_."Application Name"
+                            Description   = "File & Folder Access"
+                            TimestampInfo = "Registry Modified"
+                            EvidencePath  = $_."Source"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "Registry - MRU Folder Access"
+                    }
+
+                    $MasterTimeline += $rows
+                    $totalAdded += $rows.Count
+                } finally {
+                    if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom MRU Folder Access entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom MRU Folder Access"
+
+        } catch {
+            Write-Host "  Error processing Axiom MRU Folder Access: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom MRU Folder Access CSV not found in: $AxiomDirectory" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom MRU Folder Access (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+
+# Process Axiom Prefetch Artifacts
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Prefetch" -ForegroundColor Cyan
+    $pfFile = Get-ChildItem -Path $AxiomDirectory -Filter "Prefetch*.csv" | Select-Object -First 1
+
+    if ($pfFile) {
+        try {
+            $reader = New-Object System.IO.StreamReader($pfFile.FullName)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                        $batchData = Import-Csv $tempFile
+                        $pfRows = $batchData | ForEach-Object {
+                            $dateTimeString = $_."Last Run Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+                        
+                            if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString
+                                }
+                            }
+                        
+                            if ($dateTimeFormatted -eq "") { return }
+                        
+                            $row = @{
+                                DateTime      = $dateTimeFormatted
+                                Tool          = "Axiom"
+                                DataPath      = $_."Application Path"
+                                TimestampInfo = "Last Run"
+                                DataDetails   = $_."Application Name"
+                                Description   = "Program Execution"
+                                EvidencePath  = $_."Source"
+                                Count         = $_."Application Run Count"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "PrefetchFiles"
+                        }
+
+                        $MasterTimeline += $pfRows
+                        $totalAdded += $pfRows.Count
+                    } finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Process remaining
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                    $batchData = Import-Csv $tempFile
+                    $pfRows = $batchData | ForEach-Object {
+                        $dateTimeString = $_."Last Run Date/Time - UTC+00:00 (M/d/yyyy)"
+                        $dateTimeFormatted = ""
+                    
+                        if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            } catch {
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString
+                            }
+                        }
+                    
+                        if ($dateTimeFormatted -eq "") { return }
+                    
+                        $row = @{
+                            DateTime      = $dateTimeFormatted
+                            Tool          = "Axiom"
+                            DataPath      = $_."Application Path"
+                            TimestampInfo = "Last Run"
+                            DataDetails   = $_."Application Name"
+                            Description   = "Program Execution"
+                            EvidencePath  = $_."Source"
+                            Count         = $_."Application Run Count"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "PrefetchFiles"
+                    }
+
+                    $MasterTimeline += $pfRows
+                    $totalAdded += $pfRows.Count
+                } finally {
+                    if (Test-Path $tempFile) {
+                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom Prefetch entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom Prefetch"
+
+        } catch {
+            Write-Host "  Error processing Axiom Prefetch: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom Prefetch CSV not found in: $AxiomDirectory" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Prefetch Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+
+
+# Process Axiom Chrome Web History
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Chrome Web History" -ForegroundColor Cyan
+    $AxiomChromeHistoryPath = $AxiomDirectory
+    if (Test-Path $AxiomChromeHistoryPath) {
+        $ChromeHistoryFiles = Get-ChildItem -Path $AxiomChromeHistoryPath -Filter "Chrome Web History.csv" -ErrorAction SilentlyContinue
+        $fileCount = $ChromeHistoryFiles.Count
+        
+        if ($fileCount -gt 0) {
+            $fileCounter = 0
+            foreach ($file in $ChromeHistoryFiles) {
+                $fileCounter++
+                Show-ProcessingProgress -Activity "Processing Axiom Chrome Web History" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+                
+                try {
+                    # Use streaming approach for large files
+                    $reader = New-Object System.IO.StreamReader($file.FullName)
+                    $headerLine = $reader.ReadLine()
+                    $batchCount = 0
+                    $totalProcessed = 0
+                    $totalAdded = 0
+                    $batch = New-Object System.Collections.ArrayList
+                    
+                    # Process the file line by line in batches
+                    while (-not $reader.EndOfStream) {
+                        $line = $reader.ReadLine()
+                        
+                        # Skip empty lines
+                        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                        
+                        [void]$batch.Add($line)
+                        $batchCount++
+                        $totalProcessed++
+                        
+                        # Process in batches of the specified size
+                        if ($batchCount -ge $BatchSize) {
+                            # Create temp CSV file for the batch
+                            $tempFile = [System.IO.Path]::GetTempFileName()
+                            
+                            try {
+                                # Write header and batch to temp file
+                                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                                
+                                # Import batch data
+                                $batchData = Import-Csv $tempFile
+                                
+                                # Process Last Visited Date/Time
+                                $chromeHistoryRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Last Visited Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                    
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        }
+                                        catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                           
+                                        }
+                                    }
+                                    
+                                    # Determine description based on URL content
+                                    $url = $_."URL"
+                                    $description = "Web Activity"
+                                    
+                                    # Check if the URL starts with file:// and extract the filename
+                                    if ($url -match "^file:///") {
+                                        # Change description to File & Folder Access for file:// URLs
+                                        $description = "File & Folder Access"
+                                    }
+                                    # Check for search URLs
+                                    elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                                        $description = "Web Search"
+                                    }
+                                    # Check for download URLs
+                                    elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                                        $description = "Web Download"
+                                    }
+                                    
+                                    $row = @{
+                                        DateTime     = $dateTimeFormatted
+                                        Tool         = "Axiom"
+                                        DataPath     = $url
+                                        TimestampInfo = "Last Visited"
+                                        DataDetails  = $_."Title"
+                                        Description  = $description
+                                        Count        = $_."Visit Count"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "ChromeHistory"
+                                }
+                                
+                                # Add to master timeline
+                                $MasterTimeline += $chromeHistoryRows
+                                $totalAdded += $chromeHistoryRows.Count
+                                
+                                # Update progress
+                                Show-ProcessingProgress -Activity "Processing Axiom Chrome History: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                            catch {
+                                Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                            }
+                            finally {
+                                # Clean up temp file
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
+                            }
+                            
+                            # Reset batch
+                            $batch.Clear()
+                            $batchCount = 0
+                        }
+                    }
+                    
+                    # Process any remaining lines
+                    if ($batch.Count -gt 0) {
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Process Last Visited Date/Time
+                            $chromeHistoryRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Last Visited Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    }
+                                    catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        
+                                    }
+                                }
+                                
+                                # Determine description based on URL content
+                                $url = $_."URL"
+                                $description = "Web Activity"
+                                
+                                # Check if the URL starts with file:// and extract the filename
+                                if ($url -match "^file:///") {
+                                    # Change description to File & Folder Access for file:// URLs
+                                    $description = "File & Folder Access"
+                                }
+                                # Check for search URLs
+                                elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                                    $description = "Web Search"
+                                }
+                                # Check for download URLs
+                                elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                                    $description = "Web Download"
+                                }
+                                
+                                $row = @{
+                                    DateTime     = $dateTimeFormatted
+                                    Tool         = "Axiom"
+                                    DataPath     = $url
+                                    TimestampInfo = "Last Visited"
+                                    DataDetails  = $_."Title"
+                                    Description  = $description
+                                    Count        = $_."Visit Count"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "ChromeHistory"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $chromeHistoryRows
+                            $totalAdded += $chromeHistoryRows.Count
+                        }
+                        catch {
+                            Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+                    
+                    $reader.Close()
+                    
+                    # Report on processing results
+                    Write-Host "  Added $totalAdded Axiom Chrome web history entries from $($file.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+                
+                Update-OverallProgress -CurrentSource "Axiom Chrome Web History"
+            }
+        } else {
+            Write-Host "  No Axiom Chrome Web History files found" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  Axiom Chrome Web History path not found: $AxiomChromeHistoryPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Chrome Web History (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+# Process Axiom Edge/IE History
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Edge/IE History" -ForegroundColor Cyan
+    $AxiomEdgeIEPath = $AxiomDirectory
+    if (Test-Path $AxiomEdgeIEPath) {
+        $EdgeIEHistoryFiles = Get-ChildItem -Path $AxiomEdgeIEPath -Filter "Edge-Internet Explorer 10-11 Main History.csv" -ErrorAction SilentlyContinue
+        $fileCount = $EdgeIEHistoryFiles.Count
+        
+        if ($fileCount -gt 0) {
+            $fileCounter = 0
+            foreach ($file in $EdgeIEHistoryFiles) {
+                $fileCounter++
+                Show-ProcessingProgress -Activity "Processing Axiom Edge/IE History" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+                
+                try {
+                    # Use streaming approach for large files
+                    $reader = New-Object System.IO.StreamReader($file.FullName)
+                    $headerLine = $reader.ReadLine()
+                    $batchCount = 0
+                    $totalProcessed = 0
+                    $totalAdded = 0
+                    $batch = New-Object System.Collections.ArrayList
+                    
+                    # Process the file line by line in batches
+                    while (-not $reader.EndOfStream) {
+                        $line = $reader.ReadLine()
+                        
+                        # Skip empty lines
+                        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                        
+                        [void]$batch.Add($line)
+                        $batchCount++
+                        $totalProcessed++
+                        
+                        # Process in batches of the specified size
+                        if ($batchCount -ge $BatchSize) {
+                            # Create temp CSV file for the batch
+                            $tempFile = [System.IO.Path]::GetTempFileName()
+                            
+                            try {
+                                # Write header and batch to temp file
+                                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                                
+                                # Import batch data
+                                $batchData = Import-Csv $tempFile
+                                
+                                # Process Accessed Date/Time
+                                $edgeIEHistoryRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Accessed Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                    
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        }
+                                        catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                            
+                                        }
+                                    }
+                                    
+                                    # Determine description based on URL content
+                                    $url = $_."URL"
+                                    $description = "Web Activity"
+                                    
+                                    # Check if the URL starts with file:// and extract the filename
+                                    if ($url -match "^file:///") {
+                                        # Change description to File & Folder Access for file:// URLs
+                                        $description = "File & Folder Access"
+                                    }
+                                    # Check for search URLs
+                                    elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                                        $description = "Web Search"
+                                    }
+                                    # Check for download URLs
+                                    elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                                        $description = "Web Download"
+                                    }
+                                    
+                                    $row = @{
+                                        DateTime      = $dateTimeFormatted
+                                        Tool          = "Axiom"
+                                        DataPath      = $url
+                                        TomestampInfo = "Last Accessed"
+                                        DataDetails   = $_."Page Title"
+                                        Description   = $description
+                                        User          = $_."User"
+                                        Count         = $_."Access Count"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "EdgeIEHistory"
+                                }
+                                
+                                # Add to master timeline
+                                $MasterTimeline += $edgeIEHistoryRows
+                                $totalAdded += $edgeIEHistoryRows.Count
+                                
+                                # Update progress
+                                Show-ProcessingProgress -Activity "Processing Axiom Edge/IE History: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                            catch {
+                                Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                            }
+                            finally {
+                                # Clean up temp file
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
+                            }
+                            
+                            # Reset batch
+                            $batch.Clear()
+                            $batchCount = 0
+                        }
+                    }
+                    
+                    # Process any remaining lines
+                    if ($batch.Count -gt 0) {
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            $batchData = Import-Csv $tempFile
+                            
+                            # Process Accessed Date/Time
+                            $edgeIEHistoryRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Accessed Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    }
+                                    catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        
+                                    }
+                                }
+                                
+                                # Determine description based on URL content
+                                $url = $_."URL"
+                                $description = "Web Activity"
+                                
+                                # Check if the URL starts with file:// and extract the filename
+                                if ($url -match "^file:///") {
+                                    # Change description to File & Folder Access for file:// URLs
+                                    $description = "File & Folder Access"
+                                }
+                                # Check for search URLs
+                                elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                                    $description = "Web Search"
+                                }
+                                # Check for download URLs
+                                elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                                    $description = "Web Download"
+                                }
+                                
+                                $row = @{
+                                    DateTime              = $dateTimeFormatted
+                                    Tool                  = "Axiom"
+                                    DataPath              = $url
+                                    TimestampInfo         = "Last Accessed"
+                                    DataDetails           = $_."Page Title"
+                                    Description           = $description
+                                    User                  = $_."User"
+                                    Count                 = $_."Access Count"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "EdgeIEHistory"
+                            }
+                            
+                            # Add to master timeline
+                            $MasterTimeline += $edgeIEHistoryRows
+                            $totalAdded += $edgeIEHistoryRows.Count
+                        }
+                        catch {
+                            Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+                    
+                    $reader.Close()
+                    
+                    # Report on processing results
+                    Write-Host "  Added $totalAdded Axiom Edge/IE web history entries from $($file.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+                
+                Update-OverallProgress -CurrentSource "Axiom Edge/IE History"
+            }
+        } else {
+            Write-Host "  No Axiom Edge/IE History files found" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  Axiom Edge/IE History path not found: $AxiomEdgeIEPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Edge/IE History (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+# Process Axiom Recycle Bin Artifacts
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Recycle Bin" -ForegroundColor Cyan
+    $RecycleBinPath = Join-Path $AxiomDirectory "Recycle Bin.csv"
+
+    if (Test-Path $RecycleBinPath) {
+        try {
+            $reader = New-Object System.IO.StreamReader($RecycleBinPath)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                        $batchData = Import-Csv $tempFile
+                        $rbRows = $batchData | ForEach-Object {
+                            $dateTimeString = $_."Deleted Date/Time - UTC+00:00 (M/d/yyyy)"
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            } catch {
+                                $dateTimeFormatted = $dateTimeString
+                            }
+
+                            $row = @{
+                                DateTime       = $dateTimeFormatted
+                                Tool           = "Axiom"
+                                DataPath       = $_."Original Path"
+                                TimestampInfo  = "Deleted Time"
+                                Description    = "File System"
+                                DataDetails    = $_."Current Location"
+                                FileExtension  = [System.IO.Path]::GetExtension($_."File Name")
+                                EvidencePath   = $_."Source"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "RecycleBin"
+                        }
+
+                        $MasterTimeline += $rbRows
+                        $totalAdded += $rbRows.Count
+                    } finally {
+                        if (Test-Path $tempFile) {
+                            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Process remaining
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                    $batchData = Import-Csv $tempFile
+                    $rbRows = $batchData | ForEach-Object {
+                        $dateTimeString = $_."Deleted Date/Time - UTC+00:00 (M/d/yyyy)"
+                        try {
+                            $dateTime = [datetime]::Parse($dateTimeString)
+                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                        } catch {
+                            $dateTimeFormatted = $dateTimeString
+                        }
+
+                        $row = @{
+                            DateTime       = $dateTimeFormatted
+                            Tool           = "Axiom"
+                            DataPath       = $_."Original Path"
+                            TimestampInfo  = "Deleted Time"
+                            Description    = "File System"
+                            DataDetails    = $_."Current Location"
+                            FileExtension  = [System.IO.Path]::GetExtension($_."File Name")
+                            EvidencePath   = $_."Source"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "RecycleBin"
+                    }
+
+                    $MasterTimeline += $rbRows
+                    $totalAdded += $rbRows.Count
+                } finally {
+                    if (Test-Path $tempFile) {
+                        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom Recycle Bin entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom Recycle Bin"
+
+        } catch {
+            Write-Host "  Error processing Axiom Recycle Bin: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom Recycle Bin file not found: $RecycleBinPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Recycle Bin Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+# Process Axiom Shellbags
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Shellbags" -ForegroundColor Cyan
+    $AxiomShellbagsPath = $AxiomDirectory
+    if (Test-Path $AxiomShellbagsPath) {
+        $ShellbagFiles = Get-ChildItem -Path $AxiomShellbagsPath -Filter "*Shellbags.csv" -ErrorAction SilentlyContinue
+        $fileCount = $ShellbagFiles.Count
+        
+        if ($fileCount -gt 0) {
+            $fileCounter = 0
+            foreach ($file in $ShellbagFiles) {
+                $fileCounter++
+                Show-ProcessingProgress -Activity "Processing Axiom Shellbags" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+                
+                try {
+                    # Use streaming approach for large files
+                    $reader = New-Object System.IO.StreamReader($file.FullName)
+                    $headerLine = $reader.ReadLine()
+                    $batchCount = 0
+                    $totalProcessed = 0
+                    $totalAdded = 0
+                    $batch = New-Object System.Collections.ArrayList
+                    
+                    # Process the file line by line in batches
+                    while (-not $reader.EndOfStream) {
+                        $line = $reader.ReadLine()
+                        
+                        # Skip empty lines
+                        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                        
+                        [void]$batch.Add($line)
+                        $batchCount++
+                        $totalProcessed++
+                        
+                        # Process in batches of the specified size
+                        if ($batchCount -ge $BatchSize) {
+                            # Create temp CSV file for the batch
+                            $tempFile = [System.IO.Path]::GetTempFileName()
+                            
+                            try {
+                                # Write header and batch to temp file
+                                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                                
+                                # Import batch data
+                                $batchData = Import-Csv $tempFile
+                                
+                                # First Interaction Date/Time
+                                $shellbagRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."First Interaction Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                    
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        }
+                                        catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                           
+                                        }
+                                    }
+                                    
+                                    $row = @{
+                                        DateTime       = $dateTimeFormatted 
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Path"
+                                        TimestampInfo  = "First Interaction"
+                                        Description    = "File & Folder Access"
+                                        EvidencePath   = $_."Source"
+                                        
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                                }
+                                $MasterTimeline += $shellbagRows
+                                $totalAdded += $shellbagRows.Count
+                                
+                                # Last Interaction Date/Time
+                                $shellbagRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Last Interaction Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                    
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        }
+                                        catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                            
+                                        }
+                                    }
+                                    
+                                    $row = @{
+                                        DateTime       = $dateTimeFormatted 
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Path"
+                                        TimestampInfo  = "Last Interacted"
+                                        Description    = "File & Folder Access"
+                                        EvidencePath   = $_."Source"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                                }
+                                $MasterTimeline += $shellbagRows
+                                $totalAdded += $shellbagRows.Count
+                                
+                                # File System Last Modified Date/Time
+                                $shellbagRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."File System Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                    
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        }
+                                        catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                           
+                                        }
+                                    }
+                                    
+                                    $row = @{
+                                        DateTime       = $dateTimeFormatted 
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Path"
+                                        TimestampInfo  = "Last Modified"
+                                        Description    = "File & Folder Access"
+                                        EvidencePath   = $_."Source"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                                }
+                                $MasterTimeline += $shellbagRows
+                                $totalAdded += $shellbagRows.Count
+                                
+                                # Update progress
+                                Show-ProcessingProgress -Activity "Processing Axiom Shellbags: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            }
+                            catch {
+                                Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                            }
+                            finally {
+                                # Clean up temp file
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
+                            }
+                            
+                            # Reset batch
+                            $batch.Clear()
+                            $batchCount = 0
+                        }
+                    }
+                    
+                    # Process any remaining lines
+                    if ($batch.Count -gt 0) {
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            
+                            $batchData = Import-Csv $tempFile
+                            
+                            # First Interaction Date/Time for remaining lines
+                            $shellbagRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."First Interaction Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    }
+                                    catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        
+                                    }
+                                }
+                                
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted 
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Path"
+                                        TimestampInfo  = "First Interaction"
+                                        Description    = "File & Folder Access"
+                                        EvidencePath   = $_."Source"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                            }
+                            $MasterTimeline += $shellbagRows
+                            $totalAdded += $shellbagRows.Count
+                            
+                            # Last Interaction Date/Time for remaining lines
+                            $shellbagRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Last Interaction Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    }
+                                    catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        
+                                    }
+                                }
+                                
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Path"
+                                        TimestampInfo  = "Last Interacted"
+                                        Description    = "File & Folder Access"
+                                        EvidencePath   = $_."Source"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                            }
+                            $MasterTimeline += $shellbagRows
+                            $totalAdded += $shellbagRows.Count
+                            
+                            # File System Last Modified Date/Time for remaining lines
+                            $shellbagRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."File System Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""  # Default value if date is invalid or empty
+                                
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    }
+                                    catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        
+                                    }
+                                }
+                                
+                                $row = @{
+                                    DateTime       = $dateTimeFormatted 
+                                    Tool           = "Axiom"
+                                    DataPath       = $_."Path"
+                                    TimestampInfo  = "Last Modified"
+                                    Description    = "File & Folder Access"
+                                    EvidencePath   = $_."Source"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "Shellbags"
+                            }
+                            $MasterTimeline += $shellbagRows
+                            $totalAdded += $shellbagRows.Count
+                        }
+                        catch {
+                            Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                        }
+                        finally {
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+                    
+                    $reader.Close()
+                    
+                    # Report on processing results
+                    Write-Host "  Added $totalAdded Axiom Shellbag entries from $($file.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+                
+                Update-OverallProgress -CurrentSource "Axiom Shellbags"
+            }
+        } else {
+            Write-Host "  No Axiom Shellbag files found" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  Axiom Shellbags path not found: $AxiomShellbagsPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Shellbags Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow 
+}
+
+# Process Axiom Shim Cache Artifacts AppCompat
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Shim Cache" -ForegroundColor Cyan
+    $shimPath = Join-Path $AxiomDirectory "Shim Cache.csv"
+
+    if (Test-Path $shimPath) {
+        try {
+            $reader = New-Object System.IO.StreamReader($shimPath)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        $batchData = Import-Csv $tempFile
+
+                        $rows = $batchData | ForEach-Object {
+                            $path = $_."File Path"
+                            if ([string]::IsNullOrWhiteSpace($path) -or $path -like "*\x*") { return }
+                        
+                            $dateTimeString = $_."Key Last Updated Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+                        
+                            if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString
+                                }
+                            }
+                        
+                            if ($dateTimeFormatted -eq "") { return }
+                        
+                            $fileName = $path -replace '.*\\([^\\]+)$', '$1'
+                        
+                            $row = @{
+                                DateTime       = $dateTimeFormatted
+                                Tool           = "Axiom"
+                                DataPath       = $path
+                                DataDetails    = $fileName
+                                TimestampInfo  = "Last Modified"
+                                EvidencePath   = $_."Source"
+                                Description    = "Program Execution"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "AppCompatCache"
+                        }
+                        
+                        $MasterTimeline += $rows
+                        $totalAdded += $rows.Count
+                    } finally {
+                        if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                    }
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Final batch
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    $batchData = Import-Csv $tempFile
+
+                    $rows = $batchData | ForEach-Object {
+                        $path = $_."File Path"
+                        if ([string]::IsNullOrWhiteSpace($path) -or $path -like "*\x*") { return }
+                    
+                        $dateTimeString = $_."Key Last Updated Date/Time - UTC+00:00 (M/d/yyyy)"
+                        $dateTimeFormatted = ""
+                    
+                        if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            } catch {
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString
+                            }
+                        }
+                    
+                        if ($dateTimeFormatted -eq "") { return }
+                    
+                        $fileName = $path -replace '.*\\([^\\]+)$', '$1'
+                    
+                        $row = @{
+                            DateTime       = $dateTimeFormatted
+                            Tool           = "Axiom"
+                            DataPath       = $path
+                            DataDetails    = $fileName
+                            TimestampInfo  = "Last Modified"
+                            EvidencePath   = $_."Source"
+                            Description    = "Program Execution"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "AppCompatCache"
+                    }                    
+
+                    $MasterTimeline += $rows
+                    $totalAdded += $rows.Count
+                } finally {
+                    if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom Shim Cache entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom Shim Cache"
+        } catch {
+            Write-Host "  Error processing Axiom Shim Cache: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom Shim Cache file not found: $shimPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Shim Cache Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+# Process Axiom AutoRun Items
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom AutoRun Items" -ForegroundColor Cyan
+    $autoRunPath = Join-Path $AxiomDirectory "AutoRun Items.csv"
+
+    if (Test-Path $autoRunPath) {
+        try {
+            $reader = New-Object System.IO.StreamReader($autoRunPath)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
+                        $batchData = Import-Csv $tempFile
+                        $rows = $batchData | ForEach-Object {
+                            $dateTimeString = $_."Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                            $dateTimeFormatted = ""
+
+                            if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                } catch {
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString
+                                }
+                            }
+
+                            if ($dateTimeFormatted -eq "") { return }
+
+                            $row = @{
+                                DateTime      = $dateTimeFormatted
+                                Tool          = "Axiom"
+                                DataPath      = $_."File Path"
+                                DataDetails   = $_."File Name"
+                                CommandLine   = $_."Command"
+                                Description   = "Program Execution"
+                                TimestampInfo = "Registry Modified"
+                                EvidencePath  = $_."Source"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Registry - AutoRun Items"
+                        }
+
+                        $MasterTimeline += $rows
+                        $totalAdded += $rows.Count
+                    } finally {
+                        if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                    }
+
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Final batch
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    $batchData = Import-Csv $tempFile
+
+                    $rows = $batchData | ForEach-Object {
+                        $dateTimeString = $_."Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                        $dateTimeFormatted = ""
+
+                        if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            } catch {
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString
+                            }
+                        }
+
+                        if ($dateTimeFormatted -eq "") { return }
+
+                        $row = @{
+                            DateTime      = $dateTimeFormatted
+                            Tool          = "Axiom"
+                            DataPath      = $_."File Path"
+                            DataDetails   = $_."File Name"
+                            Description   = "Program Execution"
+                            TimestampInfo = "Registry Modified"
+                            EvidencePath  = $_."Source"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "Registry - AutoRun Items"
+                    }
+
+                    $MasterTimeline += $rows
+                    $totalAdded += $rows.Count
+                } finally {
+                    if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom AutoRun entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom AutoRun Items"
+
+        } catch {
+            Write-Host "  Error processing Axiom AutoRun Items: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom AutoRun CSV not found in: $AxiomDirectory" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom AutoRun Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+
+
+# Process Axiom UserAssist Artifacts
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom UserAssist" -ForegroundColor Cyan
+    $userAssistPath = Join-Path $AxiomDirectory "UserAssist.csv"
+
+    if (Test-Path $userAssistPath) {
+        try {
+            $reader = New-Object System.IO.StreamReader($userAssistPath)
+            $headerLine = $reader.ReadLine()
+            $batchCount = 0
+            $totalProcessed = 0
+            $totalAdded = 0
+            $batch = New-Object System.Collections.ArrayList
+
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                [void]$batch.Add($line)
+                $batchCount++
+                $totalProcessed++
+
+                if ($batchCount -ge $BatchSize) {
+                    $tempFile = [System.IO.Path]::GetTempFileName()
+                    try {
+                        $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                        $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                        $batchData = Import-Csv $tempFile
+                        
+                        $uaRows = $batchData | ForEach-Object {
+                            $dateTimeString = $_."Last Run Date/Time - UTC+00:00 (M/d/yyyy)"
+                            if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                try {
+                                    $dateTime = [datetime]::Parse($dateTimeString)
+                                    $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                }
+                                catch {
+                                    Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    $dateTimeFormatted = $dateTimeString
+                                }
+                            } else {
+                                $dateTimeFormatted = ""
+                            }
+                            $row = @{
+                                DateTime      = $dateTimeFormatted
+                                Tool          = "Axiom"
+                                DataPath      = $_."File Name"
+                                Description   = "Program Execution"
+                                TimestampInfo = "Last Run"
+                                User          = $_."User Name"
+                                Count         = $_."Application Run Count"
+                                EvidencePath  = $_."Source"
+                            }
+                            Normalize-Row -Fields $row -ArtifactName "Registry - UserAssist"
+                        }
+
+                        $MasterTimeline += $uaRows
+                        $totalAdded += $uaRows.Count
+                    } finally {
+                        if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                    }
+                    $batch.Clear()
+                    $batchCount = 0
+                }
+            }
+
+            # Process remaining rows
+            if ($batch.Count -gt 0) {
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                    $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                    $batchData = Import-Csv $tempFile
+
+                    $uaRows = $batchData | ForEach-Object {
+                        $dateTimeString = $_."Last Run Date/Time - UTC+00:00 (M/d/yyyy)"
+                        if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                            try {
+                                $dateTime = [datetime]::Parse($dateTimeString)
+                                $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            }
+                            catch {
+                                Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                $dateTimeFormatted = $dateTimeString
+                            }
+                        } else {
+                            $dateTimeFormatted = ""
+                        }
+
+                        $row = @{
+                            DateTime      = $dateTimeFormatted
+                            Tool          = "Axiom"
+                            DataPath      = $_."File Name"
+                            Description   = "Program Execution"
+                            TimestampInfo = "Last Run"
+                            User          = $_."User Name"
+                            Count         = $_."Application Run Count"
+                            EvidencePath  = $_."Source"
+                        }
+                        Normalize-Row -Fields $row -ArtifactName "Registry - UserAssist"
+                    }
+
+                    $MasterTimeline += $uaRows
+                    $totalAdded += $uaRows.Count
+                } finally {
+                    if (Test-Path $tempFile) { Remove-Item $tempFile -Force -ErrorAction SilentlyContinue }
+                }
+            }
+
+            $reader.Close()
+            Write-Host "  Added $totalAdded Axiom UserAssist entries to timeline" -ForegroundColor Green
+            Update-OverallProgress -CurrentSource "Axiom UserAssist"
+        } catch {
+            Write-Host "  Error processing Axiom UserAssist: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  Axiom UserAssist file not found: $userAssistPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom UserAssist Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+
 
 # Complete the overall progress bar
 Write-Progress -Activity "Building Forensic Timeline" -Status "Processing Complete" -PercentComplete 100 -Id 0 -Completed
