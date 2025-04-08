@@ -16,7 +16,10 @@ https://youtu.be/8fwJ_3Sks0E?feature=shared
 
  
 
-Use the VB macro to color code the artifacts in excel. This tool is designed to quickly timeline and triage using output from Axiom, EZ parsers / Kape, Chainsaw and Hayabusa. Correlate tool output across different tools!
+Use the VB macro to color code the artifacts in excel. 
+This tool is designed to quickly timeline and triage using output 
+from Axiom, EZ parsers / Kape, Chainsaw and Hayabusa. Correlate 
+tool output across different tools!
 
 ## Quick Start
 
