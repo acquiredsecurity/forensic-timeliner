@@ -1,7 +1,7 @@
 # 🧭 Forensic Timeliner 
 
 This tool consolidates and normalizes digital forensic artifact data  
-from multiple tools (**EZ Tools**, **Nirsoft**, **Hayabusa**, **Axiom**, etc.)  
+from multiple tools (**EZ Tools**, **Nirsoft**, **Hayabusa**, **Axiom**, **Chainsaw**)  
 into a single unified forensic timeline.
 
 https://youtu.be/8fwJ_3Sks0E?feature=shared
