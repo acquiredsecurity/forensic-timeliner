@@ -76,8 +76,8 @@ function Show-Help {
     Write-Host ""
     Write-Host "Forensic Timeliner Help Menu" -ForegroundColor Cyan
     Write-Host "----------------------------------------------------" -ForegroundColor Cyan
-    Write-Host "This tool consolidates and normalizes digital forensic artifact data"
-    Write-Host "from multiple tools (Axiom, EZ Tools, Chainsaw, Hayabusa, Nirsoft)"
+    Write-Host "This Script combines CSV files from Digital Forensic tools into a Timeline"
+    Write-Host "Supported Tools include: (Axiom, Kape/EZ Tools, Chainsaw, Hayabusa, Nirsoft WebHistory View)"
     Write-Host "into a single forensic timeline."
     Write-Host ""
 
@@ -125,11 +125,13 @@ function Show-Help {
     Write-Host "    - AutoRuns                                         $BaseDir\axiom\AutoRun Items.csv"
     Write-Host "    - Chrome Web History                               $BaseDir\axiom\Chrome Web History.csv"
     Write-Host "    - Edge/IE Main History                             $BaseDir\axiom\Edge-Internet Explorer 10-11 Main History.csv"
+    Write-Host "    - Firefox Web History                              $BaseDir\axiom\Firefox Web History.csv"
     Write-Host "    - Jump Lists                                       $BaseDir\axiom\Jump Lists.csv"
     Write-Host "    - LNK Files                                        $BaseDir\axiom\LNK Files.csv"
     Write-Host "    - MRU (Folder Access)                              $BaseDir\axiom\MRU Folder Access.csv"
     Write-Host "    - MRU (Open-Saved Files)                           $BaseDir\axiom\MRU Opened-Saved Files.csv"
     Write-Host "    - MRU (Recent Files, Folder Access)                $BaseDir\axiom\MRU Recent Files & Folders.csv"
+    Write-Host "    - Opera Web History                                $BaseDir\axiom\Opera Web History.csv"
     Write-Host "    - Prefetch                                         $BaseDir\axiom\Prefetch Files*.csv"
     Write-Host "    - Recycle Bin                                      $BaseDir\axiom\Recycle Bin.csv"
     Write-Host "    - Shellbags                                        $BaseDir\axiom\Shellbags.csv"
@@ -592,19 +594,22 @@ if (-not $SkipHayabusa) {
 # Check Axiom - Count each artifact individually for accurate progress tracking
 if ($ProcessAxiom) {
     $axiomArtifactFilters = @(
-        "LNK Files.csv",
+        "Amcache.csv",
+        "AutoRun Items.csv",
         "Jump Lists.csv",
+        "LNK Files.csv",
+        "MRU Opened-Saved Files.csv",
+        "MRU Recent Files & Folders.csv",
+        "MRU Folder Access.csv",
         "UserAssist.csv",
         "Prefetch*.csv",
         "Shim Cache.csv",
         "Shellbags.csv",
-        "AutoRun Items.csv",
-        "MRU Opened-Saved Files.csv",
-        "MRU Recent Files & Folders.csv",
-        "MRU Folder Access.csv",
-        "Chrome History.csv",
+        "Chrome History.csv",   # keeping Web/Browser together
         "Edge History.csv",
-        "Amcache.csv",
+        "Edge-Internet Explorer 10-11 Main History",
+        "Firefox Web History.csv",
+        "Opera Web History",
         "Recycle Bin.csv"
     )
 
@@ -3546,6 +3551,7 @@ if (Test-Path $AxiomAmCachePath) {
                                     DataDetails    = $_."Associated Application Name"
                                     FileExtension  = $_."File Extension"
                                     SHA1           = $_."SHA1 Hash"
+                                    EvidencePath  = $_."Source"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "Amcache"
                             }
@@ -3604,6 +3610,7 @@ if (Test-Path $AxiomAmCachePath) {
                                 DataDetails    = $_."Associated Application Name"
                                 FileExtension  = $_."File Extension"
                                 SHA1           = $_."SHA1 Hash"
+                                EvidencePath  = $_."Source"
                             }
                             Normalize-Row -Fields $row -ArtifactName "Amcache"
                         }
@@ -3955,6 +3962,7 @@ if ($ProcessAxiom) {
                                         DataPath       = $_."Linked Path"
                                         TimestampInfo  = "Target Created"
                                         Description    = "File & Folder Access"
+                                        EvidencePath  = $_."Source"
                                     }
                                     Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                                 }
@@ -3981,6 +3989,7 @@ if ($ProcessAxiom) {
                                         DataPath       = $_."Linked Path"
                                         TimestampInfo  = "Source Modified"
                                         Description    = "File & Folder Access"
+                                        EvidencePath  = $_."Source"
                                     }
                                     Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                                 }
@@ -4007,6 +4016,7 @@ if ($ProcessAxiom) {
                                         DataPath       = $_."Linked Path"
                                         TimestampInfo  = "Source Created"
                                         Description    = "File & Folder Access"
+                                        EvidencePath  = $_."Source"
                                     }
                                     Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                                 }
@@ -4055,6 +4065,7 @@ if ($ProcessAxiom) {
                                     DataPath       = $_."Linked Path"
                                     TimestampInfo  = "Target Created"
                                     Description    = "File & Folder Access"
+                                    EvidencePath  = $_."Source"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                             }
@@ -4081,6 +4092,7 @@ if ($ProcessAxiom) {
                                     DataPath       = $_."Linked Path"
                                     TimestampInfo  = "Source Modified"
                                     Description    = "File & Folder Access"
+                                    EvidencePath  = $_."Source"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                             }
@@ -4107,6 +4119,7 @@ if ($ProcessAxiom) {
                                     DataPath       = $_."Linked Path"
                                     TimestampInfo  = "Source Created"
                                     Description    = "File & Folder Access"
+                                    EvidencePath  = $_."Source"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                             }
@@ -4738,6 +4751,7 @@ if ($ProcessAxiom) {
                                         DataDetails  = $_."Title"
                                         Description  = $description
                                         Count        = $_."Visit Count"
+                                        EvidencePath  = $_."Source"
                                     }
                                     Normalize-Row -Fields $row -ArtifactName "ChromeHistory"
                                 }
@@ -4816,6 +4830,7 @@ if ($ProcessAxiom) {
                                     DataDetails  = $_."Title"
                                     Description  = $description
                                     Count        = $_."Visit Count"
+                                    EvidencePath  = $_."Source"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "ChromeHistory"
                             }
@@ -4853,6 +4868,329 @@ if ($ProcessAxiom) {
 } else {
     Write-Host "  Skipping Axiom Chrome Web History (ProcessAxiom is disabled)" -ForegroundColor Yellow
 }
+
+# Process Axiom Firefox Web History
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Firefox Web History" -ForegroundColor Cyan
+    $AxiomFirefoxHistoryPath = $AxiomDirectory
+    if (Test-Path $AxiomFirefoxHistoryPath) {
+        $FirefoxHistoryFiles = Get-ChildItem -Path $AxiomFirefoxHistoryPath -Filter "Firefox Web History.csv" -ErrorAction SilentlyContinue
+        $fileCount = $FirefoxHistoryFiles.Count
+
+        if ($fileCount -gt 0) {
+            $fileCounter = 0
+            foreach ($file in $FirefoxHistoryFiles) {
+                $fileCounter++
+                Show-ProcessingProgress -Activity "Processing Axiom Firefox Web History" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+
+                try {
+                    $reader = New-Object System.IO.StreamReader($file.FullName)
+                    $headerLine = $reader.ReadLine()
+                    $batchCount = 0
+                    $totalProcessed = 0
+                    $totalAdded = 0
+                    $batch = New-Object System.Collections.ArrayList
+
+                    while (-not $reader.EndOfStream) {
+                        $line = $reader.ReadLine()
+                        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                        [void]$batch.Add($line)
+                        $batchCount++
+                        $totalProcessed++
+
+                        if ($batchCount -ge $BatchSize) {
+                            $tempFile = [System.IO.Path]::GetTempFileName()
+                            try {
+                                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                                $batchData = Import-Csv $tempFile
+
+                                $firefoxRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Last Visited Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        }
+                                    }
+
+                                    $url = $_."URL"
+                                    $description = "Web Activity"
+                                    if ($url -match "^file:///") {
+                                        $description = "File & Folder Access"
+                                    } elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                                        $description = "Web Search"
+                                    } elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                                        $description = "Web Download"
+                                    }
+
+                                    $row = @{
+                                        DateTime        = $dateTimeFormatted
+                                        Tool            = "Axiom"
+                                        DataPath        = $url
+                                        TimestampInfo   = "Last Visited"
+                                        DataDetails     = $_."Title"
+                                        Description     = $description
+                                        Count           = $_."Visit Count"
+                                        EvidencePath    = $_."Source"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "FirefoxHistory"
+                                }
+
+                                $MasterTimeline += $firefoxRows
+                                $totalAdded += $firefoxRows.Count
+
+                                Show-ProcessingProgress -Activity "Processing Axiom Firefox History: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            } catch {
+                                Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                            } finally {
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
+                            }
+
+                            $batch.Clear()
+                            $batchCount = 0
+                        }
+                    }
+
+                    # Process remaining lines
+                    if ($batch.Count -gt 0) {
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            $batchData = Import-Csv $tempFile
+
+                            $firefoxRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Last Visited Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    }
+                                }
+
+                                $url = $_."URL"
+                                $description = "Web Activity"
+                                if ($url -match "^file:///") {
+                                    $description = "File & Folder Access"
+                                } elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                                    $description = "Web Search"
+                                } elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                                    $description = "Web Download"
+                                }
+
+                                $row = @{
+                                    DateTime        = $dateTimeFormatted
+                                    Tool            = "Axiom"
+                                    DataPath        = $url
+                                    TimestampInfo   = "Last Visited"
+                                    DataDetails     = $_."Title"
+                                    Description     = $description
+                                    Count           = $_."Visit Count"
+                                    EvidencePath    = $_."Source"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "FirefoxHistory"
+                            }
+
+                            $MasterTimeline += $firefoxRows
+                            $totalAdded += $firefoxRows.Count
+                        } catch {
+                            Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                        } finally {
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+
+                    $reader.Close()
+                    Write-Host "  Added $totalAdded Axiom Firefox web history entries from $($file.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+
+                Update-OverallProgress -CurrentSource "Axiom Firefox Web History"
+            }
+        } else {
+            Write-Host "  No Axiom Firefox Web History files found" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  Axiom Firefox Web History path not found: $AxiomFirefoxHistoryPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Firefox Web History (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
+# Process Axiom Opera Web History
+if ($ProcessAxiom) {
+    Write-Host "Processing Axiom Opera Web History" -ForegroundColor Cyan
+    $AxiomOperaHistoryPath = $AxiomDirectory
+    if (Test-Path $AxiomOperaHistoryPath) {
+        $OperaHistoryFiles = Get-ChildItem -Path $AxiomOperaHistoryPath -Filter "Opera Web History.csv" -ErrorAction SilentlyContinue
+        $fileCount = $OperaHistoryFiles.Count
+
+        if ($fileCount -gt 0) {
+            $fileCounter = 0
+            foreach ($file in $OperaHistoryFiles) {
+                $fileCounter++
+                Show-ProcessingProgress -Activity "Processing Axiom Opera Web History" -Status "File: $($file.Name)" -Current $fileCounter -Total $fileCount -NestedLevel 1
+
+                try {
+                    $reader = New-Object System.IO.StreamReader($file.FullName)
+                    $headerLine = $reader.ReadLine()
+                    $batchCount = 0
+                    $totalProcessed = 0
+                    $totalAdded = 0
+                    $batch = New-Object System.Collections.ArrayList
+
+                    while (-not $reader.EndOfStream) {
+                        $line = $reader.ReadLine()
+                        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                        [void]$batch.Add($line)
+                        $batchCount++
+                        $totalProcessed++
+
+                        if ($batchCount -ge $BatchSize) {
+                            $tempFile = [System.IO.Path]::GetTempFileName()
+                            try {
+                                $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                                $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                                $batchData = Import-Csv $tempFile
+
+                                $operaRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Last Visited Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        }
+                                    }
+
+                                    $url = $_."URL"
+                                    $description = "Web Activity"
+                                    if ($url -match "^file:///") {
+                                        $description = "File & Folder Access"
+                                    } elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                                        $description = "Web Search"
+                                    } elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                                        $description = "Web Download"
+                                    }
+
+                                    $row = @{
+                                        DateTime        = $dateTimeFormatted
+                                        Tool            = "Axiom"
+                                        DataPath        = $url
+                                        TimestampInfo   = "Last Visited"
+                                        DataDetails     = $_."Title"
+                                        Description     = $description
+                                        Count           = $_."Visit Count"
+                                        EvidencePath  = $_."Source"
+                                    }
+                                    Normalize-Row -Fields $row -ArtifactName "OperaHistory"
+                                }
+
+                                $MasterTimeline += $operaRows
+                                $totalAdded += $operaRows.Count
+
+                                Show-ProcessingProgress -Activity "Processing Axiom Opera History: $($file.Name)" -Status "Processed $totalProcessed entries, added $totalAdded events" -Current $totalProcessed -Total $totalProcessed -NestedLevel 2
+                            } catch {
+                                Write-Host "    Error processing batch: $_" -ForegroundColor Red
+                            } finally {
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
+                            }
+
+                            $batch.Clear()
+                            $batchCount = 0
+                        }
+                    }
+
+                    # Process remaining lines
+                    if ($batch.Count -gt 0) {
+                        $tempFile = [System.IO.Path]::GetTempFileName()
+                        try {
+                            $headerLine | Out-File -FilePath $tempFile -Encoding utf8
+                            $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+                            $batchData = Import-Csv $tempFile
+
+                            $operaRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Last Visited Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    }
+                                }
+
+                                $url = $_."URL"
+                                $description = "Web Activity"
+                                if ($url -match "^file:///") {
+                                    $description = "File & Folder Access"
+                                } elseif ($url -match "search|query|q=|p=|find|lookup|google\.com/search|bing\.com/search|duckduckgo\.com/\?q=|yahoo\.com/search") {
+                                    $description = "Web Search"
+                                } elseif ($url -match "download|\.exe$|\.zip$|\.rar$|\.7z$|\.msi$|\.iso$|\.pdf$|\.dll$|\/downloads\/") {
+                                    $description = "Web Download"
+                                }
+
+                                $row = @{
+                                    DateTime        = $dateTimeFormatted
+                                    Tool            = "Axiom"
+                                    DataPath        = $url
+                                    TimestampInfo   = "Last Visited"
+                                    DataDetails     = $_."Title"
+                                    Description     = $description
+                                    Count           = $_."Visit Count"
+                                    EvidencePath  = $_."Source"
+                                }
+                                Normalize-Row -Fields $row -ArtifactName "OperaHistory"
+                            }
+
+                            $MasterTimeline += $operaRows
+                            $totalAdded += $operaRows.Count
+                        } catch {
+                            Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
+                        } finally {
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+
+                    $reader.Close()
+                    Write-Host "  Added $totalAdded Axiom Opera web history entries from $($file.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Error processing $($file.Name): $_" -ForegroundColor Red
+                }
+
+                Update-OverallProgress -CurrentSource "Axiom Opera Web History"
+            }
+        } else {
+            Write-Host "  No Axiom Opera Web History files found" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  Axiom Opera Web History path not found: $AxiomOperaHistoryPath" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipping Axiom Opera Web History (ProcessAxiom is disabled)" -ForegroundColor Yellow
+}
+
 
 # Process Axiom Edge/IE History
 if ($ProcessAxiom) {
@@ -4944,6 +5282,7 @@ if ($ProcessAxiom) {
                                         Description   = $description
                                         User          = $_."User"
                                         Count         = $_."Access Count"
+                                        EvidencePath  = $_."Source"
                                     }
                                     Normalize-Row -Fields $row -ArtifactName "EdgeIEHistory"
                                 }
@@ -5023,6 +5362,7 @@ if ($ProcessAxiom) {
                                     Description           = $description
                                     User                  = $_."User"
                                     Count                 = $_."Access Count"
+                                    EvidencePath          = $_."Source"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "EdgeIEHistory"
                             }
