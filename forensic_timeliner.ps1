@@ -5,7 +5,7 @@ param (
     [string]$ChainsawDirectory = "$BaseDir\chainsaw",                                        # Directory containing Chainsaw CSV files
     [string]$HayabusaDirectory = "$BaseDir\hayabusa", 
     [string]$NirsoftDirectory = "$BaseDir\browsinghistory",                                  # Directory containing Hayabusa CSV files                                                                # Skip Hayabusa processing
-	 [string]$AxiomDirectory = "$BaseDir\axiom",
+    [string]$AxiomDirectory = "$BaseDir\axiom",
     [string]$OutputFile = "$BaseDir\timeline\Forensic_Timeliner.csv",                        # Output timeline file
     [ValidateSet("xlsx", "csv", "json")]
     [string]$ExportFormat = "csv",                                                           # Output Format  CSV for timeline creation with Json and Xlsx Options
