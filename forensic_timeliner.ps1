@@ -77,7 +77,7 @@ function Show-Help {
     Write-Host "Forensic Timeliner Help Menu" -ForegroundColor Cyan
     Write-Host "----------------------------------------------------" -ForegroundColor Cyan
     Write-Host "This tool consolidates and normalizes digital forensic artifact data"
-    Write-Host "from multiple tools (EZ Tools, Nirsoft, Hayabusa, Axiom, etc.)"
+    Write-Host "from multiple tools (Axiom, EZ Tools, Chainsaw, Hayabusa, Nirsoft)"
     Write-Host "into a single forensic timeline."
     Write-Host ""
 
