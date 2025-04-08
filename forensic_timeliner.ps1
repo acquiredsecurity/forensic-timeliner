@@ -3898,7 +3898,6 @@ if ($ProcessAxiom) {
     Write-Host "  Skipping Axiom Jump List Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
 }
 
-
 # Process Axiom LNK Files
 if ($ProcessAxiom) {
     Write-Host "Processing Axiom LNK Files" -ForegroundColor Cyan
@@ -3936,50 +3935,90 @@ if ($ProcessAxiom) {
                                 $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
                                 $batchData = Import-Csv $tempFile
 
-                                # Pass 1: Target Created
-                                $batchData | ForEach-Object {
-                                    $dt = Format-DateTime $_."Target File Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                # First pass - Target Created Date/Time
+                                $lnkRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Target File Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""
+
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        }
+                                    }
+
                                     $row = @{
-                                        DateTime = $dt
-                                        Tool = "Axiom"
-                                        DataPath = $_."Linked Path"
-                                        TimestampInfo = "Target Created"
-                                        Description = "File & Folder Access"
+                                        DateTime       = $dateTimeFormatted
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Linked Path"
+                                        TimestampInfo  = "Target Created"
+                                        Description    = "File & Folder Access"
                                     }
                                     Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                                 }
+                                $MasterTimeline += $lnkRows
+                                $totalAdded += $lnkRows.Count
 
-                                # Pass 2: Source Modified
-                                $batchData | ForEach-Object {
-                                    $dt = Format-DateTime $_."Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                                # Second pass - Source FileModified
+                                $lnkRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""
+
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        }
+                                    }
+
                                     $row = @{
-                                        DateTime = $dt
-                                        Tool = "Axiom"
-                                        DataPath = $_."Linked Path"
-                                        TimestampInfo = "Source Modified"
-                                        Description = "File & Folder Access"
+                                        DateTime       = $dateTimeFormatted
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Linked Path"
+                                        TimestampInfo  = "Source Modified"
+                                        Description    = "File & Folder Access"
                                     }
                                     Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                                 }
+                                $MasterTimeline += $lnkRows
+                                $totalAdded += $lnkRows.Count
 
-                                # Pass 3: Source Created
-                                $batchData | ForEach-Object {
-                                    $dt = Format-DateTime $_."Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                # Third pass - Source Created Date/Time
+                                $lnkRows = $batchData | ForEach-Object {
+                                    $dateTimeString = $_."Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                    $dateTimeFormatted = ""
+
+                                    if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                        try {
+                                            $dateTime = [datetime]::Parse($dateTimeString)
+                                            $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                        } catch {
+                                            Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                        }
+                                    }
+
                                     $row = @{
-                                        DateTime = $dt
-                                        Tool = "Axiom"
-                                        DataPath = $_."Linked Path"
-                                        TimestampInfo = "Source Created"
-                                        Description = "File & Folder Access"
+                                        DateTime       = $dateTimeFormatted
+                                        Tool           = "Axiom"
+                                        DataPath       = $_."Linked Path"
+                                        TimestampInfo  = "Source Created"
+                                        Description    = "File & Folder Access"
                                     }
                                     Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                                 }
+                                $MasterTimeline += $lnkRows
+                                $totalAdded += $lnkRows.Count
 
-                                $totalAdded += $batchData.Count * 3
                             } catch {
                                 Write-Host "    Error processing batch: $_" -ForegroundColor Red
                             } finally {
-                                if (Test-Path $tempFile) { Remove-Item $tempFile -Force }
+                                if (Test-Path $tempFile) {
+                                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                                }
                             }
 
                             $batch.Clear()
@@ -3987,56 +4026,98 @@ if ($ProcessAxiom) {
                         }
                     }
 
-                    # Final batch (remaining lines)
+                    # Final batch
                     if ($batch.Count -gt 0) {
                         $tempFile = [System.IO.Path]::GetTempFileName()
                         try {
                             $headerLine | Out-File -FilePath $tempFile -Encoding utf8
                             $batch | Out-File -FilePath $tempFile -Encoding utf8 -Append
+
                             $batchData = Import-Csv $tempFile
 
-                            # Re-run 3 timestamp passes
-                            $batchData | ForEach-Object {
-                                $dt = Format-DateTime $_."Target File Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                            # First pass - Target Created Date/Time
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Target File Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""
+
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    }
+                                }
+
                                 $row = @{
-                                    DateTime = $dt
-                                    Tool = "Axiom"
-                                    DataPath = $_."Linked Path"
-                                    TimestampInfo = "Target Created"
-                                    Description = "File & Folder Access"
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "Axiom"
+                                    DataPath       = $_."Linked Path"
+                                    TimestampInfo  = "Target Created"
+                                    Description    = "File & Folder Access"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                             }
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
 
-                            $batchData | ForEach-Object {
-                                $dt = Format-DateTime $_."Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                            # Second pass - Source Last Modified Date/Time
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""
+
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    }
+                                }
+
                                 $row = @{
-                                    DateTime = $dt
-                                    Tool = "Axiom"
-                                    DataPath = $_."Linked Path"
-                                    TimestampInfo = "Source Modified"
-                                    Description = "File & Folder Access"
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "Axiom"
+                                    DataPath       = $_."Linked Path"
+                                    TimestampInfo  = "Source Modified"
+                                    Description    = "File & Folder Access"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                             }
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
 
-                            $batchData | ForEach-Object {
-                                $dt = Format-DateTime $_."Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                            # Third pass - Source Created Date/Time
+                            $lnkRows = $batchData | ForEach-Object {
+                                $dateTimeString = $_."Created Date/Time - UTC+00:00 (M/d/yyyy)"
+                                $dateTimeFormatted = ""
+
+                                if (![string]::IsNullOrWhiteSpace($dateTimeString)) {
+                                    try {
+                                        $dateTime = [datetime]::Parse($dateTimeString)
+                                        $dateTimeFormatted = $dateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                                    } catch {
+                                        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
+                                    }
+                                }
+
                                 $row = @{
-                                    DateTime = $dt
-                                    Tool = "Axiom"
-                                    DataPath = $_."Linked Path"
-                                    TimestampInfo = "Source Created"
-                                    Description = "File & Folder Access"
+                                    DateTime       = $dateTimeFormatted
+                                    Tool           = "Axiom"
+                                    DataPath       = $_."Linked Path"
+                                    TimestampInfo  = "Source Created"
+                                    Description    = "File & Folder Access"
                                 }
                                 Normalize-Row -Fields $row -ArtifactName "LNKFiles"
                             }
-
-                            $totalAdded += $batchData.Count * 3
+                            $MasterTimeline += $lnkRows
+                            $totalAdded += $lnkRows.Count
                         } catch {
                             Write-Host "    Error processing remaining batch: $_" -ForegroundColor Red
                         } finally {
-                            if (Test-Path $tempFile) { Remove-Item $tempFile -Force }
+                            if (Test-Path $tempFile) {
+                                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                            }
                         }
                     }
 
@@ -4057,17 +4138,6 @@ if ($ProcessAxiom) {
 } else {
     Write-Host "  Skipping Axiom LNK File Processing (ProcessAxiom is disabled)" -ForegroundColor Yellow
 }
-
-# Helper for date parsing
-function Format-DateTime($dateTimeString) {
-    try {
-        return ([datetime]::Parse($dateTimeString)).ToString("yyyy-MM-dd HH:mm:ss")
-    } catch {
-        Write-Host "    Error parsing date: $dateTimeString" -ForegroundColor Yellow
-        return $dateTimeString
-    }
-}
-
 
 # Process Axiom MRU Opened-Saved Files
 if ($ProcessAxiom) {
