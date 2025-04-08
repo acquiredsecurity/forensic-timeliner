@@ -4,7 +4,7 @@ param (
     [string]$KapeDirectory = "$BaseDir\kape_out",                                            # Path to main KAPE timeline folder and csv output from EZ Tools
     [string]$ChainsawDirectory = "$BaseDir\chainsaw",                                        # Directory containing Chainsaw CSV files
     [string]$HayabusaDirectory = "$BaseDir\hayabusa", 					     # Directory containing Hayabusa CSV files
-    [string]$NirsoftDirectory = "$BaseDir\browsinghistory",                                  # Directory containing Nirsoft Browsing History CSV files                                                                # Skip Hayabusa processing
+    [string]$NirsoftDirectory = "$BaseDir\browsinghistory",                                  # Directory containing Nirsoft Browsing History CSV files                                                             
     [string]$AxiomDirectory = "$BaseDir\axiom",					             # Directory containing Axiom CSV Files
     [string]$OutputFile = "$BaseDir\timeline\Forensic_Timeliner.csv",                        # Output timeline file
     [ValidateSet("xlsx", "csv", "json")]
