@@ -152,6 +152,24 @@ These can be customized in interactive mode or by modifying the script parameter
 
 Event logs are filtered by channel and event ID. You can customize the filtering criteria in the script by modifying the `$EventChannelFilters` hashtable.
 
+# Forensic Timeliner Supported Artifacts and Description
+
+| Artifact Name | Description | Supported Forensic Tool Output | Artifact Description | Time Stamps Used|
+|----------------|---------------------------|----------------------|-------------------|---------------|
+| AmCache        | Amcache Hive               | Axiom, EZ Tools/Kape                   | Program Execution | Last Write    |
+| AppCompatCache | Application Compatability  | Axiom, EZ Tools/Kape                   | Program Execution | Last Modified |
+| Chrome History | Chrome browser history     | Axiom, Nirsoft                         | ChromeHistory     | Last Visited  |
+| Edge/IE History| Chrome browser history     | Axiom, Nirsoft                         | EdgeIEHistory     | Last Accessed  / Last Visited |
+| Event Logs     | Windows Event Logs         | EZ Tools/Kape, Chainsaw, Hayabusa      | ChromeHistory     | Last Visited  |
+| MFT            | Master File Table          | EZ Tools/Kape, Chainsaw                | File System       | Date Created | 
+| Registry       | Windows registry artifacts | Axiom, EZ Tools/Kape                   | Registry, Registry - MRU Opened-Saved Files, Registry - MRU Recent Files & Folders , Registry - MRU Folder Access, Registry - AutoRun Items, Registry - UserAssist| lAst Run, Last Write, Registry Modified |
+
+
+
+
+
+
+
 
 
 ## License
