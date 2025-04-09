@@ -152,17 +152,31 @@ These can be customized in interactive mode or by modifying the script parameter
 
 Event logs are filtered by channel and event ID. You can customize the filtering criteria in the script by modifying the `$EventChannelFilters` hashtable.
 
-# Forensic Timeliner Supported Artifacts and Description
+# Forensic Timeliner Supported Artifacts with Tool and Description Details
 
 | Artifact Name | Description | Supported Forensic Tool Output | Artifact Description | Time Stamps Used|
-|----------------|---------------------------|----------------------|-------------------|---------------|
-| AmCache        | Amcache Hive               | Axiom, EZ Tools/Kape                   | Program Execution | Last Write    |
-| AppCompatCache | Application Compatability  | Axiom, EZ Tools/Kape                   | Program Execution | Last Modified |
-| Chrome History | Chrome browser history     | Axiom, Nirsoft                         | ChromeHistory     | Last Visited  |
-| Edge/IE History| Chrome browser history     | Axiom, Nirsoft                         | EdgeIEHistory     | Last Accessed  / Last Visited |
-| Event Logs     | Windows Event Logs         | EZ Tools/Kape, Chainsaw, Hayabusa      | ChromeHistory     | Last Visited  |
-| MFT            | Master File Table          | EZ Tools/Kape, Chainsaw                | File System       | Date Created | 
-| Registry       | Windows registry artifacts | Axiom, EZ Tools/Kape                   | Registry, Registry - MRU Opened-Saved Files, Registry - MRU Recent Files & Folders , Registry - MRU Folder Access, Registry - AutoRun Items, Registry - UserAssist| lAst Run, Last Write, Registry Modified |
+|----------------|----------------------------|----------------------|----------------------|---------------------------|
+| AmCache        | Cached application information            | Axiom, EZ Tools/Kape                   | Program Execution | Last Write    |
+| AppCompatCache | Application Compatability Checker  | Axiom, EZ Tools/Kape                   | Program Execution | Last Modified |
+| ChromeHistory  | Chrome browser history     | Axiom                                  | Web Activity, Web Search, Web Download   | Last Visited  |
+| EdgeIEHistory  | Chrome browser history     | Axiom                                  | File & Folder Access, Web Activity, Web Search, Web Download | Last Accessed  / Last Visited |
+| EventLogs      | Windows Event Logs         | EZ Tools/Kape, Chainsaw, Hayabusa      | **Maps to Channels identifiers    | Event Time  |
+| File Deletion  | Deleted File Info          | EZ Tools/Kape                          | File System       | File Deleted On |
+| FireFoxHistory | Firefox browser history    | Axiom                                  | Web Activity, Web Search, Web Download   | Last Visited |
+| JumpLists      | Recent file/folder/application usage | Axiom, EZ Tools/Kape         | File & Folder Access     | Creation Time, Last Access Time, Last Modified Time |
+| LNK Files      | Recent file/folder/application usage | Axiom, EZ Tools/Kape         | File & Folder Access     | Source Created, Source Modified Time, Target Created |
+| MFT            | Windows NTFS file system metadata | EZ Tools/Kape, Chainsaw          File System       | Date Created | 
+| OperaHistory   | Opera browser history      | Axiom, Nirsoft                         | Web Activity, Web Search, Web Download | Last Visited |
+| PrefetchFiles  | File Execution             | Axiom, EZ Tools/Kape                   | Program Execution | Last Run, File Created |
+| Recycle Bin    | Deleted File Info          | Axiom                                 | File System       | File Deleted On |
+| Registry       | Windows registry artifacts | Axiom, EZ Tools/Kape                   | Registry, Registry - MRU Opened-Saved Files, Registry - MRU Recent Files & Folders , Registry - MRU Folder Access, Registry - AutoRun Items, Registry - UserAssist| LAst Run, Last Write, Registry Modified |
+| Shellbags      | Folder view preferences and accessed locations | Axiom, EZ Tools/Kape | File & Folder Access | First Interaction, Last Interaction, Last Modified, Last Write |
+| WebHistory - Brave  | Brave browser history  | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
+| WebHistory - Chrome | Chrome browser history | Nirsoft | Web Search, Web Download | Event Time |
+| WebHistory - Chrome | Chrome browser history | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
+| WebHistory - Internet Explorer | IE browser history | Nirsoft | File & Folder Access, Web Activity, Web Search, Web Download | Event Time |
+| WebHistory - Opera | Opera browser history | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
+
 
 
 
