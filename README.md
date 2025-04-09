@@ -165,7 +165,7 @@ Event logs are filtered by channel and event ID. You can customize the filtering
 | FireFoxHistory | Firefox browser history    | Axiom                                  | Web Activity, Web Search, Web Download   | Last Visited |
 | JumpLists      | Recent file/folder/application usage | Axiom, EZ Tools/Kape         | File & Folder Access     | Creation Time, Last Access Time, Last Modified Time |
 | LNK Files      | Recent file/folder/application usage | Axiom, EZ Tools/Kape         | File & Folder Access     | Source Created, Source Modified Time, Target Created |
-| MFT            | Windows NTFS file system metadata | EZ Tools/Kape, Chainsaw          File System       | Date Created | 
+| MFT            | Windows NTFS file system metadata | EZ Tools/Kape, Chainsaw         | File System       | Date Created | 
 | OperaHistory   | Opera browser history      | Axiom, Nirsoft                         | Web Activity, Web Search, Web Download | Last Visited |
 | PrefetchFiles  | File Execution             | Axiom, EZ Tools/Kape                   | Program Execution | Last Run, File Created |
 | Recycle Bin    | Deleted File Info          | Axiom                                 | File System       | File Deleted On |
