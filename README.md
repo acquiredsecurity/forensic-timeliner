@@ -169,7 +169,7 @@ Event logs are filtered by channel and event ID. You can customize the filtering
 | OperaHistory   | Opera browser history      | Axiom, Nirsoft                         | Web Activity, Web Search, Web Download | Last Visited |
 | PrefetchFiles  | File Execution             | Axiom, EZ Tools/Kape                   | Program Execution | Last Run, File Created |
 | Recycle Bin    | Deleted File Info          | Axiom                                 | File System       | File Deleted On |
-| Registry       | Windows registry artifacts | Axiom, EZ Tools/Kape                   | Registry, Registry - MRU Opened-Saved Files, Registry - MRU Recent Files & Folders , Registry - MRU Folder Access, Registry - AutoRun Items, Registry - UserAssist| LAst Run, Last Write, Registry Modified |
+| Registry       | Windows registry artifacts | Axiom, EZ Tools/Kape                   | Registry, Registry - MRU Opened-Saved Files, Registry - MRU Recent Files & Folders , Registry - MRU Folder Access, Registry - AutoRun Items, Registry - UserAssist| Last Run, Last Write, Registry Modified |
 | Shellbags      | Folder view preferences and accessed locations | Axiom, EZ Tools/Kape | File & Folder Access | First Interaction, Last Interaction, Last Modified, Last Write |
 | WebHistory - Brave  | Brave browser history  | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
 | WebHistory - Chrome | Chrome browser history | Nirsoft | Web Search, Web Download | Event Time |
