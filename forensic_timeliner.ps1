@@ -6313,7 +6313,7 @@ switch ($ExportFormat) {
 
     "csv" {
     $totalRows = $OrderedTimeline.Count
-    $maxRowsPerFile = 1000000000  # 1 Million row max per CSV Export
+    $maxRowsPerFile = 1000000  ## 1,000,000 row max per CSV Export
     
     if ($totalRows -le $maxRowsPerFile) {
         # If under the threshold, just create a single file
