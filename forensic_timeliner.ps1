@@ -1006,7 +1006,7 @@ if (Test-Path $AppCompatCachePath) {
                                     Tool           = "EZ Tools"
                                     DataPath       = $_."Path"
                                     DataDetails    = $_."Path" -replace '.*\\([^\\]+)$', '$1'
-                                    TimestampInfo  = "Last Modified"
+                                    TimestampInfo  = "Last Modified Time"
                                     EvidencePath   = $_."SourceFile"
                                     Description    = "Program Execution"
                                 }
@@ -1054,7 +1054,7 @@ if (Test-Path $AppCompatCachePath) {
                                 Tool           = "EZ Tools"
                                 DataPath       = $_."Path"
                                 DataDetails    = $_."Path" -replace '.*\\([^\\]+)$', '$1'
-                                TimestampInfo  = "Last Modified"
+                                TimestampInfo  = "Last Modified Time"
                                 EvidencePath   = $_."SourceFile"
                                 Description    = "Program Execution"
                             }
@@ -1730,7 +1730,7 @@ if (Test-Path $jumpListPath) {
                                     Tool           = "EZ Tools"
                                     DataPath       = $dataPathValue
                                     Description    = "File & Folder Access"
-                                    TimestampInfo  = "Last Modified"
+                                    TimestampInfo  = "Last Modified Time"
                                     DataDetails    = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
                                         "" 
                                      } else { 
@@ -1835,7 +1835,7 @@ if (Test-Path $jumpListPath) {
                                     Tool           = "EZ Tools"
                                     DataPath       = $dataPathValue
                                     Description    = "File & Folder Access"
-                                    TimestampInfo  = "Last Modified"
+                                    TimestampInfo  = "Last Modified Time"
                                     DataDetails    = $(if ([string]::IsNullOrEmpty($dataPathValue)) { 
                                     "" 
                                  } else { 
@@ -5644,7 +5644,7 @@ if ($ProcessAxiom) {
                                         DateTime       = $dateTimeFormatted 
                                         Tool           = "Axiom"
                                         DataPath       = $_."Path"
-                                        TimestampInfo  = "Last Modified"
+                                        TimestampInfo  = "Last Modified Time"
                                         Description    = "File & Folder Access"
                                         EvidencePath   = $_."Source"
                                     }
@@ -5759,7 +5759,7 @@ if ($ProcessAxiom) {
                                     DateTime       = $dateTimeFormatted 
                                     Tool           = "Axiom"
                                     DataPath       = $_."Path"
-                                    TimestampInfo  = "Last Modified"
+                                    TimestampInfo  = "Last Modified Time"
                                     Description    = "File & Folder Access"
                                     EvidencePath   = $_."Source"
                                 }
@@ -5853,7 +5853,7 @@ if ($ProcessAxiom) {
                                 Tool           = "Axiom"
                                 DataPath       = $path
                                 DataDetails    = $fileName
-                                TimestampInfo  = "Last Modified"
+                                TimestampInfo  = "Last Modifie Timed"
                                 EvidencePath   = $_."Source"
                                 Description    = "Program Execution"
                             }
@@ -5904,7 +5904,7 @@ if ($ProcessAxiom) {
                             Tool           = "Axiom"
                             DataPath       = $path
                             DataDetails    = $fileName
-                            TimestampInfo  = "Last Modified"
+                            TimestampInfo  = "Last Modified Time"
                             EvidencePath   = $_."Source"
                             Description    = "Program Execution"
                         }
