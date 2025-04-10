@@ -173,7 +173,6 @@ Event logs are filtered by channel and event ID. You can customize the filtering
 | Shellbags      | Folder view preferences and accessed locations | Axiom, EZ Tools/Kape | File & Folder Access | First Interaction, Last Interaction, Last Modified, Last Write |
 | WebHistory - Brave  | Brave browser history  | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
 | WebHistory - Chrome | Chrome browser history | Nirsoft | Web Search, Web Download | Event Time |
-| WebHistory - Chrome | Chrome browser history | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
 | WebHistory - Internet Explorer | IE browser history | Nirsoft | File & Folder Access, Web Activity, Web Search, Web Download | Event Time |
 | WebHistory - Opera | Opera browser history | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
 
