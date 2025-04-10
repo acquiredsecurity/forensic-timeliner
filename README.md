@@ -159,12 +159,12 @@ Event logs are filtered by channel and event ID. You can customize the filtering
 | AmCache        | Cached application information            | Axiom, EZ Tools/Kape                   | Program Execution | Last Write    |
 | AppCompatCache | Application Compatability Checker  | Axiom, EZ Tools/Kape                   | Program Execution | Last Modified |
 | ChromeHistory  | Chrome browser history     | Axiom                                  | Web Activity, Web Search, Web Download   | Last Visited  |
-| EdgeIEHistory  | Chrome browser history     | Axiom                                  | File & Folder Access, Web Activity, Web Search, Web Download | Last Accessed  / Last Visited |
+| EdgeIEHistory  | IE/Edge browser history     | Axiom                                  | File & Folder Access, Web Activity, Web Search, Web Download | Last Accessed  / Last Visited |
 | EventLogs      | Windows Event Logs         | EZ Tools/Kape, Chainsaw, Hayabusa      | **Maps to Channels identifiers    | Event Time  |
 | File Deletion  | Deleted File Info          | EZ Tools/Kape                          | File System       | File Deleted On |
 | FireFoxHistory | Firefox browser history    | Axiom                                  | Web Activity, Web Search, Web Download   | Last Visited |
 | JumpLists      | Recent file/folder/application usage | Axiom, EZ Tools/Kape         | File & Folder Access     | Creation Time, Last Access Time, Last Modified Time |
-| LNK Files      | Recent file/folder/application usage | Axiom, EZ Tools/Kape         | File & Folder Access     | Source Created, Source Modified Time, Target Created |
+| LNKFiles       | Recent file/folder/application usage | Axiom, EZ Tools/Kape         | File & Folder Access     | Source Created, Source Modified Time, Target Created |
 | MFT            | Windows NTFS file system metadata | EZ Tools/Kape, Chainsaw         | File System       | Date Created | 
 | OperaHistory   | Opera browser history      | Axiom, Nirsoft                         | Web Activity, Web Search, Web Download | Last Visited |
 | PrefetchFiles  | File Execution             | Axiom, EZ Tools/Kape                   | Program Execution | Last Run, File Created |
@@ -176,13 +176,6 @@ Event logs are filtered by channel and event ID. You can customize the filtering
 | WebHistory - Chrome | Chrome browser history | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
 | WebHistory - Internet Explorer | IE browser history | Nirsoft | File & Folder Access, Web Activity, Web Search, Web Download | Event Time |
 | WebHistory - Opera | Opera browser history | Nirsoft | Web Activity, Web Search, Web Download | Event Time |
-
-
-
-
-
-
-
 
 
 
