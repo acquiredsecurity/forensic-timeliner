@@ -8,14 +8,14 @@ def process_jumplists(input_dir: str, batch_size: int, base_dir: str):
         print("[JumpLists] FileFolderAccess directory not found: {}".format(input_dir))
         return
 
-    jumplist_files = [
-        os.path.join(input_dir, f)
-        for f in os.listdir(input_dir)
-        if f.lower().endswith("_automaticdestinations.csv")
-    ]
+    jumplist_files = []
+    for root, _, files in os.walk(input_dir):
+        for f in files:
+            if f.lower().endswith("automaticdestinations.csv"):
+                jumplist_files.append(os.path.join(root, f))
 
     if not jumplist_files:
-        print("[JumpLists] No JumpList files found.")
+        print("[JumpLists] No JumpLists found.")
         return
 
     for file in jumplist_files:
@@ -57,6 +57,8 @@ def _normalize_rows(df, base_dir):
             data_path = row.get("Path", "")
             data_details = os.path.basename(data_path) if data_path else ""
 
+            evidence_path = os.path.relpath(row.get("SourceFile", ""), base_dir)
+
             timeline_row = {
                 "DateTime": dt_str,
                 "TimestampInfo": label,
@@ -66,7 +68,7 @@ def _normalize_rows(df, base_dir):
                 "DataDetails": data_details,
                 "DataPath": data_path,
                 "FileSize": row.get("FileSize", ""),
-                "EvidencePath": row.get("SourceFile", "")
+                "EvidencePath": evidence_path
             }
             timeline_data.append(timeline_row)
 

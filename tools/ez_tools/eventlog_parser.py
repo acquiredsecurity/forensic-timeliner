@@ -17,16 +17,16 @@ EVENT_CHANNEL_FILTERS = {
     "System": [7045],
 }
 
-def process_eventlog(input_dir: str, batch_size: int):
+def process_eventlog(input_dir: str, batch_size: int, base_dir: str):
     if not os.path.exists(input_dir):
         print(f"[EventLogs] Directory not found: {input_dir}")
         return
 
-    eventlog_files = [
-        os.path.join(input_dir, f)
-        for f in os.listdir(input_dir)
-        if f.endswith(".csv")
-    ]
+    eventlog_files = []
+    for root, _, files in os.walk(input_dir):
+        for f in files:
+            if f.lower().endswith(".csv"):
+                eventlog_files.append(os.path.join(root, f))
 
     if not eventlog_files:
         print("[EventLogs] No CSV event log files found.")
@@ -36,12 +36,12 @@ def process_eventlog(input_dir: str, batch_size: int):
         print(f"[EventLogs] Processing {file}")
         if should_use_batch(file, batch_size):
             for chunk in pd.read_csv(file, chunksize=batch_size):
-                _process_dataframe(chunk)
+                _process_dataframe(chunk, base_dir)
         else:
             df = pd.read_csv(file)
-            _process_dataframe(df)
+            _process_dataframe(df, base_dir)
 
-def _process_dataframe(df: pd.DataFrame):
+def _process_dataframe(df: pd.DataFrame, base_dir: str):
     filtered_df = df[df.apply(_eventlog_filter, axis=1)]
     rows = []
 
@@ -64,7 +64,7 @@ def _process_dataframe(df: pd.DataFrame):
             "DataDetails": row.get("MapDescription", ""),
             "DataPath": row.get("PayloadData1", ""),
             "Computer": row.get("Computer", ""),
-            "EvidencePath": row.get("SourceFile", ""),
+            "EvidencePath": os.path.relpath(row.get("SourceFile", ""), base_dir),
             "EventId": row.get("EventId", "")
         }
         rows.append(timeline_row)

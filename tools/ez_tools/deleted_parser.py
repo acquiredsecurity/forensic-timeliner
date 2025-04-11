@@ -3,16 +3,16 @@ import pandas as pd
 from utils.batch import should_use_batch
 from collector.collector import add_rows
 
-def process_deleted(input_dir: str, batch_size: int):
+def process_deleted(input_dir: str, batch_size: int, base_dir: str):
     if not os.path.exists(input_dir):
         print(f"[Deleted] FileDeletion directory not found: {input_dir}")
         return
 
-    deleted_files = [
-        os.path.join(input_dir, f)
-        for f in os.listdir(input_dir)
-        if f.lower().endswith(".csv")
-    ]
+    deleted_files = []
+    for root, _, files in os.walk(input_dir):
+        for f in files:
+            if f.lower().endswith(".csv"):
+                deleted_files.append(os.path.join(root, f))
 
     if not deleted_files:
         print("[Deleted] No deleted file CSVs found.")
@@ -22,14 +22,14 @@ def process_deleted(input_dir: str, batch_size: int):
         print(f"[Deleted] Processing {file}")
         if should_use_batch(file, batch_size):
             for chunk in pd.read_csv(file, chunksize=batch_size):
-                rows = _normalize_rows(chunk)
+                rows = _normalize_rows(chunk, file, base_dir)
                 add_rows(rows)
         else:
             df = pd.read_csv(file)
-            rows = _normalize_rows(df)
+            rows = _normalize_rows(df, file, base_dir)
             add_rows(rows)
 
-def _normalize_rows(df):
+def _normalize_rows(df, evidence_path, base_dir):
     timeline_data = []
     for _, row in df.iterrows():
         timestamp = row.get("DeletedOn", "")
@@ -53,7 +53,7 @@ def _normalize_rows(df):
             "DataDetails": filename,
             "DataPath": full_path,
             "FileSize": row.get("FileSize", ""),
-            "EvidencePath": row.get("SourceName", "")
+            "EvidencePath": os.path.relpath(row.get("SourceName", ""), base_dir)
         }
         timeline_data.append(timeline_row)
 

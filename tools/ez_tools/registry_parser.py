@@ -8,30 +8,29 @@ def process_registry(input_dir: str, batch_size: int, base_dir: str):
         print("[Registry] Registry directory not found: {}".format(input_dir))
         return
 
-    reg_files = [
-        os.path.join(input_dir, f)
-        for f in os.listdir(input_dir)
-        if f.lower().endswith("_recmd_batch_kroll_batch_output.csv")
-    ]
+    reg_files = []
+    for root, _, files in os.walk(input_dir):
+        for f in files:
+            if f.endswith("_RECmd_Batch_Kroll_Batch_Output.csv"):
+                reg_files.append(os.path.join(root, f))
 
     if not reg_files:
-        print("[Registry] No registry files found.")
+        print("[Registry] No Registry CSVs found.")
         return
 
     for file in reg_files:
         print(f"[Registry] Processing {file}")
         if should_use_batch(file, batch_size):
             for chunk in pd.read_csv(file, chunksize=batch_size):
-                rows = _normalize_rows(chunk)
+                rows = _normalize_rows(chunk, base_dir, file)
                 add_rows(rows)
         else:
             df = pd.read_csv(file)
-            rows = _normalize_rows(df)
+            rows = _normalize_rows(df, base_dir, file)
             add_rows(rows)
 
-def _normalize_rows(df):
+def _normalize_rows(df, base_dir, evidence_path):
     timeline_data = []
-
     for _, row in df.iterrows():
         timestamp = row.get("LastWriteTimestamp", "")
         try:
@@ -39,7 +38,7 @@ def _normalize_rows(df):
             if pd.isnull(dt):
                 continue
             dt_str = dt.isoformat().replace("+00:00", "Z")
-        except Exception:
+        except:
             continue
 
         timeline_row = {
@@ -50,7 +49,7 @@ def _normalize_rows(df):
             "Description": row.get("Category", ""),
             "DataDetails": row.get("Description", ""),
             "DataPath": row.get("ValueData", ""),
-            "EvidencePath": row.get("HivePath", "")
+            "EvidencePath": os.path.relpath(evidence_path, base_dir) if base_dir else evidence_path
         }
         timeline_data.append(timeline_row)
 

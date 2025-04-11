@@ -8,11 +8,11 @@ def process_lnk(input_dir: str, batch_size: int, base_dir: str):
         print("[LNK] FileFolderAccess directory not found: {}".format(input_dir))
         return
 
-    lnk_files = [
-        os.path.join(input_dir, f)
-        for f in os.listdir(input_dir)
-        if f.lower().endswith("_lecmd_output.csv")
-    ]
+    lnk_files = []
+    for root, _, files in os.walk(input_dir):
+        for f in files:
+            if f.lower().endswith("_lecmd_output.csv"):
+                lnk_files.append(os.path.join(root, f))
 
     if not lnk_files:
         print("[LNK] No LNK files found.")
@@ -51,7 +51,6 @@ def _normalize_rows(df, base_dir):
             except:
                 continue
 
-            # Determine DataPath with fallback
             data_path = next(
                 (
                     val for val in [
@@ -65,7 +64,6 @@ def _normalize_rows(df, base_dir):
                 ""
             )
 
-            # Determine DataDetails from filename or folder
             if data_path:
                 if os.path.splitext(data_path)[1]:
                     data_details = os.path.basename(data_path)
@@ -74,24 +72,24 @@ def _normalize_rows(df, base_dir):
             else:
                 data_details = ""
 
+            evidence_path = os.path.relpath(row.get("SourceFile", ""), base_dir)
+
             timeline_row = {
                 "DateTime": dt_str,
                 "TimestampInfo": label,
                 "ArtifactName": "LNK",
                 "Tool": "EZ Tools",
-                "Description": "File & Folder Access",
+                "Description": "LNK Shortcut Execution",
                 "DataDetails": data_details,
                 "DataPath": data_path,
                 "FileSize": row.get("FileSize", ""),
-                "EvidencePath": row.get("SourceFile", "")
+                "EvidencePath": evidence_path
             }
             timeline_data.append(timeline_row)
 
     return timeline_data
 
-def _parse_evidence_path(source_file, base_dir):
-    if not isinstance(source_file, str) or not source_file.startswith(base_dir):
-        return source_file
-    trimmed = source_file[len(base_dir):].lstrip("\\/")
-    parts = trimmed.split("\\", 1)
-    return parts[1] if len(parts) > 1 else trimmed
+def _parse_evidence_path(full_path, base_dir):
+    if full_path and full_path.startswith(base_dir):
+        return full_path[len(base_dir):].lstrip("\\/")
+    return full_path

@@ -8,11 +8,11 @@ def process_prefetch(input_dir: str, batch_size: int, base_dir: str):
         print("[Prefetch] ProgramExecution directory not found: {}".format(input_dir))
         return
 
-    prefetch_files = [
-        os.path.join(input_dir, f)
-        for f in os.listdir(input_dir)
-        if f.lower().endswith("_pecmd_output.csv")
-    ]
+    prefetch_files = []
+    for root, _, files in os.walk(input_dir):
+        for f in files:
+            if f.lower().endswith("_pecmd_output.csv"):
+                prefetch_files.append(os.path.join(root, f))
 
     if not prefetch_files:
         print("[Prefetch] No Prefetch files found.")
@@ -22,14 +22,14 @@ def process_prefetch(input_dir: str, batch_size: int, base_dir: str):
         print(f"[Prefetch] Processing {file}")
         if should_use_batch(file, batch_size):
             for chunk in pd.read_csv(file, chunksize=batch_size):
-                rows = _normalize_rows(chunk, file)
+                rows = _normalize_rows(chunk, file, base_dir)
                 add_rows(rows)
         else:
             df = pd.read_csv(file)
-            rows = _normalize_rows(df, file)
+            rows = _normalize_rows(df, file, base_dir)
             add_rows(rows)
 
-def _normalize_rows(df, evidence_path):
+def _normalize_rows(df, evidence_path, base_dir):
     timeline_data = []
     date_columns = [
         ("SourceCreated", "Source Created"),
@@ -39,7 +39,6 @@ def _normalize_rows(df, evidence_path):
         ("Volume0Created", "Volume Created"),
     ]
 
-    # Add PreviousRun0 to PreviousRun6
     for i in range(7):
         date_columns.append((f"PreviousRun{i}", f"Previous Run {i}"))
 
@@ -62,7 +61,7 @@ def _normalize_rows(df, evidence_path):
                 "Description": "Program Execution",
                 "DataPath": row.get("SourceFilename", ""),
                 "DataDetails": row.get("ExecutableName", ""),
-                "EvidencePath": evidence_path,
+                "EvidencePath": os.path.relpath(evidence_path, base_dir) if base_dir else evidence_path,
                 "Count": row.get("RunCount", "")
             }
             timeline_data.append(timeline_row)
