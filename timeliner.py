@@ -1,7 +1,8 @@
 import os
 import sys
 from cli.args import parse_arguments
-from tools.ez_tools import amcache_parser, appcompat_parser, deleted_parser, eventlog_parser, jumplist_parser,  lnk_parser, mft_parser, prefetch_parser, registry_parser, shellbags_parser 
+from tools.ez_tools import amcache_parser, appcompat_parser, deleted_parser, eventlog_parser, jumplist_parser, lnk_parser, mft_parser, prefetch_parser, registry_parser, shellbags_parser 
+from tools.nirsoft import browsinghistoryview
 from utils.export import export_to_csv
 from ui.help import show_help
 from ui.banner import print_banner
@@ -33,8 +34,11 @@ def main():
         lnk_parser.process_lnk(args.FileFolderSubDir, args.BatchSize, args.BaseDir)
         mft_parser.process_mft(args.FileSystemSubDir, args.BatchSize, args.MFTExtensionFilter, args.MFTPathFilter)
         prefetch_parser.process_prefetch(args.ProgramExecSubDir, args.BatchSize, args.BaseDir)
-        registry_parser.process_prefetch(args.RegistrySubDir, args.BatchSize, args.BaseDir)
+        registry_parser.process_registry(args.RegistrySubDir, args.BatchSize, args.BaseDir)
         shellbags_parser.process_shellbags(args.FileFolderSubDir, args.BatchSize, args.BaseDir)
+
+    if args.ProcessNirsoft:
+        browsinghistoryview.process_browsinghistoryview(args.NirsoftSubDir, args.BatchSize, args.BaseDir)    
 
     from collector.collector import get_all_rows
     timeline_rows = get_all_rows()    
