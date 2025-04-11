@@ -3,39 +3,50 @@ import pandas as pd
 from utils.batch import should_use_batch
 from collector.collector import add_rows
 
-def process_amcache(input_dir: str, batch_size: int):
+# Channel-specific Event ID filters
+EVENT_CHANNEL_FILTERS = {
+    "Application": [1000, 1001],
+    "Microsoft-Windows-PowerShell/Operational": [4100, 4103, 4104],
+    "Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational": [72, 98, 104, 131, 140],
+    "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational": [21, 22],
+    "Microsoft-Windows-TaskScheduler/Operational": [106, 140, 141, 129, 200, 201],
+    "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational": [261, 1149],
+    "Microsoft-Windows-WinRM/Operational": [169],
+    "Security": [1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756],
+    "SentinelOne/Operational": [1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110],
+    "System": [7045],
+}
+
+def process_eventlog(input_dir: str, batch_size: int):
     if not os.path.exists(input_dir):
-        print(f"[Amcache] ProgramExecution directory not found: {input_dir}")
+        print(f"[EventLogs] Directory not found: {input_dir}")
         return
 
-    amcache_files = [
+    eventlog_files = [
         os.path.join(input_dir, f)
         for f in os.listdir(input_dir)
-        if f.endswith("ssociatedFileEntries.csv")
+        if f.endswith(".csv")
     ]
 
-    if not amcache_files:
-        print("[Amcache] No Amcache files found.")
+    if not eventlog_files:
+        print("[EventLogs] No CSV event log files found.")
         return
 
-    for file in amcache_files:
-        print(f"[Amcache] Processing {file}")
+    for file in eventlog_files:
+        print(f"[EventLogs] Processing {file}")
         if should_use_batch(file, batch_size):
             for chunk in pd.read_csv(file, chunksize=batch_size):
-                rows = _normalize_amcache_rows(chunk)
-                add_rows(rows)
+                _process_dataframe(chunk)
         else:
-            try:
-                df = pd.read_csv(file)
-                rows = _normalize_amcache_rows(df)
-                add_rows(rows)
-            except Exception as e:
-                print(f"[Amcache] Error reading {file}: {e}")
+            df = pd.read_csv(file)
+            _process_dataframe(df)
 
-def _normalize_amcache_rows(df):
-    timeline_data = []
-    for _, row in df.iterrows():
-        timestamp = row.get("FileKeyLastWriteTimestamp", "")
+def _process_dataframe(df: pd.DataFrame):
+    filtered_df = df[df.apply(_eventlog_filter, axis=1)]
+    rows = []
+
+    for _, row in filtered_df.iterrows():
+        timestamp = row.get("TimeCreated", "")
         try:
             dt = pd.to_datetime(timestamp, utc=True, errors='coerce')
             if pd.isnull(dt):
@@ -46,15 +57,23 @@ def _normalize_amcache_rows(df):
 
         timeline_row = {
             "DateTime": dt_str,
-            "TimestampInfo": "Last Write",
-            "ArtifactName": "Amcache",
+            "TimestampInfo": "Event Time",
+            "ArtifactName": "EventLogs",
             "Tool": "EZ Tools",
-            "Description": "Program Execution",
-            "DataDetails": row.get("ApplicationName", ""),
-            "DataPath": row.get("FullPath", ""),
-            "FileExtension": row.get("FileExtension", ""),
-            "SHA1": row.get("SHA1", "")
+            "Description": row.get("Channel", ""),
+            "DataDetails": row.get("MapDescription", ""),
+            "DataPath": row.get("PayloadData1", ""),
+            "Computer": row.get("Computer", ""),
+            "EvidencePath": row.get("SourceFile", ""),
+            "EventId": row.get("EventId", "")
         }
-        timeline_data.append(timeline_row)
+        rows.append(timeline_row)
 
-    return timeline_data
+    add_rows(rows)
+
+def _eventlog_filter(row):
+    channel = str(row.get("Channel", "")).strip()
+    event_id = row.get("EventId")
+    if not channel or pd.isnull(event_id):
+        return False
+    return channel in EVENT_CHANNEL_FILTERS and int(event_id) in EVENT_CHANNEL_FILTERS[channel]

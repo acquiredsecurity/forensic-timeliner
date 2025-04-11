@@ -43,7 +43,7 @@ def parse_arguments():
     parser.add_argument('--StartDate', type=parse_iso_datetime, help="Format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ (UTC)")
     parser.add_argument('--EndDate', type=parse_iso_datetime, help="Format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ (UTC)")
     parser.add_argument('--Deduplicate', action='store_true')
-    parser.add_argument('--Interactive', action='store_true')
+    parser.add_argument('--Interactive', action='store_true', help='Enable interactive configuration mode')
     parser.add_argument('--Help', action='store_true')
 
     return parser.parse_args()
