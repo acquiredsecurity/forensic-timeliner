@@ -1,2 +1,2 @@
 # forensic-timeliner-py
-Porting PowerShell script to pythin
+Porting PowerShell script to python
