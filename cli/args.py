@@ -13,8 +13,10 @@ def parse_iso_datetime(d):
                 "Date must be in ISO 8601 format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ"
             )
 
-def get_args():
+# This is your main argument parser setup
+def parse_arguments():
     parser = argparse.ArgumentParser(description="Forensic Timeliner Python")
+
     parser.add_argument('--BaseDir', default='C:\\triage', help='Base directory for triage data')
     parser.add_argument('--EZDirectory', default=None, help='Directory for EZ Tools output (default = BaseDir\\kape_out)')
     parser.add_argument('--ChainsawDirectory', default=None)
@@ -42,5 +44,6 @@ def get_args():
     parser.add_argument('--EndDate', type=parse_iso_datetime, help="Format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ (UTC)")
     parser.add_argument('--Deduplicate', action='store_true')
     parser.add_argument('--Interactive', action='store_true')
+    parser.add_argument('--Help', action='store_true')
 
     return parser.parse_args()

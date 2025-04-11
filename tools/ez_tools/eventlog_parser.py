@@ -18,36 +18,19 @@ def process_amcache(input_dir: str, batch_size: int):
         print("[Amcache] No Amcache files found.")
         return
 
-    timeline_rows = []
-
     for file in amcache_files:
         print(f"[Amcache] Processing {file}")
         if should_use_batch(file, batch_size):
-            rows = _process_amcache_in_batches(file, batch_size)
+            for chunk in pd.read_csv(file, chunksize=batch_size):
+                rows = _normalize_amcache_rows(chunk)
+                add_rows(rows)
         else:
-            rows = _process_amcache_file(file)
-
-        add_rows(rows)
-
-
-    add_rows(timeline_rows)
-
-def _process_amcache_file(file_path):
-    try:
-        df = pd.read_csv(file_path)
-        return _normalize_amcache_rows(df)
-    except Exception as e:
-        print(f"[Amcache] Error reading {file_path}: {e}")
-        return []
-
-def _process_amcache_in_batches(file_path, batch_size):
-    rows = []
-    try:
-        for chunk in pd.read_csv(file_path, chunksize=batch_size):
-            rows.extend(_normalize_amcache_rows(chunk))
-    except Exception as e:
-        print(f"[Amcache] Error reading {file_path} in chunks: {e}")
-    return rows
+            try:
+                df = pd.read_csv(file)
+                rows = _normalize_amcache_rows(df)
+                add_rows(rows)
+            except Exception as e:
+                print(f"[Amcache] Error reading {file}: {e}")
 
 def _normalize_amcache_rows(df):
     timeline_data = []
