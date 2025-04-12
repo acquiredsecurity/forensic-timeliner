@@ -1,38 +1,28 @@
 import os
 import pandas as pd
+from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
-from utils.batch import should_use_batch
 
-def process_browsinghistoryview(input_dir: str, batch_size: int, base_dir: str):
-    if not os.path.exists(input_dir):
-        print(f"[Nirsoft] Nirsoft directory not found: {input_dir}")
-        return
+def process_browsinghistoryview(base_dir: str, batch_size: int):
+    artifact_name = "NirsoftBrowsingHistory"
+    print(f"[Nirsoft] Scanning for relevant CSVs under: {base_dir}")
 
-    bhv_files = []
-    for root, _, files in os.walk(input_dir):
-        for f in files:
-            if "brow" in f.lower() and f.lower().endswith(".csv"):
-                bhv_files.append(os.path.join(root, f))
+    bhv_files = find_artifact_files(base_dir, artifact_name)
 
     if not bhv_files:
         print("[Nirsoft] No BrowsingHistoryView CSVs found.")
         return
 
-    for file in bhv_files:
-        print(f"[Nirsoft] Processing {file}")
+    for file_path in bhv_files:
+        print(f"[Nirsoft] Processing {file_path}")
         try:
-            if should_use_batch(file, batch_size):
-                for chunk in pd.read_csv(file, chunksize=batch_size, encoding="cp1252", on_bad_lines='skip'):
-                    rows = _normalize_rows(chunk)
-                    add_rows(rows)
-            else:
-                df = pd.read_csv(file, encoding="cp1252", on_bad_lines='skip')
-                rows = _normalize_rows(df)
+            for df in load_csv_with_progress(file_path, batch_size):
+                rows = _normalize_rows(df, file_path)
                 add_rows(rows)
         except Exception as e:
-            print(f"[Nirsoft] Failed to parse {file}: {e}")
+            print(f"[Nirsoft] Failed to parse {file_path}: {e}")
 
-def _normalize_rows(df):
+def _normalize_rows(df, evidence_path):
     timeline_data = []
     for _, row in df.iterrows():
         timestamp = row.get("Visit Time", "")
@@ -43,12 +33,12 @@ def _normalize_rows(df):
             dt_str = dt.isoformat().replace("+00:00", "Z")
         except:
             continue
-
+        
         url = str(row.get("URL", "")).strip().lower()
         title = row.get("Title", "")
         description = "Web Activity"
         data_details = title
-
+        
         if url.startswith("file:///"):
             if "/" in url:
                 data_details = url.split("/")[-1]
@@ -57,7 +47,7 @@ def _normalize_rows(df):
             description = "Web Search"
         elif any(term in url for term in ["download", ".exe", ".zip", ".rar", ".7z", ".msi", ".iso", ".pdf", ".dll", "/downloads/"]):
             description = "Web Download"
-
+        
         timeline_row = {
             "DateTime": dt_str,
             "Tool": "Nirsoft",
@@ -67,8 +57,8 @@ def _normalize_rows(df):
             "DataDetails": data_details,
             "Description": description,
             "User": row.get("User Profile", ""),
-            "EvidencePath": row.get("History File", "")
+            "EvidencePath": str(row.get("History File", evidence_path))
         }
         timeline_data.append(timeline_row)
-
+    
     return timeline_data
