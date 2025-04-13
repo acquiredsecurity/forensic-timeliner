@@ -25,8 +25,6 @@ def print_banner():
         "[cyan]Mini Timeline Builder for Axiom, KAPE, Chainsaw, Hayabusa, Nirsoft and more?!?[/cyan]\n"
         "[bright_black]| Made by https://github.com/acquiredsecurity\n"
         "| with help from the robots \\[o_o] \n"
-        "|                          <)   )╯\n"
-        "|                          /    \\\n"
         "| Combine forensic exports into one powerful timeline",
         border_style="magenta",
         padding=(1, 2)

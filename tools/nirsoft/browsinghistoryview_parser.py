@@ -3,11 +3,11 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 
-def process_browsinghistoryview(base_dir: str, batch_size: int):
+def process_browsinghistoryview(nirsoft_dir: str, batch_size: int, base_dir: str):
     artifact_name = "NirsoftBrowsingHistory"
-    print(f"[Nirsoft] Scanning for relevant CSVs under: {base_dir}")
+    print(f"[Nirsoft] Scanning for relevant CSVs under: {nirsoft_dir}")
 
-    bhv_files = find_artifact_files(base_dir, artifact_name)
+    bhv_files = find_artifact_files(nirsoft_dir, base_dir, artifact_name)
 
     if not bhv_files:
         print("[Nirsoft] No BrowsingHistoryView CSVs found.")
@@ -16,13 +16,13 @@ def process_browsinghistoryview(base_dir: str, batch_size: int):
     for file_path in bhv_files:
         print(f"[Nirsoft] Processing {file_path}")
         try:
-            for df in load_csv_with_progress(file_path, batch_size):
-                rows = _normalize_rows(df, file_path)
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name="WebHistory"):
+                rows = _normalize_rows(df, file_path, base_dir)
                 add_rows(rows)
         except Exception as e:
             print(f"[Nirsoft] Failed to parse {file_path}: {e}")
 
-def _normalize_rows(df, evidence_path):
+def _normalize_rows(df, evidence_path, base_dir):
     timeline_data = []
     for _, row in df.iterrows():
         timestamp = row.get("Visit Time", "")
@@ -38,7 +38,7 @@ def _normalize_rows(df, evidence_path):
         title = row.get("Title", "")
         description = "Web Activity"
         data_details = title
-        
+
         if url.startswith("file:///"):
             if "/" in url:
                 data_details = url.split("/")[-1]
@@ -48,6 +48,8 @@ def _normalize_rows(df, evidence_path):
         elif any(term in url for term in ["download", ".exe", ".zip", ".rar", ".7z", ".msi", ".iso", ".pdf", ".dll", "/downloads/"]):
             description = "Web Download"
         
+        evidence_path_trimmed = os.path.relpath(str(row.get("History File", evidence_path)), base_dir) if base_dir else evidence_path
+
         timeline_row = {
             "DateTime": dt_str,
             "Tool": "Nirsoft",
@@ -57,7 +59,7 @@ def _normalize_rows(df, evidence_path):
             "DataDetails": data_details,
             "Description": description,
             "User": row.get("User Profile", ""),
-            "EvidencePath": str(row.get("History File", evidence_path))
+            "EvidencePath": evidence_path_trimmed
         }
         timeline_data.append(timeline_row)
     

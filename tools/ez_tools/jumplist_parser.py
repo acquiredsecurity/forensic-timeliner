@@ -3,11 +3,11 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 
-def process_jumplists(base_dir: str, batch_size: int):
+def process_jumplists(ez_dir: str, batch_size: int, base_dir: str):
     artifact_name = "JumpLists"
-    print(f"[JumpLists] Scanning for relevant CSVs under: {base_dir}")
+    print(f"[JumpLists] Scanning for relevant CSVs under: {ez_dir}")
 
-    jumplist_files = find_artifact_files(base_dir, artifact_name)
+    jumplist_files = find_artifact_files(ez_dir, base_dir, artifact_name)
 
     if not jumplist_files:
         print("[JumpLists] No JumpLists found.")
@@ -16,7 +16,7 @@ def process_jumplists(base_dir: str, batch_size: int):
     for file_path in jumplist_files:
         print(f"[JumpLists] Processing {file_path}")
         try:
-            for df in load_csv_with_progress(file_path, batch_size):
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name="JumpLists"):
                 rows = _normalize_rows(df, file_path, base_dir)
                 add_rows(rows)
         except Exception as e:
@@ -57,7 +57,7 @@ def _normalize_rows(df, evidence_path, base_dir):
                 "DataDetails": data_details,
                 "DataPath": data_path,
                 "FileSize": row.get("FileSize", ""),
-                "EvidencePath": os.path.relpath(evidence_path, base_dir)
+                "EvidencePath": os.path.relpath(evidence_path, base_dir) if base_dir else evidence_path
             }
             timeline_data.append(timeline_row)
     return timeline_data

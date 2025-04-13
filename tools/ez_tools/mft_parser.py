@@ -3,20 +3,20 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 
-def process_mft(base_dir: str, batch_size: int, extension_filter=None, path_filter=None):
+def process_mft(ez_dir: str, batch_size: int, base_dir: str, extension_filter=None, path_filter=None):
     artifact_name = "MFT"
-    print(f"[MFT] Scanning for relevant CSVs under: {base_dir}")
+    print(f"[MFT] Scanning for relevant CSVs under: {ez_dir}")
 
-    mft_files = find_artifact_files(base_dir, artifact_name)
+    mft_files = find_artifact_files(ez_dir, base_dir, artifact_name)
 
     if not mft_files:
-        print(f"  [!] No MFT files found in: {base_dir}")
+        print(f"[MFT] No MFT files found in: {ez_dir}")
         return
 
     for file_path in mft_files:
         print(f"[MFT] Processing {file_path}")
         try:
-            for df in load_csv_with_progress(file_path, batch_size):
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name="MFT"):
                 timeline_data = _process_dataframe(df, file_path, base_dir, extension_filter, path_filter)
                 add_rows(timeline_data)
         except Exception as e:
@@ -39,13 +39,10 @@ def _process_dataframe(df, evidence_path, base_dir, extension_filter=None, path_
             if not dt_str:
                 continue
             
-            try:
-                parsed_dt = pd.to_datetime(dt_str, utc=True, errors='coerce')
-                if pd.isnull(parsed_dt):
-                    continue
-                formatted_dt = parsed_dt.isoformat().replace("+00:00", "Z")
-            except Exception:
+            parsed_dt = pd.to_datetime(dt_str, utc=True, errors='coerce')
+            if pd.isnull(parsed_dt):
                 continue
+            formatted_dt = parsed_dt.isoformat().replace("+00:00", "Z")
             
             parsed = {
                 "DateTime": formatted_dt,
@@ -57,7 +54,7 @@ def _process_dataframe(df, evidence_path, base_dir, extension_filter=None, path_
                 "DataPath": path,
                 "FileExtension": ext,
                 "SHA1": "",
-                "EvidencePath": os.path.relpath(evidence_path, base_dir)
+                "EvidencePath": os.path.relpath(evidence_path, base_dir) if base_dir else evidence_path
             }
             timeline_data.append(parsed)
         except Exception as e:

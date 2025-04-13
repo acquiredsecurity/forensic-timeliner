@@ -17,11 +17,11 @@ EVENT_CHANNEL_FILTERS = {
     "System": [7045],
 }
 
-def process_eventlog(base_dir: str, batch_size: int):
+def process_eventlog(ez_dir: str, batch_size: int, base_dir: str):
     artifact_name = "EventLogs"
-    print(f"[EventLogs] Scanning for relevant CSVs under: {base_dir}")
+    print(f"[EventLogs] Scanning for relevant CSVs under: {ez_dir}")
 
-    eventlog_files = find_artifact_files(base_dir, artifact_name)
+    eventlog_files = find_artifact_files(ez_dir, base_dir, artifact_name)
 
     if not eventlog_files:
         print("[EventLogs] No CSV event log files found.")
@@ -30,7 +30,7 @@ def process_eventlog(base_dir: str, batch_size: int):
     for file_path in eventlog_files:
         print(f"[EventLogs] Processing {file_path}")
         try:
-            for df in load_csv_with_progress(file_path, batch_size):
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name="EventLogs"):
                 _process_dataframe(df, file_path, base_dir)
         except Exception as e:
             print(f"[EventLogs] Failed to parse {file_path}: {e}")
@@ -57,7 +57,7 @@ def _process_dataframe(df: pd.DataFrame, evidence_path: str, base_dir: str):
             "DataDetails": row.get("MapDescription", ""),
             "DataPath": row.get("PayloadData1", ""),
             "Computer": row.get("Computer", ""),
-            "EvidencePath": os.path.relpath(evidence_path, base_dir),
+            "EvidencePath": os.path.relpath(evidence_path, base_dir) if base_dir else evidence_path,
             "EventId": row.get("EventId", "")
         }
         rows.append(timeline_row)

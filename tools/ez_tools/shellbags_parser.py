@@ -3,11 +3,11 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 
-def process_shellbags(base_dir: str, batch_size: int):
+def process_shellbags(ez_dir: str, batch_size: int, base_dir: str):
     artifact_name = "Shellbags"
-    print(f"[Shellbags] Scanning for relevant CSVs under: {base_dir}")
+    print(f"[Shellbags] Scanning for relevant CSVs under: {ez_dir}")
 
-    shellbag_files = find_artifact_files(base_dir, artifact_name)
+    shellbag_files = find_artifact_files(ez_dir, base_dir, artifact_name)
 
     if not shellbag_files:
         print("[Shellbags] No Shellbags files found.")
@@ -16,7 +16,7 @@ def process_shellbags(base_dir: str, batch_size: int):
     for file_path in shellbag_files:
         print(f"[Shellbags] Processing {file_path}")
         try:
-            for df in load_csv_with_progress(file_path, batch_size):
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name="Shellbags"):
                 rows = _normalize_rows(df, file_path, base_dir)
                 add_rows(rows)
         except Exception as e:
@@ -39,7 +39,7 @@ def _normalize_rows(df, evidence_path, base_dir):
                 dt_str = dt.isoformat().replace("+00:00", "Z")
             except:
                 continue
-            
+
             timeline_row = {
                 "DateTime": dt_str,
                 "TimestampInfo": label,
