@@ -18,11 +18,10 @@ def print_banner():
    ██║   ██║██║╚██╔╝██║██╔══╝  ██║     ██║██║╚██╗██║██╔══╝  ██╔══██╗
    ██║   ██║██║ ╚═╝ ██║███████╗███████╗██║██║ ╚████║███████╗██║  ██║
    ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
-
 [/bold green]"""
-
     subtitle = Panel.fit(
         "[cyan]Mini Timeline Builder for Axiom, KAPE, Chainsaw, Hayabusa, Nirsoft and more?!?[/cyan]\n"
+        "[cyan]Post Processing of CSV output from Leading forensic tools into a single timeline![/cyan]\n"
         "[bright_black]| Made by https://github.com/acquiredsecurity\n"
         "| with help from the robots \\[o_o] \n"
         "| Combine forensic exports into one powerful timeline",

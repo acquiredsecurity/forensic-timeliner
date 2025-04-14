@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
+from utils.logger import print_and_log 
 
 def process_amcache(ez_dir: str, batch_size: int, base_dir: str):
     artifact_name = "Amcache"

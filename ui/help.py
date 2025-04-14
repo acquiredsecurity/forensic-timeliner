@@ -1,65 +1,56 @@
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+
 def show_help():
-    print("\nForensic Timeliner Help Menu")
-    print("----------------------------------------------------")
-    print("This script combines CSV files from digital forensic tools into a timeline.")
-    print("Supported tools include: Axiom, KAPE/EZ Tools, Chainsaw, Hayabusa, Nirsoft WebHistoryView")
-    print("\nParameters:")
-    print("  --base-dir <path>               Base output path (Default: C:/triage)")
-    print("  --output-file <path>           Timeline output file (Default: C:/triage/timeline/Forensic_Timeliner.csv)")
-    print("  --export-format <csv|json|xlsx> Output format (Default: csv)")
-    print("  --batch-size <int>             Number of lines to process per batch (Default: 10000)")
-    print("  --start-date <datetime>        Only include events after this date")
-    print("  --end-date <datetime>          Only include events before this date")
-    print("  --deduplicate                  Enable deduplication of timeline entries")
-    print("  --interactive                  Launch interactive configuration menu")
-    print("  --help                         Display this help menu")
-    print("\nTool Switches:")
-    print("  --process-kape                 Process EZ Tools KAPE output")
-    print("  --process-chainsaw             Process Chainsaw CSV exports")
-    print("  --process-hayabusa             Process Hayabusa CSV exports")
-    print("  --process-axiom                Process Magnet Axiom CSV exports")
-    print("  --process-nirsoft-webhistory   Process Nirsoft BrowsingHistoryView CSV")
-    print("  --skip-event-logs              Skip EZ Tools Event Log processing")
-    print("\nSupported Artifacts:")
-    print("  EZ Tools (KAPE):")
-    print("    - Amcache (AmcacheParser)              C:/triage/kape_out/ProgramExecution/*ssociatedFileEntries.csv")
-    print("    - AppCompatCache (Shim)                C:/triage/kape_out/ProgramExecution/*AppCompatCache*.csv")
-    print("    - Deleted Files (RBCmd)                C:/triage/kape_out/FileDeletion/*RBCmd*.csv")
-    print("    - Event Logs (EvtxECmd)                C:/triage/kape_out/EventLogs/*.csv")
-    print("    - Jump Lists (JLECmd)                  C:/triage/kape_out/FileFolderAccess/*_AutomaticDestinations.csv")
-    print("    - LNK Files (LECmd)                    C:/triage/kape_out/FileFolderAccess/*_LECmd_Output.csv")
-    print("    - MFT (MFTECmd)                        C:/triage/kape_out/FileSystem/*MFT_Out*.csv")
-    print("    - Prefetch (PECmd)                     C:/triage/kape_out/ProgramExecution/*_PECmd_Output.csv")
-    print("    - Registry (RECmd)                     C:/triage/kape_out/Registry/*_RECmd_Batch_Kroll_Batch_Output.csv")
-    print("    - Shellbags (SBECmd)                   C:/triage/kape_out/FileFolderAccess/*_UsrClass.csv OR _NTUSER.csv")
-    print("\n  Axiom (Magnet):")
-    print("    - Amcache                              C:/triage/axiom/AmCache File Entries.csv")
-    print("    - AppCompatCache (Shim)                C:/triage/axiom/Shim Cache.csv")
-    print("    - AutoRuns                             C:/triage/axiom/AutoRun Items.csv")
-    print("    - Chrome Web History                   C:/triage/axiom/Chrome Web History.csv")
-    print("    - Edge/IE Main History                 C:/triage/axiom/Edge-Internet Explorer 10-11 Main History.csv")
-    print("    - Firefox Web History                  C:/triage/axiom/Firefox Web History.csv")
-    print("    - Jump Lists                           C:/triage/axiom/Jump Lists.csv")
-    print("    - LNK Files                            C:/triage/axiom/LNK Files.csv")
-    print("    - MRU (Folder Access)                  C:/triage/axiom/MRU Folder Access.csv")
-    print("    - MRU (Open-Saved Files)               C:/triage/axiom/MRU Opened-Saved Files.csv")
-    print("    - MRU (Recent Files, Folder Access)    C:/triage/axiom/MRU Recent Files & Folders.csv")
-    print("    - Opera Web History                    C:/triage/axiom/Opera Web History.csv")
-    print("    - Prefetch                             C:/triage/axiom/Prefetch Files*.csv")
-    print("    - Recycle Bin                          C:/triage/axiom/Recycle Bin.csv")
-    print("    - Shellbags                            C:/triage/axiom/Shellbags.csv")
-    print("    - UserAssist                           C:/triage/axiom/UserAssist.csv")
-    print("\n  Hayabusa:")
-    print("    - Event Logs with Sigma rule matching  C:/triage/hayabusa/hayabusa.csv")
-    print("\n  Chainsaw:")
-    print("    - Sigma-correlated event logs          C:/triage/chainsaw/*.csv")
-    print("\n  Nirsoft:")
-    print("    - Web Browsing History                 C:/triage/nirsoft/*.csv")
-    print("\nOther Info:")
-    print("  - Supports batch processing for large CSVs")
-    print("  - Progress indicators for each source")
-    print("  - Source count and export stats included")
-    print("\nExample Usage:")
-    print("  python timeliner.py --interactive")
-    print("  python timeliner.py --process-kape --process-axiom --export-format json")
-    print("\nFor best results, organize tool exports into the default paths under base-dir, and use interactive mode to specify custom paths.\n")
+    console = Console()
+
+    # Banner Panel
+    console.print(Panel.fit("[bold cyan]Forensic Timeliner Help[/bold cyan]\n[green]Builds timeline from forensic CSV exports[/green]"))
+
+    # Description
+    console.print("[bold yellow]Supported Tools:[/bold yellow] Axiom, EZ Tools (KAPE), Chainsaw, Hayabusa, Nirsoft\n")
+
+    # Parameters Table
+    param_table = Table(title="Command Line Parameters", show_lines=True, box=None)
+    param_table.add_column("Argument", style="bold white", no_wrap=True)
+    param_table.add_column("Description", style="dim")
+
+    param_table.add_row("--BaseDir", "Base output directory (default: C:/triage)")
+    param_table.add_row("--OutputFile", "Timeline output file path (default is timestamped CSV)")
+    param_table.add_row("--ExportFormat", "csv, json, or xlsx (default: csv)")
+    param_table.add_row("--BatchSize", "Batch size for large CSVs (default: 10000)")
+    param_table.add_row("--StartDate", "Start datetime (YYYY-MM-DD or ISO)")
+    param_table.add_row("--EndDate", "End datetime (YYYY-MM-DD or ISO)")
+    param_table.add_row("--Deduplicate", "Enable deduplication of timeline entries")
+    param_table.add_row("--Interactive", "Launch interactive configuration menu")
+    param_table.add_row("--Help", "Display this help menu")
+
+    console.print(param_table)
+
+    # Tool switches
+    tool_table = Table(title="Tool Switches", box=None)
+    tool_table.add_column("Switch", style="bold green")
+    tool_table.add_column("Description")
+
+    tool_table.add_row("--ProcessEZ", "Process EZ Tools / KAPE output")
+    tool_table.add_row("--ProcessAxiom", "Process Magnet Axiom exports")
+    tool_table.add_row("--ProcessHayabusa", "Process Hayabusa output")
+    tool_table.add_row("--ProcessChainsaw", "Process Chainsaw output")
+    tool_table.add_row("--ProcessNirsoft", "Process Nirsoft WebHistoryView")
+    tool_table.add_row("--SkipEventLogs", "Skip Event Log parsing")
+    tool_table.add_row("--ALL", "Enable all modules (EZ, Axiom, Hayabusa, Nirsoft, Chainsaw)")
+
+    console.print(tool_table)
+
+    console.print(Panel.fit(
+    "[bold yellow]Examples:[/bold yellow]\n"
+    "[cyan]python timeliner.py --Interactive[/cyan]\n"
+    "[cyan]python timeliner.py --ProcessEZ --Deduplicate --StartDate 2024-01-01[/cyan]\n"
+    "[cyan]python timeliner.py --ALL --OutputFile C:\\triage --StartDate 2024-01-01 --Deduplicate[/cyan]",
+    title="Usage Examples",
+    border_style="cyan"
+))
+
+    # Recommendation
+    console.print("\n[italic]Tip: Use --Interactive mode to auto-fill paths and filter options.[/italic]")

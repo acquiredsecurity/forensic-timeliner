@@ -1,67 +1,72 @@
 import os
+import sys
+import questionary
 from datetime import datetime
+from cli.args import parse_iso_datetime 
 
 def run_interactive_config():
     config = {}
 
-    print("\n===== Forensic Timeliner Interactive Configuration =====")
+    print("\n[Forensic Timeliner Interactive Configuration]\n")
 
-    # Output format
-    fmt = input("Select output format (csv, json, xlsx) [csv]: ").strip().lower()
-    config["ExportFormat"] = fmt if fmt in ["csv", "json", "xlsx"] else "csv"
+    # Artifact selection
+    selections = questionary.checkbox(
+        "Select Forensic Tool CSV Output sources to include:",
+        choices=[
+            "KAPE / EZ Tools",
+            "Axiom",
+            "Hayabusa",
+            "Nirsoft",
+            "Chainsaw",
+            "All"
+        ]
+    ).ask()
+
+    if selections is None:
+        print("\n[!] Interactive setup cancelled by user.")
+        sys.exit(0)
+
+    config["ProcessEZ"] = "KAPE / EZ Tools" in selections or "All" in selections
+    config["ProcessAxiom"] = "Axiom" in selections or "All" in selections
+    config["ProcessHayabusa"] = "Hayabusa" in selections or "All" in selections
+    config["ProcessNirsoft"] = "Nirsoft" in selections or "All" in selections
+    config["ProcessChainsaw"] = "Chainsaw" in selections or "All" in selections
 
     # Base directory
-    base_dir = input("Enter base directory for triage data [C:\\triage]: ").strip()
-    config["BaseDir"] = base_dir if base_dir else "C:\\triage"
+    base_dir = questionary.text("Base directory for triage data:", default="C:\\triage").ask()
+    config["BaseDir"] = base_dir
 
-    # EZ Tools toggle
-    proc_ez = input("Include KAPE/EZ Tools output? (y/n) [n]: ").strip().lower()
-    config["ProcessEZ"] = proc_ez == "y"
-
+    # EZ-specific options
     if config["ProcessEZ"]:
-        ez_dir = input("  Path to EZ Tools/KAPE directory [{}\\kape]: ".format(config["BaseDir"])).strip()
-        config["EZDirectory"] = ez_dir if ez_dir else os.path.join(config["BaseDir"], "kape")
+        config["EZDirectory"] = questionary.text("Path to EZ Tools directory:", default=os.path.join(base_dir, "kape")).ask()
+        config["MFTExtensionFilter"] = questionary.text("MFT Extension Filter (comma-separated):", default=".exe,.ps1,.zip").ask().split(",")
+        config["MFTPathFilter"] = questionary.text("MFT Path Filter (comma-separated):", default="Users,tmp").ask().split(",")
+        config["SkipEventLogs"] = questionary.confirm("Skip EZ Event Logs?", default=False).ask()
 
-        # Subdirs
-        print("\n  Configure subdirectories (press Enter for default values):")
-        config["ProgramExecSubDir"] = input("    Program Execution [ProgramExecution]: ") or "ProgramExecution"
-        config["FileSystemSubDir"] = input("    File System [FileSystem]: ") or "FileSystem"
-        config["EventLogsSubDir"] = input("    Event Logs [EventLogs]: ") or "EventLogs"
-        config["FileFolderSubDir"] = input("    File/Folder Access [FileFolderAccess]: ") or "FileFolderAccess"
-        config["FileDeletionSubDir"] = input("    File Deletion [FileDeletion]: ") or "FileDeletion"
-        config["RegistrySubDir"] = input("    Registry [Registry]: ") or "Registry"
+    # Output format
+    config["ExportFormat"] = questionary.select(
+        "Select export format:",
+        choices=["csv", "json", "xlsx"]
+    ).ask()
 
-        # MFT extension filter
-        ext_filter = input("  MFT Extension Filter (.exe,.pdf,...) [.exe,.ps1,.zip]: ")
-        config["MFTExtensionFilter"] = [e.strip() for e in ext_filter.split(",") if e.strip()] if ext_filter else [".exe", ".ps1", ".zip"]
-
-        # MFT path filter
-        path_filter = input("  MFT Path Filter (Users,tmp,...) [Users,tmp]: ")
-        config["MFTPathFilter"] = [p.strip() for p in path_filter.split(",") if p.strip()] if path_filter else ["Users", "tmp"]
-
-        # Skip Event Logs
-        skip_evt = input("  Skip EZ Event Logs? (y/n) [n]: ").strip().lower()
-        config["SkipEventLogs"] = skip_evt == "y"
-
-    # Output location
-    default_output = os.path.join(config["BaseDir"], "timeline", f"Forensic_Timeliner.{config['ExportFormat']}")
-    output = input(f"Where to save the output? [{default_output}]: ").strip()
-    config["OutputFile"] = output if output else default_output
+    # Output path
+    default_output = os.path.join(base_dir, "timeline", f"Forensic_Timeliner.{config['ExportFormat']}")
+    config["OutputFile"] = questionary.text("Where to save the output:", default=default_output).ask()
 
     # Batch size
-    batch_input = input("Batch size for large files [10000]: ")
-    config["BatchSize"] = int(batch_input) if batch_input.isdigit() else 10000
+    batch = questionary.text("Batch size for large files:", default="10000").ask()
+    config["BatchSize"] = int(batch) if batch.isdigit() else 10000
 
     # Deduplication
-    dedup = input("Enable deduplication of timeline entries? (y/n) [n]: ").strip().lower()
-    config["Deduplicate"] = dedup == "y"
+    config["Deduplicate"] = questionary.confirm("Enable deduplication?", default=False).ask()
 
     # Date filtering
-    if input("Apply date range filter? (y/n) [n]: ").strip().lower() == "y":
-        start = input("  Start date (YYYY-MM-DD) [none]: ").strip()
-        end = input("  End date (YYYY-MM-DD) [none]: ").strip()
-        config["StartDate"] = start if start else None
-        config["EndDate"] = end if end else None
+    if questionary.confirm("Apply date range filter?", default=False).ask():
+        config["StartDate"] = parse_iso_datetime(questionary.text("Start date (YYYY-MM-DD):").ask())
+        config["EndDate"] = parse_iso_datetime(questionary.text("End date (YYYY-MM-DD):").ask())
+    else:
+        config["StartDate"] = None
+        config["EndDate"] = None
 
-    print("\n[+] Interactive configuration complete. Running timeline build...\n")
+    print("\n[+] Configuration complete. Running timeline build...\n")
     return config

@@ -2,6 +2,10 @@ import os
 import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
+from utils.logger import print_and_log 
+from utils.filters import print_eventlog_filters  # make sure this exists
+from utils.logger import print_and_log 
+
 
 # Channel-specific Event ID filters
 EVENT_CHANNEL_FILTERS = {
@@ -19,7 +23,14 @@ EVENT_CHANNEL_FILTERS = {
 
 def process_eventlog(ez_dir: str, batch_size: int, base_dir: str):
     artifact_name = "EventLogs"
-    print(f"[EventLogs] Scanning for relevant CSVs under: {ez_dir}")
+    print_and_log(f"[{artifact_name}] Scanning for relevant CSVs under: {ez_dir}")
+    print_and_log("  Current Event Log Filters:")
+    print_and_log("  (For additional Event Log Filtering add Chainsaw or Hayabusa output to your timeline)")
+    print_and_log("  --------------------------------------------------------")
+
+    # Display formatted filter info
+    from utils.filters import EVENT_CHANNEL_FILTERS
+    print_eventlog_filters(EVENT_CHANNEL_FILTERS)
 
     eventlog_files = find_artifact_files(ez_dir, base_dir, artifact_name)
 

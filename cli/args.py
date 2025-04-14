@@ -1,44 +1,82 @@
-import argparse
+import sys
 from datetime import datetime
 
-# Helper to parse ISO 8601 or simple date format
-def parse_iso_datetime(d):
+def parse_iso_datetime(value: str) -> datetime:
     try:
-        return datetime.strptime(d, "%Y-%m-%dT%H:%M:%SZ")
+        if "T" in value:
+            return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+        return datetime.strptime(value, "%Y-%m-%d")
     except ValueError:
-        try:
-            return datetime.strptime(d, "%Y-%m-%d")
-        except ValueError:
-            raise argparse.ArgumentTypeError(
-                "Date must be in ISO 8601 format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ"
-            )
+        raise ValueError(f"Invalid date format: {value}")
 
-# This is your main argument parser setup
+
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Forensic Timeliner Python")
+    args = {
+        "BaseDir": "C:\\triage",
+        "EZDirectory": None,
+        "ChainsawDirectory": None,
+        "HayabusaDirectory": None,
+        "NirsoftDirectory": None,
+        "AxiomDirectory": None,
+        "OutputFile": None,
+        "ExportFormat": "csv",
+        "SkipEventLogs": False,
+        "ProcessAxiom": False,
+        "ProcessChainsaw": False,
+        "ProcessEZ": False,
+        "ProcessHayabusa": False,
+        "ProcessNirsoft": False,
+        "MFTExtensionFilter": [".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"],
+        "MFTPathFilter": ["Users", "tmp"],
+        "BatchSize": 10000,
+        "StartDate": None,
+        "EndDate": None,
+        "Deduplicate": False,
+        "Interactive": False,
+        "ALL": False,
+        "Help": False
+    }
 
-    parser.add_argument('--BaseDir', default='C:\\triage', help='Base directory for triage data')
-    parser.add_argument('--EZDirectory', default=None, help='Directory for EZ Tools output (default = BaseDir\\kape_out)')
-    parser.add_argument('--ChainsawDirectory', default=None)
-    parser.add_argument('--HayabusaDirectory', default=None)
-    parser.add_argument('--NirsoftDirectory', default=None)
-    parser.add_argument('--AxiomDirectory', default=None)
-    parser.add_argument('--OutputFile', default=None)
-    parser.add_argument('--ExportFormat', choices=['csv', 'json', 'xlsx'], default='csv')
-    parser.add_argument('--SkipEventLogs', action='store_true')
-    parser.add_argument('--ProcessAxiom', action='store_true')
-    parser.add_argument('--ProcessChainsaw', action='store_true')
-    parser.add_argument('--ProcessEZ', action='store_true')
-    parser.add_argument('--ProcessHayabusa', action='store_true')
-    parser.add_argument('--ProcessNirsoft', action='store_true')
-    parser.add_argument('--MFTExtensionFilter', nargs='+', default=[".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"])
-    parser.add_argument('--MFTPathFilter', nargs='+', default=["Users", "tmp"])
-    parser.add_argument('--BatchSize', type=int, default=10000)
-    parser.add_argument('--StartDate', type=parse_iso_datetime, help="Format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ (UTC)")
-    parser.add_argument('--EndDate', type=parse_iso_datetime, help="Format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ (UTC)")
-    parser.add_argument('--Deduplicate', action='store_true')
-    parser.add_argument('--Interactive', action='store_true', help='Enable interactive configuration mode')
-    parser.add_argument('--ALL', action='store_true', help='Run all modules (EZ Tools, Hayabusa, Nirsoft, Chainsaw, Axiom, etc.)')
-    parser.add_argument('--Help', action='store_true')
+    # Normalize for case-insensitive matching
+    args_keys_lower = {k.lower(): k for k in args}
 
-    return parser.parse_args()
+    aliases = {
+        "-i": "Interactive",
+        "--i": "Interactive",
+        "-h": "Help",
+        "--h": "Help",
+        "--help": "Help",
+        "--Help": "Help",
+        "-H": "Help",
+        "-a": "ALL",
+        "--a": "ALL",
+        "-d": "Deduplicate",
+        "--d": "Deduplicate"
+    }
+
+    # Parse short aliases
+    for flag, dest in aliases.items():
+        if flag in sys.argv:
+            args[dest] = True
+
+    # Parse full flags like --StartDate 2025-04-01
+    for i, arg in enumerate(sys.argv):
+        if arg.startswith("--"):
+            key = arg[2:]
+            if key in args:
+                if isinstance(args[key], bool):
+                    args[key] = True
+                else:
+                    if i + 1 < len(sys.argv):
+                        val = sys.argv[i + 1]
+                        if key in ["MFTExtensionFilter", "MFTPathFilter"]:
+                            args[key] = val.split(",")
+                        elif key == "BatchSize":
+                            args[key] = int(val)
+                        elif key in ["StartDate", "EndDate"]:
+                            args[key] = parse_iso_datetime(val)
+                        else:
+                            args[key] = val
+
+    return args
+

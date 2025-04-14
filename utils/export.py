@@ -1,10 +1,35 @@
 import os
+from datetime import datetime
+import re
+def normalize_datetime_field(value):
+    """
+    Normalize various DateTime formats to: YYYY-MM-DD HH:MM:SS
+    """
+    if not isinstance(value, str):
+        return value
+    try:
+        value = re.sub(r"[TZ]", " ", value).split(".")[0].strip()
+        dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return value
 
 def export_to_csv(data, output_path):
     import pandas as pd
     import csv
 
     df = pd.DataFrame(data)
+
+    # Normalize DateTime column if it exists
+    if "DateTime" in df.columns:
+        df["DateTime"] = df["DateTime"].apply(normalize_datetime_field)
+
+        # Sort by DateTime
+        try:
+            df["DateTime"] = pd.to_datetime(df["DateTime"], errors='coerce')
+            df = df.sort_values("DateTime")
+        except Exception as e:
+            print(f"[!] Warning: Failed to sort by DateTime: {e}")
 
     # Define the preferred field order
     preferred_order = [
@@ -31,7 +56,7 @@ def export_to_csv(data, output_path):
         index=False,
         encoding='utf-8',
         quoting=csv.QUOTE_MINIMAL,
-        lineterminator='\n'
+        lineterminator='\r\n'
     )
 
     print(f"Exported {len(df)} rows to {output_path}")
