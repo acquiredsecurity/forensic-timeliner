@@ -1,6 +1,9 @@
 import os
 from datetime import datetime
 import re
+import pandas as pd
+import csv
+
 def normalize_datetime_field(value):
     """
     Normalize various DateTime formats to: YYYY-MM-DD HH:MM:SS
@@ -15,8 +18,7 @@ def normalize_datetime_field(value):
         return value
 
 def export_to_csv(data, output_path):
-    import pandas as pd
-    import csv
+    
 
     df = pd.DataFrame(data)
 
@@ -44,6 +46,8 @@ def export_to_csv(data, output_path):
     ordered_columns = [col for col in preferred_order if col in df.columns]
     extra_columns = [col for col in df.columns if col not in ordered_columns]
     df = df[ordered_columns + extra_columns]
+
+    df = df.fillna("").astype(str)
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 

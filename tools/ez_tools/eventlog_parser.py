@@ -3,9 +3,7 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log 
-from utils.filters import print_eventlog_filters  # make sure this exists
-from utils.logger import print_and_log 
-
+from utils.filters import print_eventlog_filters
 
 # Channel-specific Event ID filters
 EVENT_CHANNEL_FILTERS = {
@@ -24,12 +22,7 @@ EVENT_CHANNEL_FILTERS = {
 def process_eventlog(ez_dir: str, batch_size: int, base_dir: str):
     artifact_name = "EventLogs"
     print_and_log(f"[{artifact_name}] Scanning for relevant CSVs under: {ez_dir}")
-    print_and_log("  Current Event Log Filters:")
-    print_and_log("  (For additional Event Log Filtering add Chainsaw or Hayabusa output to your timeline)")
-    print_and_log("  --------------------------------------------------------")
 
-    # Display formatted filter info
-    from utils.filters import EVENT_CHANNEL_FILTERS
     print_eventlog_filters(EVENT_CHANNEL_FILTERS)
 
     eventlog_files = find_artifact_files(ez_dir, base_dir, artifact_name)
@@ -39,40 +32,43 @@ def process_eventlog(ez_dir: str, batch_size: int, base_dir: str):
         return
 
     for file_path in eventlog_files:
-        print(f"[EventLogs] Processing {file_path}")
+        print(f"[EventLogs] Processing: {file_path}")
+        total_rows = 0
         try:
-            for df in load_csv_with_progress(file_path, batch_size, artifact_name="EventLogs"):
-                _process_dataframe(df, file_path, base_dir)
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name=artifact_name):
+                filtered_df = df[df.apply(_eventlog_filter, axis=1)]
+                timeline_data = []
+
+                for _, row in filtered_df.iterrows():
+                    timestamp = row.get("TimeCreated", "")
+                    dt = pd.to_datetime(timestamp, utc=True, errors='coerce')
+                    if pd.isnull(dt):
+                        continue
+
+                    dt_str = dt.isoformat().replace("+00:00", "Z")
+
+                    timeline_row = {
+                        "DateTime": dt_str,
+                        "TimestampInfo": "Event Time",
+                        "ArtifactName": artifact_name,
+                        "Tool": "EZ Tools",
+                        "Description": row.get("Channel", ""),
+                        "DataDetails": row.get("MapDescription", ""),
+                        "DataPath": row.get("PayloadData1", ""),
+                        "Computer": row.get("Computer", ""),
+                        "EvidencePath": os.path.relpath(file_path, base_dir) if base_dir else file_path,
+                        "EventId": row.get("EventId", "")
+                    }
+
+                    timeline_data.append(timeline_row)
+
+                total_rows += len(timeline_data)
+                add_rows(timeline_data)
         except Exception as e:
             print(f"[EventLogs] Failed to parse {file_path}: {e}")
-
-def _process_dataframe(df: pd.DataFrame, evidence_path: str, base_dir: str):
-    filtered_df = df[df.apply(_eventlog_filter, axis=1)]
-    rows = []
-    for _, row in filtered_df.iterrows():
-        timestamp = row.get("TimeCreated", "")
-        try:
-            dt = pd.to_datetime(timestamp, utc=True, errors='coerce')
-            if pd.isnull(dt):
-                continue
-            dt_str = dt.isoformat().replace("+00:00", "Z")
-        except:
             continue
-        
-        timeline_row = {
-            "DateTime": dt_str,
-            "TimestampInfo": "Event Time",
-            "ArtifactName": "EventLogs",
-            "Tool": "EZ Tools",
-            "Description": row.get("Channel", ""),
-            "DataDetails": row.get("MapDescription", ""),
-            "DataPath": row.get("PayloadData1", ""),
-            "Computer": row.get("Computer", ""),
-            "EvidencePath": os.path.relpath(evidence_path, base_dir) if base_dir else evidence_path,
-            "EventId": row.get("EventId", "")
-        }
-        rows.append(timeline_row)
-    add_rows(rows)
+
+        print_and_log(f"[✓] Parsed {total_rows} timeline rows from: {file_path}")
 
 def _eventlog_filter(row):
     channel = str(row.get("Channel", "")).strip()

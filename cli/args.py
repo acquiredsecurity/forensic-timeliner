@@ -33,6 +33,7 @@ def parse_arguments():
         "EndDate": None,
         "Deduplicate": False,
         "Interactive": False,
+        "Preview": False,
         "ALL": False,
         "Help": False
     }
@@ -51,7 +52,10 @@ def parse_arguments():
         "-a": "ALL",
         "--a": "ALL",
         "-d": "Deduplicate",
-        "--d": "Deduplicate"
+        "--d": "Deduplicate",
+        "--p": "Preview",
+        "--preview": "Preview"
+
     }
 
     # Parse short aliases

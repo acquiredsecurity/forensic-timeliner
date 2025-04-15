@@ -1,0 +1,15 @@
+2025-04-14 23:15:30.975072 - Fixed 1262 non-compliant rows in c:\triage\20250414_231318_forensic_timeliner.csv
+2025-04-14 23:25:54,965 - INFO - Exported 34883 rows to c:\triage\20250414_232359_forensic_timeliner.csv
+2025-04-14 23:25:55,649 - INFO - RFC 4180 compliance fix applied to: c:\triage\20250414_232359_forensic_timeliner.csv
+2025-04-14 23:49:20,027 - INFO - Exported 32540 rows to c:\triage\20250414_234703_forensic_timeliner.csv
+2025-04-14 23:49:20,618 - INFO - RFC 4180 compliance fix applied to: c:\triage\20250414_234703_forensic_timeliner.csv
+2025-04-15 00:11:07,099 - INFO - Exported 32540 rows to c:\triage\20250415_000822_forensic_timeliner.csv
+2025-04-15 00:11:07,699 - INFO - RFC 4180 compliance fix applied to: c:\triage\20250415_000822_forensic_timeliner.csv
+2025-04-15 00:21:51,187 - INFO - Exported 32540 rows to c:\triage\20250415_001941_forensic_timeliner.csv
+2025-04-15 00:21:51,820 - INFO - RFC 4180 compliance fix applied to: c:\triage\20250415_001941_forensic_timeliner.csv
+2025-04-15 08:24:31,386 - INFO - Exported 32540 rows to c:\triage\20250415_082220_forensic_timeliner.csv
+2025-04-15 08:24:32,085 - INFO - RFC 4180 compliance fix applied to: c:\triage\20250415_082220_forensic_timeliner.csv
+2025-04-15 08:38:48,417 - INFO - Raw export saved: c:\triage\20250415_083631_forensic_timeliner.csv.raw.csv
+2025-04-15 08:38:49,130 - INFO - RFC 4180 fixed version saved: c:\triage\20250415_083631_forensic_timeliner.csv.fixed.csv
+2025-04-15 10:19:42,111 - INFO - Raw export saved: c:\triage\20250415_101729_forensic_timeliner.csv.raw.csv
+2025-04-15 10:19:42,945 - INFO - RFC 4180 fixed version saved: c:\triage\20250415_101729_forensic_timeliner.csv.fixed.csv

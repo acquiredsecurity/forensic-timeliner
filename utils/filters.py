@@ -1,24 +1,44 @@
+from rich.panel import Panel
 from rich.console import Console
 from rich.text import Text
+from rich.align import Align
 
-EVENT_CHANNEL_FILTERS = {
-    "Application": [1000, 1001],
-    "Microsoft-Windows-PowerShell/Operational": [4100, 4103, 4104],
-    "Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational": [72, 98, 104, 131, 140],
-    "Microsoft-Windows-TaskScheduler/Operational": [106, 140, 141, 129, 200, 201],
-    "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational": [21, 22],
-    "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational": [261, 1149],
-    "Microsoft-Windows-WinRM/Operational": [169],
-    "Security": [1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756],
-    "SentinelOne/Operational": [1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110],
-    "System": [7045]
-}
+console = Console()
 
-def print_eventlog_filters(filters: dict):
-    console = Console()
-    for channel, ids in filters.items():
-        console.print(Text(channel, style="bold cyan"))
-        event_ids = Text("  Event IDs: ", style="bold green")
-        event_ids.append(", ".join(str(i) for i in ids), style="white")
-        console.print(event_ids)
-        console.print("")  # spacing
+def print_eventlog_filters(filters):
+    lines = []
+
+    for channel, event_ids in filters.items():
+        joined_ids = ", ".join(str(eid) for eid in event_ids)
+        lines.append(f"[bold cyan]{channel}[/]\n  Event IDs: [white]{joined_ids}[/]")
+
+    filter_text = "\n".join(lines)
+
+    panel = Panel(
+        filter_text,
+        title="[bold magenta]Event Log Filters[/]",
+        subtitle="Only these Event IDs will be parsed from EZ Tools EVTX exports",
+        border_style="purple",
+        expand=False,
+    )
+
+    console.print(Align.center(panel))
+
+def print_mft_filters():
+    lines = [
+        "[bold cyan]File Extensions:[/] exe, dll, ps1, zip, 7z, rar",
+        "[bold cyan]Suspicious Paths:[/] users, public, temp, appdata, downloads",
+        "[bold cyan]Timestamp Filter:[/] Created timestamps only (MFT 0x10)"
+    ]
+
+    filter_text = "\n".join(lines)
+
+    panel = Panel(
+        filter_text,
+        title="[bold magenta]MFT Filters[/]",
+        subtitle="Only these conditions are used during EZ Tools MFT parsing",
+        border_style="purple",
+        expand=False,
+    )
+
+    console.print(Align.center(panel))

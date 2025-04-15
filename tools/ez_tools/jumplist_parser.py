@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
+from utils.logger import print_and_log
 
 def process_jumplists(ez_dir: str, batch_size: int, base_dir: str):
     artifact_name = "JumpLists"
@@ -13,17 +14,6 @@ def process_jumplists(ez_dir: str, batch_size: int, base_dir: str):
         print("[JumpLists] No JumpLists found.")
         return
 
-    for file_path in jumplist_files:
-        print(f"[JumpLists] Processing {file_path}")
-        try:
-            for df in load_csv_with_progress(file_path, batch_size, artifact_name="JumpLists"):
-                rows = _normalize_rows(df, file_path, base_dir)
-                add_rows(rows)
-        except Exception as e:
-            print(f"[JumpLists] Failed to parse {file_path}: {e}")
-
-def _normalize_rows(df, evidence_path, base_dir):
-    timeline_data = []
     date_columns = [
         ("SourceCreated", "Source Created"),
         ("SourceModified", "Source Modified"),
@@ -35,29 +25,43 @@ def _normalize_rows(df, evidence_path, base_dir):
         ("TargetAccessed", "Target Accessed"),
         ("TrackerCreatedOn", "Tracker Created On")
     ]
-    for _, row in df.iterrows():
-        for col, label in date_columns:
-            timestamp = row.get(col, "")
-            try:
-                dt = pd.to_datetime(timestamp, utc=True, errors="coerce")
-                if pd.isnull(dt):
-                    continue
-                dt_str = dt.isoformat().replace("+00:00", "Z")
-            except:
-                continue
-            
-            data_path = row.get("Path", "")
-            data_details = os.path.basename(data_path) if data_path else ""
-            timeline_row = {
-                "DateTime": dt_str,
-                "TimestampInfo": label,
-                "ArtifactName": "JumpLists",
-                "Tool": "EZ Tools",
-                "Description": "File & Folder Access",
-                "DataDetails": data_details,
-                "DataPath": data_path,
-                "FileSize": row.get("FileSize", ""),
-                "EvidencePath": os.path.relpath(evidence_path, base_dir) if base_dir else evidence_path
-            }
-            timeline_data.append(timeline_row)
-    return timeline_data
+
+    for file_path in jumplist_files:
+        print(f"[JumpLists] Processing: {file_path}")
+        total_rows = 0
+        try:
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name=artifact_name):
+                timeline_data = []
+
+                for _, row in df.iterrows():
+                    for col, label in date_columns:
+                        timestamp = row.get(col, "")
+                        dt = pd.to_datetime(timestamp, utc=True, errors="coerce")
+                        if pd.isnull(dt):
+                            continue
+                        dt_str = dt.isoformat().replace("+00:00", "Z")
+
+                        data_path = row.get("Path", "")
+                        data_details = os.path.basename(data_path) if data_path else ""
+
+                        timeline_row = {
+                            "DateTime": dt_str,
+                            "TimestampInfo": label,
+                            "ArtifactName": artifact_name,
+                            "Tool": "EZ Tools",
+                            "Description": "File & Folder Access",
+                            "DataDetails": data_details,
+                            "DataPath": data_path,
+                            "FileSize": row.get("FileSize", ""),
+                            "EvidencePath": os.path.relpath(file_path, base_dir) if base_dir else file_path,
+                        }
+
+                        timeline_data.append(timeline_row)
+
+                total_rows += len(timeline_data)
+                add_rows(timeline_data)
+        except Exception as e:
+            print(f"[JumpLists] Failed to parse {file_path}: {e}")
+            continue
+
+        print_and_log(f"[✓] Parsed {total_rows} timeline rows from: {file_path}")

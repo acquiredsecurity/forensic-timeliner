@@ -49,7 +49,7 @@ def show_help():
     "[cyan]python timeliner.py --ProcessEZ --Deduplicate --StartDate 2024-01-01[/cyan]\n"
     "[cyan]python timeliner.py --ALL --OutputFile C:\\triage --StartDate 2024-01-01 --Deduplicate[/cyan]",
     title="Usage Examples",
-    border_style="cyan"
+    border_style="purple"
 ))
 
     # Recommendation

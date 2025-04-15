@@ -4,7 +4,7 @@ from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
 
-def process_mft_chainsaw(chainsaw_dir: str, batch_size: int, base_dir: str):
+def process_chainsaw_mft(chainsaw_dir: str, batch_size: int, base_dir: str):
     artifact_name = "Chainsaw_Mft"
     print_and_log(f"[Chainsaw - {artifact_name}] Scanning for relevant CSVs under: {chainsaw_dir}")
 

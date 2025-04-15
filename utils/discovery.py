@@ -1,11 +1,8 @@
 import os
 from pathlib import Path
 import pandas as pd
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
+from tqdm import tqdm
 
-
-console = Console()
 
 ARTIFACT_SIGNATURES = {
     "Amcache": {
@@ -79,7 +76,7 @@ ARTIFACT_SIGNATURES = {
             "FileName", "ParentPath", "Extension", "Created0x10"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Prefetch": {
         "filename_patterns": ["_PECmd_Output.csv"],
@@ -110,6 +107,156 @@ ARTIFACT_SIGNATURES = {
         ],
         "strict_filename_match": True,
         "strict_folder_match": True
+    },
+    "Axiom_Amcache": {
+        "filename_patterns": ["AmCache File Entries.csv"],
+        "foldername_patterns": ["ProgramExecution", "Axiom"],
+        "required_headers": [
+            "ApplicationName", "ProgramId", "FileKeyLastWriteTimestamp", "SHA1",
+            "IsOsComponent", "FullPath", "Name", "FileExtension", "LinkDate",
+            "ProductName", "Size", "Version", "ProductVersion", "LongPathHash",
+            "BinaryType", "IsPeFile", "BinFileVersion", "BinProductVersion",
+            "Language", "Description"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_AppCompat": {
+        "filename_patterns": ["Shim Cache.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Path", "File Name", "Last Modified Date/Time - UTC+00:00 (M/d/yyyy)"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_AutoRuns": {
+        "filename_patterns": ["Autorun Items.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)", "File Path", "File Name", "Command"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_ChromeHistory": {
+        "filename_patterns": ["Chrome Web History.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Visit Date/Time - UTC+00:00 (M/d/yyyy)", "URL", "Page Title"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_Edge": {
+        "filename_patterns": ["Edge Web Visits.csv", "Edge Web History.csv" ],
+        "foldername_patterns": ["Axiom"],
+        "required_headers": [
+            "Last Visited Date/Time - UTC+00:00 (M/d/yyyy)",
+            "URL", "Title", "Visit Count", "Evidence number"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_IEHistory": {
+        "filename_patterns": ["Edge-Internet Explorer 10-11 Main History.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Accessed Date/Time - UTC+00:00 (M/d/yyyy)", "URL", "Page Title"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_Firefox": {
+        "filename_patterns": ["Firefox Web Visits.csv"],
+        "foldername_patterns": ["Axiom"],
+        "required_headers": ["Last Visited Date/Time - UTC+00:00 (M/d/yyyy)", "URL", "Title"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_Opera": {
+        "filename_patterns": ["Opera Web Visits.csv"],
+        "foldername_patterns": ["Axiom"],
+        "required_headers": ["Last Visited Date/Time - UTC+00:00 (M/d/yyyy)", "URL", "Title"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_JumpLists": {
+        "filename_patterns": ["Jump Lists.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": [
+            "Linked Path", "Target File Created Date/Time - UTC+00:00 (M/d/yyyy)",
+            "Target File Last Modified Date/Time - UTC+00:00 (M/d/yyyy)",
+            "Last Access Date/Time - UTC+00:00 (M/d/yyyy)", "Source"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_LNK": {
+        "filename_patterns": ["LNK Files.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": [
+            "Target File Last Modified Date/Time - UTC+00:00 (M/d/yyyy)",
+            "Target Path", "Target File Size"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_MRUFolderAccess": {
+        "filename_patterns": ["MRU Folder Access.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)", "Folder Accessed", "Application Name"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_MRUOpenSaved": {
+        "filename_patterns": ["MRU Opened-Saved Files.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Last Access Date/Time - UTC+00:00 (M/d/yyyy)", "Full Path", "Program Name"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_MRURecent": {
+        "filename_patterns": ["MRU Recent Files & Folders.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Last Modified Date/Time - UTC+00:00 (M/d/yyyy)", "Shortcut Target Path", "Shortcut Name"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_Prefetch": {
+        "filename_patterns": ["Prefetch Files - Windows 8-10-11.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": [
+            "Last Run Time - UTC+00:00 (M/d/yyyy)",
+            "Executable Path", "Executable Name"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_RecycleBin": {
+        "filename_patterns": ["Recycle Bin.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Deleted Date/Time - UTC+00:00 (M/d/yyyy)", "Original Path", "Current Location"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_Shellbags": {
+        "filename_patterns": ["Shellbags.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["First Interaction Date/Time - UTC+00:00 (M/d/yyyy)", "Path"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
+    "Axiom_UserAssist": {
+        "filename_patterns": ["UserAssist.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Last Execution Date/Time - UTC+00:00 (M/d/yyyy)", "Program Path", "Program Name", "Execution Count"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
     },
     "Hayabusa": {
         "filename_patterns": ["hayabusa", "haya"],
@@ -165,10 +312,11 @@ ARTIFACT_SIGNATURES = {
         "filename_patterns": ["antivirus.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "EventID", "Computer", "detections", "path", "Threat Name", "Threat Path", "SHA1", "User"
+
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_Applocker": {
         "filename_patterns": ["applocker.csv"],
@@ -370,36 +518,20 @@ def load_csv_with_progress(file_path: str, batch_size: int, artifact_name: str =
         total_lines = 0
     
     use_chunks = total_lines > batch_size
-    style_map = {
-        "Amcache": "green on white",
-        "AppCompatCache": "magenta on black",
-        "Prefetch": "cyan on black",
-        "MFT": "bright_green on black",
-        "JumpLists": "bright_yellow on black",
-        "LNK": "blue on black",
-        "Deleted": "red on black",
-        "EventLogs": "bright_magenta on black",
-        "Shellbags": "bright_blue on black",
-        "Registry": "bright_cyan on black",
-        "Hayabusa": "white on blue",
-        "WebHistory": "white on dark_green",
-        "Default": "white on black"
-    }
-    style = style_map.get(artifact_name, style_map["Default"])
     
+    print(f"[{artifact_name}] Processing: {os.path.basename(file_path)}")
+
     if use_chunks:
-        with Progress(
-            TextColumn("Progress:", style="bold green"),
-            BarColumn(bar_width=None),
-            TextColumn("{task.percentage:>3.0f}%", style="bold white"),
-            TimeRemainingColumn(),
-            console=console,
-            transient=False
-        ) as progress:
-            task = progress.add_task(f"{os.path.basename(file_path)}", total=total_lines)
+        with tqdm(
+            total=total_lines,
+            unit="rows",
+            unit_scale=True,
+            desc=f"{artifact_name}",
+            ncols=90
+        ) as pbar:
             for chunk in pd.read_csv(file_path, chunksize=batch_size, encoding=encoding, on_bad_lines="skip"):
                 yield chunk
-                progress.update(task, advance=len(chunk))
+                pbar.update(len(chunk))
     else:
         df = pd.read_csv(file_path, encoding=encoding, on_bad_lines="skip")
         yield df

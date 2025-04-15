@@ -4,17 +4,16 @@ from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
 
-def process_registry(ez_dir: str, batch_size: int, base_dir: str):
-    artifact_name = "Registry"
-    print_and_log(f"[{artifact_name}] Scanning for relevant CSVs under: {ez_dir}")
+def process_axiom_amcache(axiom_dir: str, batch_size: int, base_dir: str):
+    artifact_name = "Axiom_Amcache"
+    print_and_log(f"[{artifact_name}] Scanning for relevant CSVs under: {base_dir}")
 
-    reg_files = find_artifact_files(ez_dir, base_dir, artifact_name)
-
-    if not reg_files:
-        print_and_log(f"[{artifact_name}] No Registry CSVs found.")
+    amcache_files = find_artifact_files(axiom_dir, base_dir, artifact_name)
+    if not amcache_files:
+        print_and_log(f"[{artifact_name}] No Amcache files found.")
         return
 
-    for file_path in reg_files:
+    for file_path in amcache_files:
         print_and_log(f"[{artifact_name}] Processing: {file_path}")
         total_rows = 0
         try:
@@ -22,20 +21,21 @@ def process_registry(ez_dir: str, batch_size: int, base_dir: str):
                 timeline_data = []
 
                 for _, row in df.iterrows():
-                    timestamp = row.get("LastWriteTimestamp", "")
+                    timestamp = row.get("Key Last Updated Date/Time - UTC+00:00 (M/d/yyyy)", "")
                     dt = pd.to_datetime(timestamp, utc=True, errors="coerce")
                     if pd.isnull(dt):
                         continue
-                    dt_str = dt.isoformat().replace("+00:00", "Z")
 
                     timeline_row = {
-                        "DateTime": dt_str,
+                        "DateTime": dt.isoformat().replace("+00:00", "Z"),
+                        "Tool": "Axiom",
+                        "ArtifactName": "Amcache",
                         "TimestampInfo": "Last Write",
-                        "ArtifactName": artifact_name,
-                        "Tool": "EZ Tools",
-                        "Description": row.get("Category", ""),
-                        "DataDetails": row.get("Description", ""),
-                        "DataPath": row.get("ValueData", ""),
+                        "Description": "Program Execution",
+                        "DataPath": row.get("Full Path", "") or "",
+                        "DataDetails": row.get("Associated Application Name", "") or "",
+                        "FileExtension": row.get("File Extension", "") or "",
+                        "SHA1": row.get("SHA1 Hash", "") or "",
                         "EvidencePath": os.path.relpath(file_path, base_dir) if base_dir else file_path
                     }
 

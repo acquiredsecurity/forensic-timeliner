@@ -4,23 +4,24 @@ from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
 
-def process_shellbags(ez_dir: str, batch_size: int, base_dir: str):
-    artifact_name = "Shellbags"
-    print_and_log(f"[{artifact_name}] Scanning for relevant CSVs under: {ez_dir}")
+def process_axiom_shellbags(axiom_dir: str, batch_size: int, base_dir: str):
+    artifact_name = "Axiom_Shellbags"
+    print_and_log(f"[{artifact_name}] Scanning for relevant CSVs under: {axiom_dir}")
 
-    shellbag_files = find_artifact_files(ez_dir, base_dir, artifact_name)
-
-    if not shellbag_files:
+    shell_files = find_artifact_files(axiom_dir, base_dir, artifact_name)
+    if not shell_files:
         print_and_log(f"[{artifact_name}] No Shellbags files found.")
         return
 
     date_columns = [
-        ("LastWriteTime", "Last Write"),
-        ("FirstInteracted", "First Interacted"),
-        ("LastInteracted", "Last Interacted")
+        ("First Interaction Date/Time - UTC+00:00 (M/d/yyyy)", "First Interacted"),
+        ("Last Interaction Date/Time - UTC+00:00 (M/d/yyyy)", "Last Interacted"),
+        ("File System Last Modified Date/Time - UTC+00:00 (M/d/yyyy)", "File Modified"),
+        ("File System Last Accessed Date/Time - UTC+00:00 (M/d/yyyy)", "File Accessed"),
+        ("File System Created Date/Time - UTC+00:00 (M/d/yyyy)", "File Created")
     ]
 
-    for file_path in shellbag_files:
+    for file_path in shell_files:
         print_and_log(f"[{artifact_name}] Processing: {file_path}")
         total_rows = 0
         try:
@@ -33,16 +34,14 @@ def process_shellbags(ez_dir: str, batch_size: int, base_dir: str):
                         dt = pd.to_datetime(timestamp, utc=True, errors="coerce")
                         if pd.isnull(dt):
                             continue
-                        dt_str = dt.isoformat().replace("+00:00", "Z")
 
                         timeline_row = {
-                            "DateTime": dt_str,
+                            "DateTime": dt.isoformat().replace("+00:00", "Z"),
+                            "Tool": "Axiom",
+                            "ArtifactName": "Shellbags",
                             "TimestampInfo": label,
-                            "ArtifactName": artifact_name,
-                            "Tool": "EZ Tools",
-                            "Description": "File & Folder Access",
-                            "DataPath": row.get("AbsolutePath", ""),
-                            "DataDetails": row.get("Value", ""),
+                            "Description": "Folder Accessed",
+                            "DataPath": row.get("Path", ""),
                             "EvidencePath": os.path.relpath(file_path, base_dir) if base_dir else file_path
                         }
 

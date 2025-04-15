@@ -4,38 +4,36 @@ from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
 
-def process_browsinghistoryview(nirsoft_dir: str, batch_size: int, base_dir: str):
-    artifact_name = "NirsoftBrowsingHistory"
-    print_and_log(f"[{artifact_name}] Scanning for relevant CSVs under: {nirsoft_dir}")
+def process_axiom_edge(axiom_dir: str, batch_size: int, base_dir: str):
+    artifact_name = "Axiom_Edge"
+    print_and_log(f"[{artifact_name}] Scanning for relevant CSVs under: {axiom_dir}")
 
-    bhv_files = find_artifact_files(nirsoft_dir, base_dir, artifact_name)
-
-    if not bhv_files:
-        print_and_log("[Nirsoft] No BrowsingHistoryView CSVs found.")
+    # Find both Web History and Web Visits files
+    edge_files = find_artifact_files(axiom_dir, base_dir, artifact_name)
+    if not edge_files:
+        print_and_log(f"[{artifact_name}] No Edge Web History or Visits files found.")
         return
 
-    for file_path in bhv_files:
-        print_and_log(f"[{artifact_name}] Processing {file_path}")
+    for file_path in edge_files:
+        print_and_log(f"[{artifact_name}] Processing: {file_path}")
         total_rows = 0
         try:
-            for df in load_csv_with_progress(file_path, batch_size, artifact_name="WebHistory"):
+            # Iterate through batches of rows
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name=artifact_name):
                 timeline_data = []
                 for _, row in df.iterrows():
-                    timestamp = row.get("Visit Time", "")
-                    try:
-                        dt = pd.to_datetime(timestamp, utc=True, errors='coerce')
-                        if pd.isnull(dt):
-                            continue
-                        dt_str = dt.isoformat().replace("+00:00", "Z")
-                    except:
+                    # Adjusted timestamp field
+                    timestamp = row.get("Date Visited Date/Time - UTC+00:00 (M/d/yyyy)", "")
+                    dt = pd.to_datetime(timestamp, utc=True, errors="coerce")
+                    if pd.isnull(dt):
                         continue
-                    
-                    url = str(row.get("URL", "")).strip().lower()
-                    title = row.get("Title", "")
-                    description = "Web History"  # Always "Web History" for Nirsoft combined browsers
-                    data_details = title
+                    dt_str = dt.isoformat().replace("+00:00", "Z")
 
-                    # Check URL for activity type
+                    # URL and activity description
+                    url = str(row.get("URL", "")).strip().lower()
+                    if not url:
+                        continue
+
                     activity = ""
                     if url.startswith("file:///"):
                         activity = " + File Open Access"
@@ -44,19 +42,18 @@ def process_browsinghistoryview(nirsoft_dir: str, batch_size: int, base_dir: str
                     elif any(term in url for term in ["download", ".exe", ".zip", ".rar", ".7z", ".msi", ".iso", ".pdf", ".dll", "/downloads/"]):
                         activity = " + Download"
 
-                    # Combine the "Web History" label and activity type
-                    description = description + activity
+                    # For Web Visits and Web History
+                    title = row.get("Title", "")
+                    title = title if title else ""  # Ensure title is empty if not present
 
-                    # Create timeline row
                     timeline_row = {
                         "DateTime": dt_str,
-                        "Tool": "Nirsoft",
-                        "ArtifactName": "Web History",
+                        "Tool": "Axiom",
+                        "ArtifactName": "Web History",  # Set as Web History for both types
                         "TimestampInfo": "Last Visited",
-                        "Description": description,
+                        "Description": "Edge History" + activity,
                         "DataPath": url,
-                        "DataDetails": data_details,
-                        "User": row.get("User Profile", ""),
+                        "DataDetails": title,
                         "EvidencePath": os.path.relpath(file_path, base_dir) if base_dir else file_path
                     }
 
