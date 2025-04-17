@@ -10,7 +10,6 @@ from rich import print as rprint
 from cli.args import parse_arguments
 from ui.banner import print_banner
 from ui.help import show_help
-from ui.loading import launch_animation
 from ui.interactive import run_interactive_config
 
 # ─── EZ Tools Parsers ────────────────────────────────────────────────
@@ -31,13 +30,26 @@ from tools.axiom import (
 
 # ─── Chainsaw Parsers ────────────────────────────────────────────────
 from tools.chainsaw import (
-    applocker_parser, chainsaw_account_tampering_parser, chainsaw_antivirus_parser,
-    chainsaw_indicator_removal_parser, chainsaw_mft_parser, chainsaw_microsoft_rds_events_parser,
-    chainsaw_persistence_parser, chainsaw_powershell_parser, chainsaw_rdp_events_parser,
-    credential_access_parser, defense_evasion_parser, lateral_movement_parser,
-    log_tampering_parser, login_attacks_parser, microsoft_rasvpn_events_parser,
-    service_installation_parser, service_tampering_parser, sigma_chainsaw_parser
+    chainsaw_account_tampering_parser,
+    chainsaw_antivirus_parser,
+    chainsaw_applocker_parser,
+    chainsaw_credential_access_parser,
+    chainsaw_defense_evasion_parser,
+    chainsaw_indicator_removal_parser,
+    chainsaw_lateral_movement_parser,
+    chainsaw_log_tampering_parser,
+    chainsaw_login_attacks_parser,
+    chainsaw_mft_parser,
+    chainsaw_microsoft_rasvpn_events_parser,
+    chainsaw_microsoft_rds_events_parser,
+    chainsaw_persistence_parser,
+    chainsaw_powershell_parser,
+    chainsaw_rdp_events_parser,
+    chainsaw_service_installation_parser,
+    chainsaw_service_tampering_parser,
+    chainsaw_sigma_parser
 )
+
 
 # ─── Hayabusa & Nirsoft Parsers ──────────────────────────────────────
 from tools.hayabusa import hayabusa_parser
@@ -49,6 +61,8 @@ from utils.logger import setup_logger, print_and_log, log_info
 from utils.datefilter import filter_rows_by_date
 from utils.dedup import deduplicate_rows
 from utils.discovery_preview import preview_artifact_discovery
+from utils.config_override import load_config_override
+from utils.config_export import export_default_config
 
 # ─── Collector Function ───────────────────────────────────────────────────────
 from collector.collector import get_all_rows
@@ -62,20 +76,30 @@ def resolve_output_path(output_arg: str) -> str:
         return os.path.join(output_arg, f"{timestamp}_forensic_timeliner.csv")
 
 def main():
-    launch_animation()
     print_banner()
     args = parse_arguments()
+    
+    if len(sys.argv) == 1:
+        print("[*] No arguments provided. Launching Interactive Mode...")
+        args["Interactive"] = True
 
     if args.get("Help"):
         show_help()
         return
+    
+    if args.get("ConfigExport"):
+        export_default_config()
+        return 
 
     if args.get("Interactive"):
-        print("[*] Launching interactive configuration...")
         interactive_config = run_interactive_config()
         args.update(interactive_config)
 
-    if args.get("Preview"):
+       
+    if args.get("LoadConfigOverride"):
+        load_config_override(args["LoadConfigOverride"])    
+
+    if args.get("BaseDir") and (args.get("Preview") or args.get("Interactive")):
         from utils.discovery_preview import run_discovery_preview
         run_discovery_preview(args["BaseDir"])
        
@@ -129,11 +153,6 @@ def main():
 
    
    
-    if args.get("BaseDir"):
-            preview_artifact_discovery(args["BaseDir"])
-   
-   
-   
     # Start processing artifacts
     if args.get("ProcessEZ"):
         amcache_parser.process_amcache(args["EZDirectory"], args["BatchSize"], args["BaseDir"])
@@ -173,22 +192,23 @@ def main():
     if args.get("ProcessChainsaw"):
         chainsaw_account_tampering_parser.process_chainsaw_account_tampering(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
         chainsaw_antivirus_parser.process_chainsaw_antivirus(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        applocker_parser.process_applocker(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        credential_access_parser.process_credential_access(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        defense_evasion_parser.process_defense_evasion(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_applocker_parser.process_chainsaw_applocker(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_credential_access_parser.process_chainsaw_credential_access(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_defense_evasion_parser.process_chainsaw_defense_evasion(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
         chainsaw_indicator_removal_parser.process_chainsaw_indicator_removal(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        lateral_movement_parser.process_lateral_movement(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        log_tampering_parser.process_log_tampering(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        login_attacks_parser.process_login_attacks(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        microsoft_rasvpn_events_parser.process_microsoft_rasvpn_events(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_lateral_movement_parser.process_chainsaw_lateral_movement(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_log_tampering_parser.process_chainsaw_log_tampering(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_login_attacks_parser.process_chainsaw_login_attacks(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_microsoft_rasvpn_events_parser.process_chainsaw_microsoft_rasvpn_events(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
         chainsaw_microsoft_rds_events_parser.process_chainsaw_microsoft_rds_events(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
         chainsaw_persistence_parser.process_chainsaw_persistence(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
         chainsaw_powershell_parser.process_chainsaw_powershell(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
         chainsaw_rdp_events_parser.process_chainsaw_rdp_events(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        service_installation_parser.process_service_installation(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        service_tampering_parser.process_service_tampering(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
-        sigma_chainsaw_parser.process_chainsaw_sigma(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_service_installation_parser.process_chainsaw_service_installation(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_service_tampering_parser.process_chainsaw_service_tampering(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+        chainsaw_sigma_parser.process_chainsaw_sigma(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
         chainsaw_mft_parser.process_chainsaw_mft(args["ChainsawDirectory"], args["BatchSize"], args["BaseDir"])
+
             
 
     if args.get("ProcessNirsoft"):

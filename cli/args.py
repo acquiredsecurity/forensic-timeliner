@@ -20,7 +20,6 @@ def parse_arguments():
         "AxiomDirectory": None,
         "OutputFile": None,
         "ExportFormat": "csv",
-        "SkipEventLogs": False,
         "ProcessAxiom": False,
         "ProcessChainsaw": False,
         "ProcessEZ": False,
@@ -35,6 +34,8 @@ def parse_arguments():
         "Interactive": False,
         "Preview": False,
         "ALL": False,
+        "ConfigExport": False,
+        "LoadConfigOverride": None,
         "Help": False
     }
 

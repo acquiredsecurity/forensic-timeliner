@@ -939,3 +939,296 @@
 2025-04-15 17:10:41,096 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IWIULER.csv
 2025-04-15 17:10:41,096 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IY2X7L6.csv
 2025-04-15 17:10:41,096 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IZR3ZL5.csv
+2025-04-15 22:05:54,757 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Cookies.csv
+2025-04-15 22:05:54,759 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Current Session.csv
+2025-04-15 22:05:54,759 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Current Tabs.csv
+2025-04-15 22:05:54,760 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Downloads.csv
+2025-04-15 22:05:54,760 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome FavIcons.csv
+2025-04-15 22:05:54,760 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Keyword Search Terms.csv
+2025-04-15 22:05:54,760 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Last Session.csv
+2025-04-15 22:05:54,760 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Last Tabs.csv
+2025-04-15 22:05:54,760 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Shortcuts.csv
+2025-04-15 22:05:54,760 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Top Sites.csv
+2025-04-15 22:05:54,761 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Web Visits.csv
+2025-04-15 22:05:54,761 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Current Session.csv
+2025-04-15 22:05:54,761 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Current Tabs.csv
+2025-04-15 22:05:54,761 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Downloads.csv
+2025-04-15 22:05:54,761 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge FavIcons.csv
+2025-04-15 22:05:54,761 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Keyword Search Terms.csv
+2025-04-15 22:05:54,762 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Last Session.csv
+2025-04-15 22:05:54,762 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Last Tabs.csv
+2025-04-15 22:05:54,762 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Shortcuts.csv
+2025-04-15 22:05:54,762 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge-Internet Explorer 10-11 Daily-Weekly History.csv
+2025-04-15 22:05:54,762 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox Add-ons.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox Bookmarks.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox Cookies.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox Downloads.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox FavIcons.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox FormHistory.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox SessionStore Artifacts.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Internet Explorer Typed URLs.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Opera Cache Records.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Opera Cookies.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Opera FavIcons.csv
+2025-04-15 22:05:54,763 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Opera Keyword Search Terms.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Potential Browser Activity.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\out\Forensic_Timeliner.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\2025-04-08T14_03_11_0334688_CopyLog.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\2025-04-08T14_03_11_0334688_SkipLog.csv.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I061ZR6.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I0LD7G7.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I2G89LC.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I3LMR81.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I3RZJ3P.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I3VP042.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I3XKHHP.csv
+2025-04-15 22:05:54,764 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I4G0EWA.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I4HEEYE.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I5KO389.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I5QNIUS.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I6P43L1.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I7FE98M.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I8FC7V2.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I8KDGHT.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I9K3HKR.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IBVMOJE.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$ICI7QWH.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IEBC2OR.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IEDZ4IQ.csv
+2025-04-15 22:05:54,765 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IFDVQP1.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IFOUB0P.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$ILO0LLN.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IMJYJWP.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IMNVLTQ.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$INIE51S.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$INJIWJW.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$INOMLU1.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IPA1VRV.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IPIKDLB.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IQG17NV.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$ITUTR5K.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IU5E98N.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IWIULER.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IY2X7L6.csv
+2025-04-15 22:05:54,766 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IZR3ZL5.csv
+2025-04-15 22:11:54,012 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Cookies.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Current Session.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Current Tabs.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Downloads.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome FavIcons.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Keyword Search Terms.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Last Session.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Last Tabs.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Shortcuts.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Top Sites.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Chrome Web Visits.csv
+2025-04-15 22:11:54,014 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Current Session.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Current Tabs.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Downloads.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge FavIcons.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Keyword Search Terms.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Last Session.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Last Tabs.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge Shortcuts.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Edge-Internet Explorer 10-11 Daily-Weekly History.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox Add-ons.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox Bookmarks.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox Cookies.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox Downloads.csv
+2025-04-15 22:11:54,015 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox FavIcons.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox FormHistory.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Firefox SessionStore Artifacts.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Internet Explorer Typed URLs.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Opera Cache Records.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Opera Cookies.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Opera FavIcons.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Opera Keyword Search Terms.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\axiom\Potential Browser Activity.csv
+2025-04-15 22:11:54,016 - INFO - Unmatched CSV file: C:\triage\browser\out\Forensic_Timeliner.csv
+2025-04-15 22:11:54,017 - INFO - Unmatched CSV file: C:\triage\browser\triage\2025-04-08T14_03_11_0334688_CopyLog.csv
+2025-04-15 22:11:54,017 - INFO - Unmatched CSV file: C:\triage\browser\triage\2025-04-08T14_03_11_0334688_SkipLog.csv.csv
+2025-04-15 22:11:54,017 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I061ZR6.csv
+2025-04-15 22:11:54,017 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I0LD7G7.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I2G89LC.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I3LMR81.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I3RZJ3P.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I3VP042.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I3XKHHP.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I4G0EWA.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I4HEEYE.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I5KO389.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I5QNIUS.csv
+2025-04-15 22:11:54,018 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I6P43L1.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I7FE98M.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I8FC7V2.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I8KDGHT.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$I9K3HKR.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IBVMOJE.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$ICI7QWH.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IEBC2OR.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IEDZ4IQ.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IFDVQP1.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IFOUB0P.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$ILO0LLN.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IMJYJWP.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IMNVLTQ.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$INIE51S.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$INJIWJW.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$INOMLU1.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IPA1VRV.csv
+2025-04-15 22:11:54,019 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IPIKDLB.csv
+2025-04-15 22:11:54,020 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IQG17NV.csv
+2025-04-15 22:11:54,020 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$ITUTR5K.csv
+2025-04-15 22:11:54,020 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IU5E98N.csv
+2025-04-15 22:11:54,020 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IWIULER.csv
+2025-04-15 22:11:54,020 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IY2X7L6.csv
+2025-04-15 22:11:54,020 - INFO - Unmatched CSV file: C:\triage\browser\triage\C\$Recycle.Bin\S-1-5-21-481159449-792074996-3931589276-500\$IZR3ZL5.csv
+2025-04-16 10:38:26,242 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\$LogFile Analysis.csv
+2025-04-16 10:38:26,244 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\AmCache Device Containers.csv
+2025-04-16 10:38:26,245 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\AmCache Driver Binaries.csv
+2025-04-16 10:38:26,245 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\AmCache Driver Packages.csv
+2025-04-16 10:38:26,246 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\AmCache Pnp Devices.csv
+2025-04-16 10:38:26,246 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\AmCache Program Entries.csv
+2025-04-16 10:38:26,246 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\AmCache Shortcuts.csv
+2025-04-16 10:38:26,246 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Classifieds URLs.csv
+2025-04-16 10:38:26,246 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Default Browser.csv
+2025-04-16 10:38:26,246 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge Current Session.csv
+2025-04-16 10:38:26,246 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge Current Tabs.csv
+2025-04-16 10:38:26,251 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge FavIcons.csv
+2025-04-16 10:38:26,252 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge Keyword Search Terms.csv
+2025-04-16 10:38:26,252 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge Last Session.csv
+2025-04-16 10:38:26,252 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge Shortcuts.csv
+2025-04-16 10:38:26,252 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge-Internet Explorer 10-11 Content.csv
+2025-04-16 10:38:26,252 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge-Internet Explorer 10-11 Cookies.csv
+2025-04-16 10:38:26,252 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge-Internet Explorer 10-11 Daily-Weekly History.csv
+2025-04-16 10:38:26,252 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Edge-Internet Explorer 10-11 Dependency Entries.csv
+2025-04-16 10:38:26,253 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Facebook URLs.csv
+2025-04-16 10:38:26,253 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Feature Usage.csv
+2025-04-16 10:38:26,253 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\File Associations.csv
+2025-04-16 10:38:26,253 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\File System Information.csv
+2025-04-16 10:38:26,253 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Google Searches.csv
+2025-04-16 10:38:26,253 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Identifiers - Device.csv
+2025-04-16 10:38:26,254 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Identifiers - People.csv
+2025-04-16 10:38:26,254 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Installed Microsoft Programs.csv
+2025-04-16 10:38:26,254 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Installed Programs.csv
+2025-04-16 10:38:26,254 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Internet Explorer Typed URLs.csv
+2025-04-16 10:38:26,254 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Known DLLs.csv
+2025-04-16 10:38:26,255 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Locally Accessed Files and Folders.csv
+2025-04-16 10:38:26,255 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\MUICache.csv
+2025-04-16 10:38:26,255 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Network Interfaces (Registry).csv
+2025-04-16 10:38:26,255 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Network Profiles.csv
+2025-04-16 10:38:26,255 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Operating System Information.csv
+2025-04-16 10:38:26,255 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Passwords and Tokens.csv
+2025-04-16 10:38:26,255 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Pictures.csv
+2025-04-16 10:38:26,255 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Potential Browser Activity.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\PowerShell History.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Rebuilt Desktops - Windows.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Remote Desktop Protocol.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Safari History.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Scheduled Tasks.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Shipping Site URLs.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Social Media URLs.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\SRUM Application Resource Usage.csv
+2025-04-16 10:38:26,256 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\SRUM Energy Usage (Long Term).csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\SRUM Energy Usage.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\SRUM Network Connections.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\SRUM Network Usage.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\SRUM Push Notification Data.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Startup Items.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\System Services.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Text Documents.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Thumbcache Pictures.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Timezone Information.csv
+2025-04-16 10:38:26,257 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\USB Devices.csv
+2025-04-16 10:38:26,258 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\User Accounts - Windows.csv
+2025-04-16 10:38:26,258 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\User Accounts.csv
+2025-04-16 10:38:26,258 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\WebKit Browser Web History (Carved).csv
+2025-04-16 10:38:26,258 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Windows Event Logs - Firewall Events.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Windows Event Logs - Scheduled Task Events.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Windows Event Logs - Script Events.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Windows Event Logs - Service Events.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Windows Event Logs - User Events.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Windows Event Logs - User PNP Events.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Windows Event Logs.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\axiom\Windows Timeline Activity.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\chainsaw\chainsaw_shimcache_amcache_timeline.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\chainsaw\chainsaw_shimcache_only_output.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\chainsaw\microsoft_rds_events_-_user_profile_disk.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403071530_arnolds_Activity.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403071530_arnolds_Activity_PackageIDs.csv
+2025-04-16 10:38:26,259 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403071531_arnolds_Activity.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403071531_arnolds_Activity_PackageIDs.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403071532_arnolds_Activity.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403071532_arnolds_Activity_PackageIDs.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403071533_arnolds_Activity.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403071533_arnolds_Activity_PackageIDs.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileFolderAccess\20250403121643_CustomDestinations.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileSystem\20250403121442_MFTECmd_$Boot_Output.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileSystem\20250403121520_MFTECmd_$J_Output.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\FileSystem\20250403121527_MFTECmd_$SDS_Output.csv
+2025-04-16 10:38:26,260 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\ProgramExecution\20250403071436_Amcache_DeviceContainers.csv
+2025-04-16 10:38:26,261 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\ProgramExecution\20250403071436_Amcache_DevicePnps.csv
+2025-04-16 10:38:26,261 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\ProgramExecution\20250403071436_Amcache_DriveBinaries.csv
+2025-04-16 10:38:26,261 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\ProgramExecution\20250403071436_Amcache_DriverPackages.csv
+2025-04-16 10:38:26,261 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\ProgramExecution\20250403071436_Amcache_ProgramEntries.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\ProgramExecution\20250403071436_Amcache_ShortCuts.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\ProgramExecution\20250403121647_PECmd_Output_Timeline.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_AppCompatFlags2__C_Users_admin0x_NTUSER.DAT.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_AppCompatFlags2__C_Users_administrator_NTUSER.DAT.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_AppCompatFlags2__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_AppCompatFlags2__C_Users_t800_NTUSER.DAT.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_AppPaths__C_Windows_System32_config_SOFTWARE.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_BamDam__C_Windows_System32_config_SYSTEM.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_CIDSizeMRU__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,262 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_DeviceClasses__C_Windows_System32_config_SYSTEM.csv
+2025-04-16 10:38:26,269 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_FileExts__C_Users_admin0x_NTUSER.DAT.csv
+2025-04-16 10:38:26,269 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_FileExts__C_Users_administrator_NTUSER.DAT.csv
+2025-04-16 10:38:26,269 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_FileExts__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_FileExts__C_Users_t800_NTUSER.DAT.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_JumplistData__C_Users_admin0x_NTUSER.DAT.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_KnownNetworks__C_Windows_System32_config_SOFTWARE.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_LastVisitedPidlMRU__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_MountedDevices__C_Windows_System32_config_SYSTEM.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_NetworkAdapters__C_Windows_System32_config_SYSTEM.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_OpenSavePidlMRU__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_Products__C_Windows_System32_config_SOFTWARE.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_ProfileList__C_Windows_System32_config_SOFTWARE.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_RecentDocs__C_Users_admin0x_NTUSER.DAT.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_RecentDocs__C_Users_administrator_NTUSER.DAT.csv
+2025-04-16 10:38:26,270 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_RecentDocs__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_RecentDocs__C_Users_t800_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_Services__C_Windows_System32_config_SYSTEM.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_Taskband__C_Users_admin0x_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_Taskband__C_Users_administrator_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_Taskband__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_Taskband__C_Users_t800_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TaskCache__C_Windows_System32_config_SOFTWARE.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TimeZoneInfo__C_Windows_System32_config_SYSTEM.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TypedURLs__C_Users_admin0x_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TypedURLs__C_Users_administrator_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TypedURLs__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,271 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TypedURLs__C_Users_Default_NTUSER.DAT.csv
+2025-04-16 10:38:26,272 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TypedURLs__C_Users_t800_NTUSER.DAT.csv
+2025-04-16 10:38:26,272 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TypedURLs__C_Windows_ServiceProfiles_LocalService_NTUSER.DAT.csv
+2025-04-16 10:38:26,272 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_TypedURLs__C_Windows_ServiceProfiles_NetworkService_NTUSER.DAT.csv
+2025-04-16 10:38:26,272 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UnInstall__C_Users_admin0x_NTUSER.DAT.csv
+2025-04-16 10:38:26,272 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UnInstall__C_Users_administrator_NTUSER.DAT.csv
+2025-04-16 10:38:26,272 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UnInstall__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UnInstall__C_Users_t800_NTUSER.DAT.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UnInstall__C_Windows_System32_config_SOFTWARE.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_USB__C_Windows_System32_config_SYSTEM.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UserAccounts__C_Windows_System32_config_SAM.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UserAssist__C_Users_admin0x_NTUSER.DAT.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UserAssist__C_Users_administrator_NTUSER.DAT.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UserAssist__C_Users_arnolds_NTUSER.DAT.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_UserAssist__C_Users_t800_NTUSER.DAT.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\Registry\20250403121648\20250403121648_VolumeInfoCache__C_Windows_System32_config_SOFTWARE.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\SRUMDatabase\20250403121724_SrumECmd_AppResourceUseInfo_Output.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\SRUMDatabase\20250403121724_SrumECmd_AppTimelineProvider_Output.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\SRUMDatabase\20250403121724_SrumECmd_EnergyUsage_Output.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\SRUMDatabase\20250403121724_SrumECmd_NetworkConnections_Output.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\SRUMDatabase\20250403121724_SrumECmd_NetworkUsages_Output.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\SRUMDatabase\20250403121724_SrumECmd_PushNotifications_Output.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\timeline\SRUMDatabase\20250403121724_SrumECmd_vfuprov_Output.csv
+2025-04-16 10:38:26,273 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\triage\2025-04-03T12_12_28_7772147_CopyLog.csv
+2025-04-16 10:38:26,274 - INFO - Unmatched CSV file: C:\Users\admin0x\Desktop\sample_data\Kape_triage_t800\Kape_triage\triage\2025-04-03T12_12_28_7772147_SkipLog.csv.csv

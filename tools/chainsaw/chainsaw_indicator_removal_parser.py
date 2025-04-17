@@ -15,25 +15,20 @@ def process_chainsaw_indicator_removal(chainsaw_dir: str, batch_size: int, base_
         return
 
     for file_path in csv_files:
-        print_and_log(f"[Chainsaw - {artifact_name}] Processing {file_path}")
+        print_and_log(f"[{artifact_name}] Processing {file_path}")
+        total_rows = 0
         try:
-            for df in load_csv_with_progress(file_path, batch_size, artifact_name="Chainsaw"):
-                rows = _normalize_rows(df, file_path, base_dir)
-                add_rows(rows)
-        except Exception as e:
-            print_and_log(f"[Chainsaw - {artifact_name}] Failed to parse {file_path}: {e}")
+            for df in load_csv_with_progress(file_path, batch_size, artifact_name=artifact_name):
+                timeline_data = []
 
-def _normalize_rows(df, evidence_path, base_dir):
-    timeline_data = []
+                for _, row in df.iterrows():
+                    timestamp = row.get("timestamp") or row.get("TimeCreated") or row.get("UtcTime")
+                    dt = pd.to_datetime(timestamp, utc=True, errors="coerce")
+                    if pd.isnull(dt):
+                        continue
+                    dt_str = dt.isoformat().replace("+00:00", "Z")
 
-    for _, row in df.iterrows():
-        timestamp = row.get("timestamp")
-        dt = pd.to_datetime(timestamp, utc=True, errors="coerce")
-        if pd.isnull(dt):
-            continue
-        dt_str = dt.isoformat().replace("+00:00", "Z")
-
-        timeline_row = {
+                    timeline_row = {
             "DateTime": dt_str,
             "TimestampInfo": "EventTime",
             "ArtifactName": "EventLogs",
@@ -45,7 +40,14 @@ def _normalize_rows(df, evidence_path, base_dir):
             "User": row.get("User Name", ""),
             "Computer": row.get("Computer", ""),
             "EvidencePath": row.get("path", ""),
-        }
-        timeline_data.append(timeline_row)
+         }
 
-    return timeline_data
+                    timeline_data.append(timeline_row)
+
+                total_rows += len(timeline_data)
+                add_rows(timeline_data)
+        except Exception as e:
+            print_and_log(f"[{artifact_name}] Failed to parse {file_path}: {e}")
+            continue
+
+        print_and_log(f"[✓] Parsed {total_rows} timeline rows from: {file_path}")

@@ -1,4 +1,4 @@
 pandas
 rich
-colorama
 tqdm
+questionary

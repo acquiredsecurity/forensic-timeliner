@@ -527,7 +527,10 @@ def load_csv_with_progress(file_path: str, batch_size: int, artifact_name: str =
             unit="rows",
             unit_scale=True,
             desc=f"{artifact_name}",
-            ncols=90
+            ncols=90,
+            ascii=False,  # ✨ force Unicode
+            dynamic_ncols=False,
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
         ) as pbar:
             for chunk in pd.read_csv(file_path, chunksize=batch_size, encoding=encoding, on_bad_lines="skip"):
                 yield chunk

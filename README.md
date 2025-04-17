@@ -68,7 +68,6 @@ python timeliner.py --BaseDir "C:\path\to\triage_data" --ALL --StartDate 2023-01
 | `--ProcessChainsaw` | Process Chainsaw output |
 | `--ProcessAxiom` | Process Axiom output |
 | `--ALL` | Process all available artifact types |
-| `--SkipEventLogs` | Skip processing of event logs |
 
 ### Discovery Options
 

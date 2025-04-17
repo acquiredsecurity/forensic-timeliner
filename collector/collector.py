@@ -4,6 +4,10 @@ def sanitize_field(value):
     if value is None:
         return ""
     value = str(value)
+
+    if value.lower() == "nan":
+            return ""
+
     return value.replace("\r", " ").replace("\n", " ").strip()
 
 def sanitize_row(row: dict) -> dict:

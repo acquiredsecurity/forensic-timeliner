@@ -60,7 +60,8 @@ def export_to_csv(data, output_path):
         index=False,
         encoding='utf-8',
         quoting=csv.QUOTE_MINIMAL,
-        lineterminator='\r\n'
+        lineterminator='\r\n',
+        na_rep=''
     )
 
     print(f"Exported {len(df)} rows to {output_path}")
