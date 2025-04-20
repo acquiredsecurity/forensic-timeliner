@@ -1,216 +1,237 @@
-# Forensic Timeliner
 
-A comprehensive digital forensic timeline generation tool that automatically discovers and processes forensic artifacts from multiple sources.
+<div align="center">
+<img src="https://github.com/user-attachments/assets/258920b6-aa55-400a-b699-3d507d6ede21" alt="ft_logo2" width="300"/>
+</div>
 
-## Overview
 
-Forensic Timeliner is designed to help investigators create unified timelines from various forensic artifacts scattered across complex directory structures. It supports output from popular forensic tools including:
+> A high-speed forensic timeline tool for DFIR Invetigators to quickly combine CSV files from leading Windows triage tool output into a mini timeline. Allows investigators to combine outputs from multiple forensic tools into a single timeline. Adds custom logic and filtering to allow investigators to get to important data quickly.  Supported tools include (EZ Tools/Kape, Axiom, Hayabusa, Chainsaw, Nirsoft), CSV output ready for Timeline Explorer, Excel, etc..
+---
 
-- EZ Tools (Amcache, AppCompat, MFT, Prefetch, Registry, Shellbags, etc.)
-- Hayabusa (Windows Event Log Analysis) 
-- Nirsoft (BrowsingHistoryView)
-- Chainsaw (Event Log Parser)
-- Axiom (Commercial Forensic Tool)
+## Table of Contents
 
-## Key Features
+- [Main Features](#main-features)
+- [Quick Start](#quick-start)
+- [Downloads](#downloads)
+- [Running Forensic Timeliner](#running-forensic-timeliner)
+- [Command Line Arguments](#command-line-arguments)
+- [Custom Config](#custom-config)
+- [Timeline Output](#timeline-output-field-structure)
+- [Auto File Discovery](#auto-file-discovery)
+- [Artifact and Output Support Table](#artifact-and-output-support-table)
+- [License](#license)
 
-- **Intelligent Artifact Discovery**: Automatically locates relevant forensic files across complex directory structures
-- **Multi-tool Integration**: Processes outputs from multiple forensic tools into a unified timeline
-- **Robust File Handling**: Handles large files through efficient batch processing
-- **Automatic Directory Structure Detection**: Identifies common artifact directories without manual configuration
-- **Flexible Output Options**: Export to CSV, JSON, or Excel formats
+---
+
+## Main Features
+
+-Combine csv output from
+  - EZ Tools / Kape
+  - Axiom
+  - Chainsaw
+  - Hayabusa
+  - Nirsoft
+  - output data into a unified timeline
+
+- Automatic CSV discovery from triage directories
+  -   simply provide the base directory of where the triage output lives and the tool will attempt to discover
+
+- Timeline enrichment with regex-based data extraction
+
+- RFC-4180-compliant export for compatibility with tools like Timeline Explorer
+
+- Date filtering and deduplication controls
+
+- Interactive Setup and Discovery Preview
+  - By default if you run with --i or --Interactive --Preview runs by default. Preview helps Identify if you csv files are being doscovered in your output directory.   
+
+---
 
 ## Quick Start
 
-```bash
-# Basic usage with automatic discovery
-python timeliner.py --BaseDir "C:\path\to\triage_data" --ALL --AutoDetect
+TL;DR!
+Get some Kape/EZ Forensic Output
 
-# Process specific modules
-python timeliner.py --BaseDir "C:\path\to\triage_data" --ProcessEZ --ProcessHayabusa
+Download the exe and run: 
 
-# With date filtering
-python timeliner.py --BaseDir "C:\path\to\triage_data" --ALL --StartDate 2023-01-01 --EndDate 2023-03-01
+```powershell, cmd
+forensic-timeliner.exe --Interactive
+
+```powershell, cmd
+forensic-timeliner.exe --BaseDir C:\triage\hostname --ALL --OutputFile C:\timeline.csv
 ```
 
-## Command Line Options
+- Use default naming for your csv files and make sure they are inside the base directory you set. There is a fallback to auto discover csv files based on file headers.
+- file naming
+  - Ez Tools / Kape - default
+  - Axiom - default
+  - Chainsaw - default
+  -  Hayabusa -  "filename_patterns" \["hayabusa", "haya"],
+  -  Nirsoft Web History - "filename_patterns": \["nirsoft", "history", "browsing", "web", "browse"],     
+  
 
-### Directory Configuration
+---
 
-| Option | Description |
-|--------|-------------|
-| `--BaseDir` | Base directory for triage data (default: C:\triage) |
-| `--EZDirectory` | Directory for EZ Tools output |
-| `--HayabusaDirectory` | Directory for Hayabusa output |
-| `--ChainsawDirectory` | Directory for Chainsaw output |
-| `--NirsoftDirectory` | Directory for Nirsoft output |
-| `--AxiomDirectory` | Directory for Axiom output |
 
-### Artifact Subdirectory Configuration
+## Downloads
 
-| Option | Description |
-|--------|-------------|
-| `--ProgramExecSubDir` | Directory containing program execution artifacts |
-| `--FileFolderSubDir` | Directory containing file/folder access artifacts |
-| `--FileSystemSubDir` | Directory containing filesystem artifacts |
-| `--FileDeletionSubDir` | Directory containing file deletion artifacts |
-| `--RegistrySubDir` | Directory containing registry artifacts |
-| `--EventLogsSubDir` | Directory containing event log artifacts |
-| `--NirsoftSubDir` | Directory containing Nirsoft output |
 
-### Processing Options
+---
 
-| Option | Description |
-|--------|-------------|
-| `--ProcessEZ` | Process EZ Tools output |
-| `--ProcessHayabusa` | Process Hayabusa output |
-| `--ProcessNirsoft` | Process Nirsoft output |
-| `--ProcessChainsaw` | Process Chainsaw output |
-| `--ProcessAxiom` | Process Axiom output |
-| `--ALL` | Process all available artifact types |
+## Running Forensic Timeliner
 
-### Discovery Options
+To run as an EXE use --i for interactive menu walkthrough, the ALL flag or a specific tool flag. 
 
-| Option | Description |
-|--------|-------------|
-| `--AutoDetect` | Automatically detect artifact directories and files |
-| `--Recursive` | Enable recursive discovery of artifact files |
-| `--DiscoveryDepth` | Maximum directory depth for recursive discovery (default: 3) |
-| `--verbose` | Enable verbose output for debugging |
-
-### Filtering and Output Options
-
-| Option | Description |
-|--------|-------------|
-| `--MFTExtensionFilter` | Filter MFT entries by file extensions |
-| `--MFTPathFilter` | Filter MFT entries by path components |
-| `--StartDate` | Filter events starting from date (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ) |
-| `--EndDate` | Filter events ending at date (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ) |
-| `--Deduplicate` | Remove duplicate entries from the timeline |
-| `--OutputFile` | Path to output file (default: timestamp_forensic_timeliner.csv) |
-| `--ExportFormat` | Format of the output file [csv, json, xlsx] (default: csv) |
-| `--BatchSize` | Number of records to process at once (default: 10000) |
-
-### Other Options
-
-| Option | Description |
-|--------|-------------|
-| `--Interactive` | Enable interactive configuration mode |
-| `--Help` | Show detailed help information |
-
-## Directory Structure Discovery
-
-The tool can automatically discover forensic artifacts within complex directory structures. Here's how it works:
-
-### 1. Pattern-Based Discovery
-
-The tool uses pattern matching to identify directories containing specific forensic artifacts:
-
-```
-# Example directory structure - will be automatically discovered
-C:\triage\
-  |-- EZ_Tools_Output\
-      |-- Program_Execution\
-          |-- Prefetch_PECmd_Output.csv
-          |-- Amcache_AssociatedFileEntries.csv
-      |-- Registry\
-          |-- Registry_RECmd_Batch_Kroll_Batch_Output.csv
-  |-- Hayabusa_Output\
-      |-- hayabusa_results.csv
-  |-- BHV\
-      |-- browsinghistory.csv
+```powershell, cmd
+forensic-timeliner.exe  --BaseDir C:\triage\host --ALL --OutputFile C:\timeline.csv
 ```
 
-### 2. Discovery Process
-
-The discovery process follows these steps:
-
-1. **First Pass**: Look for tool output directories (EZ Tools, Hayabusa, Nirsoft, etc.)
-2. **Second Pass**: Look for artifact subdirectories within tool directories
-3. **Third Pass**: Look for specific artifact file types in discovered directories
-4. **Fallback**: If directories aren't found, use default subdirectory names
-
-### 3. Supported Directory Patterns
-
-The tool recognizes many naming conventions:
-
-- **EZ Tools**: `ez_tools`, `kape_out`, `kape_results`, `triage_out`, etc.
-- **Hayabusa**: `hayabusa`, `haya_out`, `event_detection`, `sigma`, etc.
-- **Nirsoft**: `nirsoft`, `browser_history`, `web_history`, etc.
-- **Program Execution**: `program_exec`, `execution`, `amcache`, `prefetch`, etc.
-- **File Deletion**: `file_deletion`, `deleted`, `recycle`, `recycle_bin`, etc.
-- **Registry**: `registry`, `reg`, `hive`, `ntuser`, etc.
-
-## Advanced Usage Examples
-
-### Discovering and Processing All Artifacts
-
-```bash
-python timeliner.py --BaseDir "D:\cases\case123\evidence01" --ALL --AutoDetect --Recursive
+```run python in powershel or bash
+python timeliner.py --BaseDir C:\triage --ProcessEZ --OutputFile C:\timeline.csv
 ```
 
-### Processing Specific Artifact Types with Custom Paths
+You may also use interactive menu:
 
-```bash
-python timeliner.py --BaseDir "D:\cases\case123" --ProcessEZ --ProcessHayabusa --EZDirectory "D:\cases\case123\KAPE_Output" --HayabusaDirectory "D:\cases\case123\Hayabusa_Output" --Recursive
+```powershell or bash
+python timeliner.py --Interactive
 ```
 
-### Filtering by Date Range and Exporting to JSON
+---
 
-```bash
-python timeliner.py --BaseDir "D:\cases\case123" --ALL --StartDate 2023-05-15T00:00:00Z --EndDate 2023-05-17T23:59:59Z --ExportFormat json --OutputFile "D:\cases\case123\reports\may_incident.json"
-```
-
-### Handling Large Datasets
-
-```bash
-python timeliner.py --BaseDir "D:\cases\case123" --ALL --AutoDetect --BatchSize 5000 --Deduplicate
-```
-
-### Verbose Debugging Mode
-
-```bash
-python timeliner.py --BaseDir "D:\cases\case123" --ALL --AutoDetect --verbose
-```
-
-## Extending the Tool
-
-### Adding New Parsers
-
-1. Create a new module in the appropriate tool directory
-2. Implement a `process_xyz()` function that follows the existing pattern
-3. Update the file discovery patterns in `utils/file_discovery.py`
-4. Import and call your parser in `timeliner.py`
-
-### Adding New File Patterns
-
-Edit the `FILE_PATTERNS` dictionary in `utils/file_discovery.py`:
+## Command Line Arguments
 
 ```python
-FILE_PATTERNS = {
-    'YourNewFileType': [r'.*your_pattern.*\.csv', r'.*alternate_pattern.*\.csv'],
-    # Existing patterns...
+--BaseDir                # Base path to triage folder
+--EZDirectory            # Optional override for EZ Tools output path
+--ChainsawDirectory      # Optional override for Chainsaw path
+--HayabusaDirectory      # Optional override for Hayabusa path
+--AxiomDirectory         # Optional override for Axiom path
+--NirsoftDirectory       # Optional override for Nirsoft path
+--OutputFile             # Output timeline CSV path
+--ProcessEZ              # Parse EZ Tools artifacts
+--ProcessChainsaw        # Parse Chainsaw Sigma outputs
+--ProcessHayabusa        # Parse Hayabusa logs
+--ProcessAxiom           # Parse Axiom CSVs
+--ProcessNirsoft         # Parse Nirsoft Web History
+--MFTExtensionFilter     # Default: ['.identifier','.exe','.ps1','.zip','.rar','.7z']
+--MFTPathFilter          # Default: ['Users']
+--BatchSize              # Chunk size for large files (default: 10000)
+--StartDate              # ISO format start filter (e.g., 2025-04-01)
+--EndDate                # ISO format end filter
+--Deduplicate            # Remove duplicate rows (post-export)
+--ALL                    # Process all modules
+--NoBanner               # Skip banner display
+--Preview                # Show discovery preview only
+--ConfigExport           # Dump default artifact config to file
+--LoadConfigOverride     # Load custom artifact config JSON
+--Help / -h              # Show help
+--Interactive / -i       # Launch GUI command-line builder
+```
+
+---
+
+
+## Timeline Output Field Structure
+
+- All output is exported as RFC-4180-compliant CSV
+- Each timeline includes the follwoing fields:
+  - \[
+        "DateTime", "TimestampInfo", "ArtifactName", "Tool", "Description",
+        "DataDetails", "DataPath", "FileExtension", "EventId",
+        "User", "Computer", "FileSize", "IPAddress",
+        "SourceAddress", "DestinationAddress", "SHA1", "Count", "EvidencePath"
+    ]
+- Sorting is done automatically by DateTime
+- Event Log Processing and Filtering
+  -  EZ Tools and Axiom Event Logs are filtered based on custom logic, so the entire output is not added to the timeline. This isn't adjustable. (Open to input) You should be running chainsaw or hayabusa as well to fill in the gaps. There's a lot of custom Regex matching for Axiom event log output as Magnet doesn't provide Channel by default so mapping is done by provider and the Channel name is regex'd from the source field
+  
+    {
+    "Application": \[1000, 1001],
+    "Microsoft-Windows-PowerShell/Operational": \[4100, 4103, 4104],
+    "Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational": \[72, 98, 104, 131, 140],
+    "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational": \[21, 22],
+    "Microsoft-Windows-TaskScheduler/Operational": \[106, 140, 141, 129, 200, 201],
+    "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational": \[261, 1149],
+    "Microsoft-Windows-WinRM/Operational": \[169],
+    "Security": \[1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756],
+    "SentinelOne/Operational": \[1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110],
+    "System": \[7045],
 }
-```
 
-## Troubleshooting
+- MFT Processing and Filtering
+  - MFT filtering is done automatically. Only created time stamps are provided using Created0x10" The follwing filters are passed by default to look for these extensions in the users folder. 
+  - DEFAULT_EXTENSIONS = \[".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"]
+  - DEFAULT_PATHS = \["Users"]
+  - You can add additional extensions and paths to search using the foll the filters
+    --MFTExtensionFilter   --MFTPathFilter          
+  
 
-### Common Issues
+---
 
-1. **No files found**: Check that your directory structure is correct and that files exist. Try using the `--verbose` flag for detailed output.
+## Auto File Discovery
 
-2. **Error processing files**: Check that the CSV files are properly formatted and contain the expected columns. If needed, add column name mappings in the relevant parser.
+In order for files to be discovered by default and added to your timeline you need to follow the file naming conventions below. When you provide a $BaseDir Forensic Timeliner will attempt to locate CSV files based on the following file names which should match the default export names from Axiom and EZ Tools/Kape. You can export the default config file with the command flag --ConfigExport and you can load a custom config using --LoadConfigOverride but the files must reside inside the --BaseDir you set.
 
-3. **Missing timeline data**: Ensure that date fields are properly formatted in your source files. The tool expects dates that can be parsed by pandas.
+example config structure
+ "Chainsaw_Persistence": {
+        "filename_patterns": ["persistence.csv"],
+        "foldername_patterns": \["chainsaw"],
+        "required_headers": \[ "timestamp", "detections", "path", "Event ID", "Computer", 
+        "User Name", "Scheduled Task Name"
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
 
-### Debugging
+---
 
-Enable verbose logging to see the full discovery process:
+## Artifact and Output Support Table
 
-```bash
-python timeliner.py --BaseDir "C:\path\to\triage_data" --ALL --AutoDetect --verbose
-```
+| Artifact                   | Supported Tool(s)       | Example Filename(s)                                                |
+|---------------------------|--------------------------|----------------------------------------------------------------------|
+| Amcache                   | EZ Tools, Axiom          | AssociatedFileEntries.csv, AmCache File Entries.csv                 |
+| AppCompatCache            | EZ Tools, Axiom          | AppCompatCache.csv, Shim Cache.csv                                  |
+| AutoRuns                 | Axiom                    | Autorun Items.csv                                                   |
+| Chrome History            | Axiom                    | Chrome Web History.csv                                              |
+| Deleted Files             | EZ Tools                 | RBCmd_Output.csv                                                    |
+| Edge History              | Axiom                    | Edge Web Visits.csv, Edge Web History.csv                           |
+| Event Logs                | EZ Tools, Axiom          | _EvtxECmd_Output.csv, Windows Event Logs.csv                        |
+| Firefox History           | Axiom                    | Firefox Web Visits.csv                                              |
+| IE History                | Axiom                    | Edge-Internet Explorer 10-11 Main History.csv                       |
+| JumpLists                 | EZ Tools, Axiom          | AutomaticDestinations.csv, Jump Lists.csv                           |
+| LNK Files                 | EZ Tools, Axiom          | _LECmd_Output.csv, LNK Files.csv                                    |
+| MFT                       | EZ Tools, Chainsaw       | _MFTECmd_$MFT_Output.csv, mft.csv                                   |
+| MRU Folder Access         | Axiom                    | MRU Folder Access.csv                                               |
+| MRU Opened/Saved Files    | Axiom                    | MRU Opened-Saved Files.csv                                          |
+| MRU Recent Files & Folders| Axiom                    | MRU Recent Files & Folders.csv                                      |
+| Opera History             | Axiom                    | Opera Web Visits.csv                                                |
+| Persistence               | Chainsaw                 | persistence.csv                                                     |
+| Prefetch                  | EZ Tools, Axiom          | _PECmd_Output.csv, Prefetch Files - Windows 8-10-11.csv             |
+| PowerShell Execution      | Chainsaw                 | powershell.csv, powershell_script.csv                               |
+| RDP Events                | Chainsaw                 | rdp_events.csv                                                      |
+| Recycle Bin               | Axiom                    | Recycle Bin.csv                                                     |
+| Registry                  | EZ Tools                 | _RECmd_Batch_Kroll_Batch_Output.csv                                 |
+| Service Installation      | Chainsaw                 | service_installation.csv                                            |
+| Service Tampering         | Chainsaw                 | service_tampering.csv                                               |
+| Shellbags                 | EZ Tools, Axiom          | _UsrClass.csv, Shellbags.csv                                        |
+| Sigma Rule Matches        | Chainsaw                 | sigma.csv                                                           |
+| UserAssist                | Axiom                    | UserAssist.csv                                                      |
+| Threat Events (Chainsaw)  | Chainsaw                 | account_tampering.csv, defense_evasion.csv, credential_access.csv   |
+| Web Browsing History      | Nirsoft, Axiom           | WebResults.csv, Chrome/Firefox/Edge History.csv                     |
+| VPN / RAS Logs            | Chainsaw                 | microsoft_rasvpn_events.csv, microsoft_rds_events.csv               |
+| Login Attacks             | Chainsaw                 | login_attacks.csv                                                   |
+| Log Tampering             | Chainsaw                 | log_tampering.csv                                                   |
+| Antivirus Detections      | Chainsaw                 | antivirus.csv                                                       |
+| Applocker Events          | Chainsaw                 | applocker.csv                                                       |
+| Indicator Removal         | Chainsaw                 | indicator_removal.csv                                               |
+| Lateral Movement          | Chainsaw                 | lateral_movement.csv                                                |
+
+
+
+---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License
+
+---
+

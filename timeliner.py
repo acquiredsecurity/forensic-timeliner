@@ -2,9 +2,13 @@
 import os
 import sys
 from datetime import datetime
+import pandas as pd
+
 
 # ─── Third-Party Libraries ───────────────────────────────────────────
 from rich import print as rprint
+
+
 
 # ─── CLI & UI Modules ────────────────────────────────────────────────
 from cli.args import parse_arguments
@@ -22,7 +26,7 @@ from tools.ez_tools import (
 # ─── Axiom Parsers ───────────────────────────────────────────────────
 from tools.axiom import (
     axiom_amcache_parser, axiom_appcompat_parser, axiom_autoruns_parser,
-    axiom_chromehistory_parser, axiom_edge_parser, axiom_iehistory_parser, axiom_firefox_parser, axiom_jumplist_parser,
+    axiom_chromehistory_parser, axiom_edge_parser, axiom_eventlog_parser, axiom_iehistory_parser, axiom_firefox_parser, axiom_jumplist_parser,
     axiom_lnk_parser, axiom_mrufolderaccess_parser, axiom_mruopensaved_parser,
     axiom_mrurecent_parser, axiom_opera_parser, axiom_prefetch_parser, axiom_recyclebin_parser,
     axiom_shellbags_parser, axiom_userassist_parser
@@ -57,16 +61,37 @@ from tools.nirsoft import browsinghistoryview_parser
 
 # ─── Utilities ───────────────────────────────────────────────────────
 from utils.export import export_to_csv
-from utils.logger import setup_logger, print_and_log, log_info
+from utils.logger import setup_logger, print_and_log
 from utils.datefilter import filter_rows_by_date
-from utils.dedup import deduplicate_rows
-from utils.discovery_preview import preview_artifact_discovery
 from utils.config_override import load_config_override
 from utils.config_export import export_default_config
+from utils.summary import print_final_summary
+from utils.dedupe import run_post_export_deduplication
 
 # ─── Collector Function ───────────────────────────────────────────────────────
 from collector.collector import get_all_rows
 
+
+# Deupe functions
+def normalize_value(val):
+    if val is None or str(val).strip().lower() in ["none", "nan"]:
+        return ""
+    return str(val).strip().lower()
+
+def deduplicate_rows(rows):
+    print("[dedup.py] Using strict full-row dedup with normalization")
+    seen = set()
+    deduped = []
+    for row in rows:
+        normalized_row = {k: normalize_value(row.get(k)) for k in row.keys()}
+        key = tuple((k, normalized_row[k]) for k in sorted(normalized_row.keys()))
+        if key not in seen:
+            seen.add(key)
+            deduped.append(row)
+    return deduped
+
+
+#output path 
 
 def resolve_output_path(output_arg: str) -> str:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -76,9 +101,11 @@ def resolve_output_path(output_arg: str) -> str:
         return os.path.join(output_arg, f"{timestamp}_forensic_timeliner.csv")
 
 def main():
-    print_banner()
     args = parse_arguments()
+    if not args.get("NoBanner", False):
+        print_banner()
     
+
     if len(sys.argv) == 1:
         print("[*] No arguments provided. Launching Interactive Mode...")
         args["Interactive"] = True
@@ -172,6 +199,7 @@ def main():
         axiom_autoruns_parser.process_axiom_autoruns(args["AxiomDirectory"], args["BatchSize"], args["BaseDir"])
         axiom_chromehistory_parser.process_axiom_chromehistory(args["AxiomDirectory"], args["BatchSize"], args["BaseDir"])
         axiom_edge_parser.process_axiom_edge(args["AxiomDirectory"], args["BatchSize"], args["BaseDir"])
+        axiom_eventlog_parser.process_axiom_eventlog(args["AxiomDirectory"], args["BatchSize"], args["BaseDir"])
         axiom_iehistory_parser.process_axiom_iehistory(args["AxiomDirectory"], args["BatchSize"], args["BaseDir"])
         axiom_firefox_parser.process_axiom_firefox(args["AxiomDirectory"], args["BatchSize"], args["BaseDir"])
         axiom_jumplist_parser.process_axiom_jumplist(args["AxiomDirectory"], args["BatchSize"], args["BaseDir"])
@@ -228,20 +256,19 @@ def main():
         after = len(timeline_rows)
         print_and_log(f"Filtered out {before - after} rows outside date range.")
 
-    # Apply deduplication if enabled
-    if args.get("Deduplicate"):
-        print_and_log("Applying deduplication based on all timeline fields...")
-        before = len(timeline_rows)
-        timeline_rows = deduplicate_rows(timeline_rows)
-        after = len(timeline_rows)
-        print_and_log(f"Deduplicated {before - after} rows (final count: {after})")
-
     if timeline_rows:
         export_to_csv(timeline_rows, final_output_path)
         rprint(f"[✓] Combined timeline written to: [bold green]{final_output_path}[/]")
         rprint(f"[✓] Log file written to: [bold yellow]{log_path}[/]")
     else:
         print("[!] No timeline data was generated.")
+
+
+
+    if args.get("Deduplicate"):
+        run_post_export_deduplication(final_output_path)
+
+    print_final_summary()
 
 
 if __name__ == "__main__":

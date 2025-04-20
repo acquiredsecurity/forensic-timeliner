@@ -1,4 +1,23 @@
+# Python cache and compiled files
 __pycache__/
 *.pyc
+
+# Virtual environments
 env/
+venv/
+
+# Build artifacts
 *.exe
+*.spec
+build/
+dist/
+output/
+output/     
+
+# Logs
+*.log
+discovery_preview.log
+
+# GUI spec files (specific to PyInstaller)
+timeliner_ui.spec
+forensic-timeliner.spec

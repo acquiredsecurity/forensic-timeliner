@@ -4,6 +4,7 @@ from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log 
 from utils.filters import print_eventlog_filters
+from utils.summary import track_summary
 
 # Channel-specific Event ID filters
 EVENT_CHANNEL_FILTERS = {
@@ -56,6 +57,8 @@ def process_eventlog(ez_dir: str, batch_size: int, base_dir: str):
                         "DataDetails": row.get("MapDescription", ""),
                         "DataPath": row.get("PayloadData1", ""),
                         "Computer": row.get("Computer", ""),
+                        "User": row.get("UserName", ""),
+                        "DestinationAddress": row.get("RemoteHost", ""),
                         "EvidencePath": os.path.relpath(file_path, base_dir) if base_dir else file_path,
                         "EventId": row.get("EventId", "")
                     }
@@ -64,6 +67,7 @@ def process_eventlog(ez_dir: str, batch_size: int, base_dir: str):
 
                 total_rows += len(timeline_data)
                 add_rows(timeline_data)
+                track_summary("EZ Tools", artifact_name, len(timeline_data))
         except Exception as e:
             print(f"[EventLogs] Failed to parse {file_path}: {e}")
             continue
@@ -73,6 +77,11 @@ def process_eventlog(ez_dir: str, batch_size: int, base_dir: str):
 def _eventlog_filter(row):
     channel = str(row.get("Channel", "")).strip()
     event_id = row.get("EventId")
+
     if not channel or pd.isnull(event_id):
         return False
-    return channel in EVENT_CHANNEL_FILTERS and int(event_id) in EVENT_CHANNEL_FILTERS[channel]
+
+    try:
+        return int(event_id) in EVENT_CHANNEL_FILTERS.get(channel, [])
+    except (ValueError, TypeError):
+        return False

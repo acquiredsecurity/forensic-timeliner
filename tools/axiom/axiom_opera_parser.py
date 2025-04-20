@@ -3,6 +3,7 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
+from utils.summary import track_summary
 
 
 def process_axiom_opera(axiom_dir: str, batch_size: int, base_dir: str):
@@ -60,8 +61,11 @@ def process_axiom_opera(axiom_dir: str, batch_size: int, base_dir: str):
 
                 total_rows += len(timeline_data)
                 add_rows(timeline_data)
+
+            track_summary("Axiom", artifact_name, total_rows)
+            print_and_log(f"[✓] Parsed {total_rows} timeline rows from: {file_path}")
+
         except Exception as e:
             print_and_log(f"[{artifact_name}] Failed to parse {file_path}: {e}")
             continue
 
-        print_and_log(f"[✓] Parsed {total_rows} timeline rows from: {file_path}")

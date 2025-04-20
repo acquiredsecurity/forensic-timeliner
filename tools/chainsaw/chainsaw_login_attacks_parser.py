@@ -3,6 +3,7 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
+from utils.summary import track_summary
 
 def process_chainsaw_login_attacks(chainsaw_dir: str, batch_size: int, base_dir: str):
     artifact_name = "login_attacks"
@@ -48,4 +49,5 @@ def process_chainsaw_login_attacks(chainsaw_dir: str, batch_size: int, base_dir:
             print_and_log(f"[{artifact_name}] Failed to parse {file_path}: {e}")
             continue
 
+        track_summary("Chainsaw", artifact_name, len(timeline_data))
         print_and_log(f"[✓] Parsed {total_rows} timeline rows from: {file_path}")

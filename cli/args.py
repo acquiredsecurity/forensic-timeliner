@@ -19,14 +19,13 @@ def parse_arguments():
         "NirsoftDirectory": None,
         "AxiomDirectory": None,
         "OutputFile": None,
-        "ExportFormat": "csv",
         "ProcessAxiom": False,
         "ProcessChainsaw": False,
         "ProcessEZ": False,
         "ProcessHayabusa": False,
         "ProcessNirsoft": False,
         "MFTExtensionFilter": [".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"],
-        "MFTPathFilter": ["Users", "tmp"],
+        "MFTPathFilter": ["Users"],
         "BatchSize": 10000,
         "StartDate": None,
         "EndDate": None,
@@ -36,7 +35,8 @@ def parse_arguments():
         "ALL": False,
         "ConfigExport": False,
         "LoadConfigOverride": None,
-        "Help": False
+        "Help": False,
+        "NoBanner": False
     }
 
     # Normalize for case-insensitive matching

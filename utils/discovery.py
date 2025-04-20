@@ -163,6 +163,15 @@ ARTIFACT_SIGNATURES = {
         "strict_filename_match": True,
         "strict_folder_match": False
     },
+    "Axiom_EventLogs": {
+        "filename_patterns": ["Windows Event Logs.csv"],
+        "foldername_patterns": ["axiom"],
+        "required_headers": ["Record", "Tags", "Comments", "Event ID", "Event Type", "Created Date/Time - UTC+00:00 (M/d/yyyy)", "Event Record ID",	"Event Description Summary", "Computer"	
+                             "Event Data", "Source"	
+        ],
+        "strict_filename_match": True,
+        "strict_folder_match": False
+    },
     "Axiom_Firefox": {
         "filename_patterns": ["Firefox Web Visits.csv"],
         "foldername_patterns": ["Axiom"],
@@ -288,7 +297,7 @@ ARTIFACT_SIGNATURES = {
             "timestamp", "detections", "path", "FileNamePath"   
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_Sigma": {
         "filename_patterns": ["sigma.csv"],
@@ -303,7 +312,7 @@ ARTIFACT_SIGNATURES = {
         "filename_patterns": ["account_tampering.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
         "strict_folder_match": False
@@ -322,28 +331,28 @@ ARTIFACT_SIGNATURES = {
         "filename_patterns": ["applocker.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_CredentialAccess": {
         "filename_patterns": ["credential_access.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_DefenseEvasion": {
         "filename_patterns": ["defense_evasion.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_IndicatorRemoval": {
         "filename_patterns": ["indicator_removal.csv"],
@@ -358,37 +367,37 @@ ARTIFACT_SIGNATURES = {
         "filename_patterns": ["lateral_movement.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_LogTampering": {
         "filename_patterns": ["log_tampering.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_LoginAttacks": {
         "filename_patterns": ["login_attacks.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_MicrosoftRasvpnEvents": {
         "filename_patterns": ["microsoft_rasvpn_events.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     },
     "Chainsaw_MicrosoftRdsEvents": {
         "filename_patterns": ["microsoft_rds_events.csv"],
@@ -440,10 +449,10 @@ ARTIFACT_SIGNATURES = {
         "filename_patterns": ["service_tampering.csv"],
         "foldername_patterns": ["chainsaw"],
         "required_headers": [
-            "UtcTime", "EventID", "ComputerName", "Detection", "RuleTitle"
+            "timestamp", "Event ID", "Computer", "Channel", "detections", "path"
         ],
         "strict_filename_match": True,
-        "strict_folder_match": True
+        "strict_folder_match": False
     }
 
 }
@@ -501,40 +510,74 @@ def find_artifact_files(input_dir: str, base_dir: str, artifact_name: str) -> li
     return matches
 
 
-def load_csv_with_progress(file_path: str, batch_size: int, artifact_name: str = "Default"):
-    # Simple encoding detection
+def load_csv_with_progress(file_path: str, batch_size: int, artifact_name: str = "Default", filter_func: callable = None):
     if os.path.basename(file_path).lower() == "webresults.csv":
-        encoding = "cp1252"  # Use CP1252 specifically for WebResults.csv
+        encoding = "cp1252"
         print(f"[Discovery] Using cp1252 encoding for WebResults.csv")
     else:
         encoding = "utf-8"
-    
-    # Count lines safely with the correct encoding
+
+    # Count total lines
     try:
         with open(file_path, encoding=encoding, errors="replace") as f:
             total_lines = sum(1 for _ in f) - 1
     except Exception as e:
         print(f"[Discovery] Could not count lines in {file_path}: {e}")
         total_lines = 0
-    
+
     use_chunks = total_lines > batch_size
-    
     print(f"[{artifact_name}] Processing: {os.path.basename(file_path)}")
 
     if use_chunks:
-        with tqdm(
+        file_bar = tqdm(
             total=total_lines,
             unit="rows",
             unit_scale=True,
-            desc=f"{artifact_name}",
+            desc=f"{artifact_name} (% of File Added to Timeline)",
             ncols=90,
-            ascii=False,  # ✨ force Unicode
             dynamic_ncols=False,
             bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
-        ) as pbar:
-            for chunk in pd.read_csv(file_path, chunksize=batch_size, encoding=encoding, on_bad_lines="skip"):
-                yield chunk
-                pbar.update(len(chunk))
+        )
+
+        if filter_func:
+            filtered_bar = tqdm(
+                total=0,
+                desc=f"{artifact_name} (Batch processing Progress)",
+                ncols=90,
+                dynamic_ncols=False,
+                bar_format="{l_bar}{bar}| {n_fmt} rows [{elapsed}<{remaining}, {rate_fmt}]"
+            )
+        else:
+            filtered_bar = None
+
+        for chunk in pd.read_csv(file_path, chunksize=batch_size, encoding=encoding, on_bad_lines="skip"):
+            file_bar.update(len(chunk))
+
+            if filter_func:
+                filtered_count = chunk[chunk.apply(filter_func, axis=1)].shape[0]
+                filtered_bar.total += filtered_count
+                filtered_bar.update(filtered_count)
+
+            yield chunk
+
+        file_bar.close()
+        if filtered_bar:
+            filtered_bar.close()
+
+        print(f"[{artifact_name}] Finished reading {total_lines:,} rows.")
+
     else:
         df = pd.read_csv(file_path, encoding=encoding, on_bad_lines="skip")
+        if filter_func:
+            filtered_bar = tqdm(
+                total=df.shape[0],
+                desc=f"{artifact_name} (Timeline Rows)",
+                ncols=90,
+                dynamic_ncols=False,
+                bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
+            )
+            filtered_count = df[df.apply(filter_func, axis=1)].shape[0]
+            filtered_bar.n = filtered_count
+            filtered_bar.refresh()
+            filtered_bar.close()
         yield df

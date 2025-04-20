@@ -3,6 +3,7 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
+from utils.summary import track_summary
 
 def process_hayabusa(hayabusa_dir: str, batch_size: int, base_dir: str):
     artifact_name = "Hayabusa"
@@ -44,7 +45,7 @@ def process_hayabusa(hayabusa_dir: str, batch_size: int, base_dir: str):
                             "Tool": "Hayabusa",
                             "ArtifactName": "EventLogs",
                             "TimestampInfo": "Event Time",
-                            "Description": row.get("Channel", "Unknown Channel"),
+                            "Description": row.get("Channel", ""),
                             "EventId": str(row.get("EventID", "")),
                             "DataPath": row.get("Details", ""),
                             "DataDetails": row.get("RuleTitle", ""),
@@ -52,10 +53,6 @@ def process_hayabusa(hayabusa_dir: str, batch_size: int, base_dir: str):
                             "EvidencePath": os.path.relpath(file_path, base_dir) if base_dir else file_path,
                         }
 
-                        # Optional extra fields
-                        for field in ["Level", "Message", "Category", "Provider", "Severity"]:
-                            if field in row:
-                                timeline_row[field] = row.get(field, "")
 
                         timeline_data.append(timeline_row)
                     except Exception as e:
@@ -64,6 +61,7 @@ def process_hayabusa(hayabusa_dir: str, batch_size: int, base_dir: str):
 
                 total_rows += len(timeline_data)
                 add_rows(timeline_data)
+                track_summary("Hayabusa", artifact_name, len(timeline_data))
         except Exception as e:
             print_and_log(f"[{artifact_name}] Failed to parse {file_path}: {e}")
             continue

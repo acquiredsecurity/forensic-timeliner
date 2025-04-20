@@ -28,12 +28,12 @@ TOOL_GROUPS = {
 }
 
 def pause_with_countdown(seconds=10):
-    spicy_colors = ["red", "orange1", "yellow1", "green3", "deepskyblue1", "medium_purple", "magenta"]
+    dark_purple = "dark_violet"  # or use "#301934" for custom RGB
     for i in range(seconds, 0, -1):
-        color = spicy_colors[i % len(spicy_colors)]
-        msg = f"[bold {color}]Next tool preview in: {i} seconds... (press space to skip)[/bold {color}]"
+        msg = f"[bold {dark_purple}]Next tool preview in: {i} seconds... (press space to skip)[/bold {dark_purple}]"
         centered = Align.center(msg, vertical="middle")
         console.print(centered, end='\r')
+        time.sleep(1)
 
         start = time.time()
         while time.time() - start < 1:

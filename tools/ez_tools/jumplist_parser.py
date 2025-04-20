@@ -3,6 +3,7 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
+from utils.summary import track_summary
 
 def process_jumplists(ez_dir: str, batch_size: int, base_dir: str):
     artifact_name = "JumpLists"
@@ -60,6 +61,7 @@ def process_jumplists(ez_dir: str, batch_size: int, base_dir: str):
 
                 total_rows += len(timeline_data)
                 add_rows(timeline_data)
+                track_summary("EZ Tools", artifact_name, len(timeline_data))
         except Exception as e:
             print(f"[JumpLists] Failed to parse {file_path}: {e}")
             continue

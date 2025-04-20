@@ -3,6 +3,7 @@ import pandas as pd
 from utils.discovery import find_artifact_files, load_csv_with_progress
 from collector.collector import add_rows
 from utils.logger import print_and_log
+from utils.summary import track_summary
 
 def process_browsinghistoryview(nirsoft_dir: str, batch_size: int, base_dir: str):
     artifact_name = "NirsoftBrowsingHistory"
@@ -44,8 +45,9 @@ def process_browsinghistoryview(nirsoft_dir: str, batch_size: int, base_dir: str
                     elif any(term in url for term in ["download", ".exe", ".zip", ".rar", ".7z", ".msi", ".iso", ".pdf", ".dll", "/downloads/"]):
                         activity = " + Download"
 
-                    # Combine the "Web History" label and activity type
-                    description = description + activity
+                   # Extract browser and build description
+                    browser = row.get("Web Browser", "").strip()
+                    description = f"{browser}{activity if activity else ''}"
 
                     # Create timeline row
                     timeline_row = {
@@ -64,6 +66,7 @@ def process_browsinghistoryview(nirsoft_dir: str, batch_size: int, base_dir: str
 
                 total_rows += len(timeline_data)
                 add_rows(timeline_data)
+                track_summary("Nirsoft", artifact_name, len(timeline_data))
         except Exception as e:
             print_and_log(f"[{artifact_name}] Failed to parse {file_path}: {e}")
             continue
