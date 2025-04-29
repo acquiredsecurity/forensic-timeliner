@@ -55,10 +55,10 @@ public class AxiomMruFolderAccessParser : IArtifactParser
                     rows.Add(new TimelineRow
                     {
                         DateTime = dtStr,
-                        TimestampInfo = "Registry Modified",
-                        ArtifactName = "MRU Folder Access",
+                        TimestampInfo = "Last Modified",
+                        ArtifactName = "Registry",
                         Tool = artifact.Tool,
-                        Description = "File & Folder Access",
+                        Description = "MRU Folder Access",
                         DataPath = path,
                         DataDetails = dict.GetString("Application Name"),
                         EvidencePath = Path.GetRelativePath(baseDir, file)

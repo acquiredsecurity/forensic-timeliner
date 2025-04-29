@@ -53,8 +53,8 @@ public class AxiomAutoRunsParser : IArtifactParser
                     rows.Add(new TimelineRow
                     {
                         DateTime = dtStr,
-                        TimestampInfo = "Registry Modified",
-                        ArtifactName = "AutoRuns",
+                        TimestampInfo = "Last Modified",
+                        ArtifactName = "Registry",
                         Tool = artifact.Tool,
                         Description = "Program Execution",
                         DataPath = path,

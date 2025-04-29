@@ -55,7 +55,7 @@ public class AxiomUserAssistParser : IArtifactParser
                     {
                         DateTime = dtStr,
                         Tool = artifact.Tool,
-                        ArtifactName = "UserAssist",
+                        ArtifactName = "Registry",
                         TimestampInfo = "Last Run",
                         Description = "Program Execution",
                         DataPath = path,

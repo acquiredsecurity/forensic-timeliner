@@ -22,18 +22,20 @@ public static class InteractiveMenu
                 .Title("[bold yellow]Select your tools:[/]")
                 .PageSize(10)
                 .InstructionsText("[grey](Press [blue]<space>[/] to toggle, [green]<enter>[/] to accept)[/]")
-                .AddChoices("EZ Tools / KAPE", "Hayabusa", "Chainsaw", "Nirsoft", "All")
+                .AddChoices("EZ Tools / KAPE", "Axiom", "Hayabusa", "Chainsaw", "Nirsoft", "All")   // <-- Added "Axiom" here
         );
 
         // If user selects "All", clear previous and force all tools enabled
         bool allSelected = toolChoices.Contains("All");
 
         config.ProcessEZ = allSelected || toolChoices.Contains("EZ Tools / KAPE");
+        config.ProcessAxiom = allSelected || toolChoices.Contains("Axiom");
         config.ProcessHayabusa = allSelected || toolChoices.Contains("Hayabusa");
         config.ProcessChainsaw = allSelected || toolChoices.Contains("Chainsaw");
         config.ProcessNirsoft = allSelected || toolChoices.Contains("Nirsoft");
+        
 
-        config.BaseDir = AnsiConsole.Ask<string>("Set base directory for your CSV output from a single host:", "C:\\triage\\hostname");
+        config.BaseDir = AnsiConsole.Ask<string>("Set the base directory that contains the CSV output to build into a timeline:", "C:\\triage\\hostname");
 
         if (config.ProcessEZ)
         {
@@ -46,6 +48,7 @@ public static class InteractiveMenu
 
         var outputFile = Path.Combine(config.BaseDir, "timeline", "forensic_timeliner.csv");
         config.OutputFile = AnsiConsole.Ask("Where would you like to save your unified Forensic Timeline?", outputFile);
+
         var extension = config.ExportFormat == "json" ? ".json" : ".csv";
 
         if (!Path.HasExtension(config.OutputFile))

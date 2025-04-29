@@ -54,7 +54,7 @@ public class AxiomRecycleBinParser : IArtifactParser
                     {
                         DateTime = dtStr,
                         Tool = artifact.Tool,
-                        ArtifactName = "RecycleBin",
+                        ArtifactName = "FileDeletion",
                         TimestampInfo = "Deleted Time",
                         Description = "File Deleted",
                         DataPath = dataPath,

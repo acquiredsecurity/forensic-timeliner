@@ -29,12 +29,10 @@ public class JumplistsParser : IArtifactParser
             { "SourceCreated", "Source Created" },
             { "SourceModified", "Source Modified" },
             { "SourceAccessed", "Source Accessed" },
-            { "CreationTime", "Creation Time" },
-            { "LastModified", "Last Modified" },
-            { "TargetCreated", "Target Created" },
-            { "TargetModified", "Target Modified" },
+            { "CreationTime", "Target Created" },
+            { "LastModified", "Target Modified" },
             { "TargetAccessed", "Target Accessed" },
-            { "TrackerCreatedOn", "Tracker Created On" }
+            { "TrackerCreatedOn", "Tracker Created" }
         };
 
         foreach (var file in files)

@@ -46,6 +46,15 @@ class Program
                     }
 
 
+            // Check if config folder exists before loading YAMLs
+            var configFolderPath = Path.Combine(AppContext.BaseDirectory, "config");
+
+            if (!Directory.Exists(configFolderPath))
+            {
+                AnsiConsole.MarkupLine("\n[bold red][!] Fatal Error: [/][white]Missing required 'config' folder at:[/] [blue]" + configFolderPath + "[/]");
+                Environment.Exit(1);
+            }
+
             // Load default discovery signatures
             DiscoveryConfig.LoadFromYaml();
 

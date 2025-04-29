@@ -66,10 +66,10 @@ public class AxiomMruRecentParser : IArtifactParser
                     rows.Add(new TimelineRow
                     {
                         DateTime = dtStr,
-                        TimestampInfo = "Key Last Modified",
-                        ArtifactName = "MRU_Recent",
+                        TimestampInfo = "Last Modified",
+                        ArtifactName = "Registry",
                         Tool = artifact.Tool,
-                        Description = "Shortcut Accessed",
+                        Description = "MRU Recent",
                         DataPath = dataPath,
                         DataDetails = dataDetails,
                         EvidencePath = Path.GetRelativePath(baseDir, file)

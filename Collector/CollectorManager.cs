@@ -87,7 +87,6 @@ public static class CollectorManager
         sanitized.Add(sanitizedRow);
     }
 
-    Logger.LogInfo($"[*] - After sanitize: {sanitized.Count} rows kept");
     return sanitized;
 }
 

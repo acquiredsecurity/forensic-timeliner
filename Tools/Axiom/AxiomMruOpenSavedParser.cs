@@ -54,10 +54,10 @@ public class AxiomMruOpenSavedParser : IArtifactParser
                     rows.Add(new TimelineRow
                     {
                         DateTime = dtStr,
-                        TimestampInfo = "Registry Modified",
-                        ArtifactName = "MRU_OpenSaved",
+                        TimestampInfo = "Last Modified",
+                        ArtifactName = "Registry",
                         Tool = artifact.Tool,
-                        Description = "MRU Document Accessed",
+                        Description = "MRU Open & Saved",
                         DataPath = path,
                         DataDetails = dict.GetString("File Name"),
                         EvidencePath = Path.GetRelativePath(baseDir, file)

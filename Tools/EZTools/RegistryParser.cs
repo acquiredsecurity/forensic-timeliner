@@ -56,7 +56,7 @@ public class RegistryParser : IArtifactParser
                         Tool = artifact.Tool,
                         Description = dict.GetString("Category"),
                         DataDetails = dict.GetString("Description"),
-                        DataPath = dict.GetString("ValueData"),
+                        DataPath = dict.GetString("ValueData") + "\\" + dict.GetString("ValueData2") + "\\" + dict.GetString("ValueData3"),
                         EvidencePath = Path.GetRelativePath(baseDir, file)
                     });
 

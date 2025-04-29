@@ -28,9 +28,7 @@ public class AxiomShellbagsParser : IArtifactParser
         {
             ("First Interaction Date/Time - UTC+00:00 (M/d/yyyy)", "First Interacted"),
             ("Last Interaction Date/Time - UTC+00:00 (M/d/yyyy)", "Last Interacted"),
-            ("File System Last Modified Date/Time - UTC+00:00 (M/d/yyyy)", "File Modified"),
-            ("File System Last Accessed Date/Time - UTC+00:00 (M/d/yyyy)", "File Accessed"),
-            ("File System Created Date/Time - UTC+00:00 (M/d/yyyy)", "File Created")
+            ("File System Last Accessed Date/Time - UTC+00:00 (M/d/yyyy)", "Last Write")
         };
 
         foreach (var file in files)
