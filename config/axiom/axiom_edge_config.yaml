@@ -1,0 +1,19 @@
+artifact: Axiom_Edge
+tool: Axiom
+description: Web Activity
+discovery:
+  filename_patterns:
+    - Edge Web Visits.csv
+    - Edge Web History.csv
+  foldername_patterns:
+    - Axiom
+  required_headers:
+    - Last Visited Date/Time - UTC+00:00 (M/d/yyyy)
+    - URL
+    - Title
+    - Visit Count
+    - Evidence number
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

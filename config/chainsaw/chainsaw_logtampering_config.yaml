@@ -1,0 +1,19 @@
+artifact: Chainsaw_LogTampering
+tool: Chainsaw
+description: Log Tampering
+discovery:
+  filename_patterns:
+    - log_tampering.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - Event ID
+    - Computer
+    - Channel
+    - detections
+    - path
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

@@ -1,0 +1,36 @@
+artifact: Axiom_ActivityTimeline
+tool: Axiom
+description: Windows Timeline Activity
+discovery:
+  filename_patterns:
+    - Windows Timeline Activity.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Record
+    - Tags
+    - Comments
+    - Application Name
+    - Display Name
+    - Content
+    - Activity Type
+    - Focus (Seconds)
+    - Start Date/Time - UTC+00:00 (M/d/yyyy)
+    - End Date/Time - UTC+00:00 (M/d/yyyy)
+    - Activity ID
+    - Platform
+    - Created Date/Time - UTC+00:00 (M/d/yyyy)
+    - Created In Cloud Date/Time - UTC+00:00 (M/d/yyyy)
+    - Last Modified Date/Time - UTC+00:00 (M/d/yyyy)
+    - Last Modified On Client Date/Time - UTC+00:00 (M/d/yyyy)
+    - Local Only
+    - Source
+    - Location
+    - Evidence number
+    - Deleted source
+    - Recovery method
+    - Item ID
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

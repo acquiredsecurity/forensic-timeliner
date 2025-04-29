@@ -1,0 +1,22 @@
+artifact: Chainsaw_Antivirus
+tool: Chainsaw
+description: Antivirus
+discovery:
+  filename_patterns:
+    - antivirus.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - EventID
+    - Computer
+    - detections
+    - path
+    - Threat Name
+    - Threat Path
+    - SHA1
+    - User
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

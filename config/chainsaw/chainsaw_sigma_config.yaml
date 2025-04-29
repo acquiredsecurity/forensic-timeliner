@@ -1,0 +1,23 @@
+artifact: Chainsaw_Sigma
+tool: Chainsaw
+description: Sigma
+discovery:
+  filename_patterns:
+    - sigma.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - detections
+    - path
+    - count
+    - Event.System.Provider
+    - Event ID
+    - Record ID
+    - Computer
+    - Event Data
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+

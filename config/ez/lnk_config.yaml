@@ -1,0 +1,23 @@
+artifact: LNK
+tool: EZ Tools
+description: File & Folder Access
+discovery:
+  filename_patterns:
+    - _LECmd_Output.csv
+  foldername_patterns:
+    - FileFolderAccess
+  required_headers:
+    - LocalPath
+    - TargetIDAbsolutePath
+    - NetworkPath
+    - SourceCreated
+    - SourceModified
+    - SourceAccessed
+    - TargetCreated
+    - TargetModified
+    - TargetAccessed
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+

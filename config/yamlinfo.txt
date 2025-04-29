@@ -1,0 +1,113 @@
+# ForensicTimeliner YAML Configuration Guide
+
+## Structure
+Each YAML file defines a forensic artifact configuration with the following structure:
+
+artifact: [NAME]            # Required: Name of the artifact 
+tool: [TOOL]                # Required: Source tool (EZ Tools, Chainsaw, etc.)
+description: [DESCRIPTION]  # Required: Brief description of the artifact
+enabled: true|false         # Optional: Whether this artifact is active (default: true)
+
+discovery:                  # Required: Rules for finding artifact files
+  filename_patterns:        # Required: List of filename patterns to match
+    - [PATTERN1]
+    - [PATTERN2]
+  foldername_patterns:      # Required: List of folder name patterns to match
+    - [PATTERN1]
+    - [PATTERN2]
+  required_headers:         # Required: List of CSV headers to expect
+    - [HEADER1]
+    - [HEADER2]
+  strict_filename_match: true|false  # Optional: Exact match for filenames (default: false)
+  strict_folder_match: true|false    # Optional: Exact match for folders (default: false)
+
+filters:                    # Optional: Additional filtering rules (MFT and EventLogs only)
+  extensions:               # Optional: List of file extensions to include (MFT only)
+    - [EXTENSION1]
+    - [EXTENSION2]
+  paths:                    # Optional: List of paths to include (MFT only)
+    - [PATH1]
+    - [PATH2]
+  event_channel_filters:    # Optional: Event log channels and IDs to include (EventLogs only)
+    [CHANNEL1]: [ID1, ID2, ID3]
+    [CHANNEL2]: [ID1, ID2, ID3]
+
+## Examples
+
+### Standard Artifact
+artifact: ActivityTimeline
+tool: EZ Tools
+description: Windows Activity Timeline
+enabled: true
+discovery:
+  filename_patterns:
+    - _Activity.csv
+  foldername_patterns:
+    - ProgramExecution
+  required_headers:
+    - Id
+    - ActivityTypeOrg
+  strict_filename_match: true
+  strict_folder_match: false
+
+### MFT Artifact with Filters
+artifact: MFT
+tool: EZ Tools
+description: MFT Created
+discovery:
+  filename_patterns:
+    - *MFTECmd*$MFT_Output.csv
+  foldername_patterns:
+    - FileSystem
+  required_headers:
+    - EntryNumber
+    - SequenceNumber
+    # (other headers)
+  strict_filename_match: false
+  strict_folder_match: false
+enabled: true
+filters:
+  extensions:
+    - .identifier
+    - .exe
+    - .ps1
+    - .zip
+    - .rar
+    - .7z
+  paths:
+    - Users
+
+### Event Logs Artifact with Filters
+artifact: EventLogs
+tool: EZ Tools
+description: Windows Event Logs
+discovery:
+  filename_patterns:
+    - _events.csv
+  foldername_patterns:
+    - EventLogs
+  required_headers:
+    - Channel
+    - EventID
+    # (other headers)
+  strict_filename_match: false
+  strict_folder_match: false
+enabled: true
+filters:
+  event_channel_filters:
+    Security: [1102, 4624, 4625, 4648, 4698, 4702]
+    System: [7045]
+    Application: [1000, 1001]
+    Microsoft-Windows-PowerShell/Operational: [4100, 4103, 4104]
+
+## Notes
+- Set 'enabled: false' to disable an artifact without deleting its configuration
+- When strict_filename_match is false, partial matches are allowed
+- When strict_folder_match is false, partial matches are allowed
+- At least half of required_headers must match when doing header-based discovery
+- Filters are only applicable to certain artifact types:
+  - MFT artifacts support 'extensions' and 'paths' filters
+  - EventLogs artifacts support 'event_channel_filters'
+- Extension filters should include the dot (e.g., '.exe' not 'exe')
+- Path filters are partial matches (e.g., 'Users' will match any path containing 'Users')
+- Event channel filters specify which event IDs to include for each channel

@@ -1,0 +1,19 @@
+artifact: Chainsaw_MicrosoftRasVpnEvents
+tool: Chainsaw
+description: Microsoft RAS VPN Events
+discovery:
+  filename_patterns:
+    - microsoft_rasvpn_events.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - Event ID
+    - Computer
+    - Channel
+    - detections
+    - path
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

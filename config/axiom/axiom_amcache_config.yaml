@@ -1,0 +1,34 @@
+artifact: Axiom_Amcache
+tool: Axiom
+description: Program Execution
+discovery:
+  filename_patterns:
+    - AmCache File Entries.csv
+  foldername_patterns:
+    - ProgramExecution
+    - Axiom
+  required_headers:
+    - ApplicationName
+    - ProgramId
+    - FileKeyLastWriteTimestamp
+    - SHA1
+    - IsOsComponent
+    - FullPath
+    - Name
+    - FileExtension
+    - LinkDate
+    - ProductName
+    - Size
+    - Version
+    - ProductVersion
+    - LongPathHash
+    - BinaryType
+    - IsPeFile
+    - BinFileVersion
+    - BinProductVersion
+    - Language
+    - Description
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

@@ -1,0 +1,42 @@
+artifact: Jumplists
+tool: EZ Tools
+description: File & Folder Access
+discovery:
+  filename_patterns:
+    - _AutomaticDestinations.csv
+    - _CustomDestinations.csv
+  foldername_patterns:
+    - FileFolderAccess
+  required_headers:
+    - SourceFile	
+    - SourceCreated	
+    - SourceModified	
+    - SourceAccessed	
+    - AppId	
+    - AppIdDescription	
+    - DestListVersion	
+    - LastUsedEntryNumber	
+    - MRU	
+    - EntryNumber	
+    - CreationTime
+    - LastModified	
+    - Hostname	
+    - MacAddress	
+    - Path	
+    - InteractionCount	
+    - PinStatus	
+    - FileBirthDroid	
+    - FileDroid	
+    - VolumeBirthDroid	
+    - VolumeDroid	
+    - TargetCreated	
+    - TargetModified	
+    - TargetAccessed	
+    - FileSize	
+    - RelativePath	
+    - WorkingDirectory	
+    - FileAttributes	
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

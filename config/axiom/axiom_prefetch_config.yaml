@@ -1,0 +1,16 @@
+artifact: Axiom_Prefetch
+tool: Axiom
+description: Prefetch Files (Windows 8/10/11)
+discovery:
+  filename_patterns:
+    - Prefetch Files - Windows 8-10-11.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Last Run Time - UTC+00:00 (M/d/yyyy)
+    - Executable Path
+    - Executable Name
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

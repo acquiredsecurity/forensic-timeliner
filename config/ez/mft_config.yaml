@@ -1,0 +1,52 @@
+artifact: MFT
+tool: EZ Tools
+description: MFT Created
+discovery:
+  filename_patterns:
+    - _MFTECmd_$MFT_Output.csv
+  foldername_patterns:
+    - FileSystem
+  required_headers:
+    - EntryNumber	
+    - SequenceNumber	
+    - InUse	
+    - ParentEntryNumber	
+    - ParentSequenceNumber	
+    - ParentPath	
+    - FileName	
+    - Extension	
+    - FileSize	
+    - ReferenceCount	
+    - ReparseTarget	
+    - IsDirectory	
+    - HasAds	
+    - IsAds	
+    - Created0x10	
+    - Created0x30	
+    - LastModified0x10	
+    - LastModified0x30	
+    - LastRecordChange0x10	
+    - LastRecordChange0x30	
+    - LastAccess0x10	
+    - LastAccess0x30	
+    - UpdateSequenceNumber	
+    - LogfileSequenceNumber	
+    - SecurityId	
+    - ObjectIdFileDroid	
+    - LoggedUtilStream	
+    - ZoneIdContents
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+filters:
+  extensions:
+    - .identifier
+    - .exe
+    - .ps1
+    - .zip
+    - .rar
+    - .7z
+  paths:
+    - Users
+

@@ -1,0 +1,16 @@
+artifact: Axiom_LNK
+tool: Axiom
+description: LNK Files
+discovery:
+  filename_patterns:
+    - LNK Files.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Target File Last Modified Date/Time - UTC+00:00 (M/d/yyyy)
+    - Target Path
+    - Target File Size
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

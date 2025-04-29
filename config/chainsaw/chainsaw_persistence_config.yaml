@@ -1,0 +1,21 @@
+artifact: Chainsaw_Persistence
+tool: Chainsaw
+description: Persistence
+discovery:
+  filename_patterns:
+    - persistence.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - detections
+    - path
+    - Event ID
+    - Computer
+    - User Name
+    - Scheduled Task Name
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false 
+  strict_header_match: false
+enabled: true

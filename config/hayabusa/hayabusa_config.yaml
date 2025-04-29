@@ -1,0 +1,21 @@
+artifact: Hayabusa
+tool: Hayabusa
+description: Hayabusa Results
+discovery:
+  filename_patterns:
+    - hayabusa
+    - haya
+  foldername_patterns:
+    - haya
+  required_headers:
+    - Timestamp
+    - RuleTitle
+    - RecordID
+    - Details
+    - ExtraFieldInfo
+    - RuleID
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+

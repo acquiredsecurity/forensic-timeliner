@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net9.0</TargetFramework>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<SelfContained>true</SelfContained>
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="config\**" />
+	  <EmbeddedResource Remove="config\**" />
+	  <None Remove="config\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CsvHelper" Version="33.0.1" />
+		<PackageReference Include="Spectre.Console" Version="0.50.0" />
+		<PackageReference Include="YamlDotNet" Version="16.3.0" />
+	</ItemGroup>
+
+</Project>
+

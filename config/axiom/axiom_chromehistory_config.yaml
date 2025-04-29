@@ -1,0 +1,16 @@
+artifact: Axiom_ChromeHistory
+tool: Axiom
+description: Web Activity
+discovery:
+  filename_patterns:
+    - Chrome Web History.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Visit Date/Time - UTC+00:00 (M/d/yyyy)
+    - URL
+    - Page Title
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

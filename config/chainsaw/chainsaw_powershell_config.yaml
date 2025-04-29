@@ -1,0 +1,20 @@
+artifact: Chainsaw_Powershell
+tool: Chainsaw
+description: PowerShell
+discovery:
+  filename_patterns:
+    - powershell.csv
+    - powershell_engine_state.csv
+    - powershell_script.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - detections
+    - path
+    - Event ID
+    - Computer
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

@@ -1,0 +1,15 @@
+artifact: Axiom_Shellbags
+tool: Axiom
+description: Shellbags
+discovery:
+  filename_patterns:
+    - Shellbags.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - First Interaction Date/Time - UTC+00:00 (M/d/yyyy)
+    - Path
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

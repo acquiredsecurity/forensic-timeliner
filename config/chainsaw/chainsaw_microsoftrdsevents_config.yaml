@@ -1,0 +1,20 @@
+artifact: Chainsaw_MicrosoftRdsEvents
+tool: Chainsaw
+description: Microsoft RDS Events
+discovery:
+  filename_patterns:
+    - microsoft_rds_events.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - Event ID
+    - Computer
+    - detections
+    - path
+    - Channel
+    - Information
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

@@ -1,0 +1,16 @@
+artifact: Axiom_Firefox
+tool: Axiom
+description: Firefox Web Visits
+discovery:
+  filename_patterns:
+    - Firefox Web Visits.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Last Visited Date/Time - UTC+00:00 (M/d/yyyy)
+    - URL
+    - Title
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

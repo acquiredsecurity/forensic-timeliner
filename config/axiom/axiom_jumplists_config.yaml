@@ -1,0 +1,18 @@
+artifact: Axiom_JumpLists
+tool: Axiom
+description: Jump Lists
+discovery:
+  filename_patterns:
+    - Jump Lists.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Linked Path
+    - Target File Created Date/Time - UTC+00:00 (M/d/yyyy)
+    - Target File Last Modified Date/Time - UTC+00:00 (M/d/yyyy)
+    - Last Access Date/Time - UTC+00:00 (M/d/yyyy)
+    - Source
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

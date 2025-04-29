@@ -1,0 +1,24 @@
+artifact: Chainsaw_ServiceInstallation
+tool: Chainsaw
+description: Service Installation
+discovery:
+  filename_patterns:
+    - service_installation.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - detections
+    - path
+    - Event ID
+    - Record ID
+    - Computer
+    - Service Name
+    - Service File Name
+    - Service Type
+    - Service Start Type
+    - Service Account
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

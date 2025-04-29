@@ -1,0 +1,18 @@
+artifact: Chainsaw_Mft
+tool: Chainsaw
+description: MFT
+discovery:
+  filename_patterns:
+    - mft.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - detections
+    - path
+    - FileNamePath
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+

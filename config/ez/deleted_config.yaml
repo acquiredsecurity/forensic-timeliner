@@ -1,0 +1,18 @@
+artifact: FileDeletion
+tool: EZ Tools
+description: Deleted Files
+discovery:
+  filename_patterns:
+    - _RBCmd_Output.csv
+  foldername_patterns:
+    - FileDeletion
+  required_headers:
+    - SourceName
+    - FileType
+    - FileName
+    - FileSize
+    - DeletedOn
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

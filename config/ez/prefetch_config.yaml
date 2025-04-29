@@ -1,0 +1,22 @@
+artifact: Prefetch
+tool: EZ Tools
+description: Program Execution
+discovery:
+  filename_patterns:
+    - _PECmd_Output_Timeline.csv
+  foldername_patterns:
+    - ProgramExecution
+  required_headers:
+    - ExecutableName
+    - SourceFilename
+    - LastRun
+    - RunCount
+    - SourceCreated
+    - SourceModified
+    - SourceAccessed
+    - Volume0Created
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+

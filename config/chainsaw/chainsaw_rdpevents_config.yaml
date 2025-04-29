@@ -1,0 +1,19 @@
+artifact: Chainsaw_RdpEvents
+tool: Chainsaw
+description: RDP Events
+discovery:
+  filename_patterns:
+    - rdp_events.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - detections
+    - path
+    - Event ID
+    - Computer
+    - Information
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

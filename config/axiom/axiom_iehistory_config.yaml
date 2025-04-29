@@ -1,0 +1,16 @@
+artifact: Axiom_IEHistory
+tool: Axiom
+description: Internet Explorer 10/11 Main History
+discovery:
+  filename_patterns:
+    - Edge-Internet Explorer 10-11 Main History.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Accessed Date/Time - UTC+00:00 (M/d/yyyy)
+    - URL
+    - Page Title
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

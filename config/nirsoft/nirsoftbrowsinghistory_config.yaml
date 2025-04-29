@@ -1,0 +1,33 @@
+artifact: NirsoftBrowsingHistory
+tool: Nirsoft
+description: Web History
+discovery:
+  filename_patterns:
+    - nirsoft
+    - history
+    - browsing
+    - web
+    - browse
+  foldername_patterns:
+    - nirsoft
+    - browse
+  required_headers:
+    - URL
+    - Title
+    - Visit Time
+    - Visit Count
+    - Visited From
+    - Visit Type
+    - Visit Duration
+    - Web Browser
+    - User Profile
+    - Browser Profile
+    - URL Length
+    - Typed Count
+    - History File
+    - Record ID
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+

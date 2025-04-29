@@ -1,0 +1,35 @@
+artifact: Amcache
+tool: EZ Tools
+description: Program Execution
+discovery:
+  filename_patterns:
+    - _AssociatedFileEntries.csv
+    - _UnassociatedFileEntries.csv
+  foldername_patterns:
+    - ProgramExecution
+  required_headers:
+    - ApplicationName
+    - ProgramId
+    - FileKeyLastWriteTimestamp
+    - SHA1
+    - IsOsComponent
+    - FullPath
+    - Name
+    - FileExtension
+    - LinkDate
+    - ProductName
+    - Size
+    - Version
+    - ProductVersion
+    - LongPathHash
+    - BinaryType
+    - IsPeFile
+    - BinFileVersion
+    - BinProductVersion
+    - Usn
+    - Language
+    - Description
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

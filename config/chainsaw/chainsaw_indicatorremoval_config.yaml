@@ -1,0 +1,20 @@
+artifact: Chainsaw_IndicatorRemoval
+tool: Chainsaw
+description: Indicator Removal
+discovery:
+  filename_patterns:
+    - indicator_removal.csv
+  foldername_patterns:
+    - chainsaw
+  required_headers:
+    - timestamp
+    - detections
+    - path
+    - Event ID
+    - Computer
+    - User Name
+    - Scheduled Task Name
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

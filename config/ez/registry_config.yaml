@@ -1,0 +1,23 @@
+artifact: Registry
+tool: EZ Tools
+description: Registry
+discovery:
+  filename_patterns:
+    - _RECmd_Batch_Kroll_Batch_Output.csv
+  foldername_patterns:
+    - Registry
+  required_headers:
+    - HivePath
+    - HiveType
+    - Description
+    - Category
+    - KeyPath
+    - ValueName
+    - ValueType
+    - ValueData
+    - LastWriteTimestamp
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+

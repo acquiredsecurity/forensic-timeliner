@@ -1,0 +1,16 @@
+artifact: Axiom_MRUOpenSaved
+tool: Axiom
+description: MRU Opened/Saved Files
+discovery:
+  filename_patterns:
+    - MRU Opened-Saved Files.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Last Access Date/Time - UTC+00:00 (M/d/yyyy)
+    - Full Path
+    - Program Name
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

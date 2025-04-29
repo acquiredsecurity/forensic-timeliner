@@ -1,0 +1,16 @@
+artifact: Axiom_RecycleBin
+tool: Axiom
+description: Recycle Bin
+discovery:
+  filename_patterns:
+    - Recycle Bin.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Deleted Date/Time - UTC+00:00 (M/d/yyyy)
+    - Original Path
+    - Current Location
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

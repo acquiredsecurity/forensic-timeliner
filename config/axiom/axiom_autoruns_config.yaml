@@ -1,0 +1,17 @@
+artifact: Axiom_AutoRuns
+tool: Axiom
+description: Program Execution
+discovery:
+  filename_patterns:
+    - Autorun Items.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)
+    - File Path
+    - File Name
+    - Command
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

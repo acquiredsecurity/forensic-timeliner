@@ -1,0 +1,16 @@
+artifact: Axiom_MRURecent
+tool: Axiom
+description: MRU Recent Files and Folders
+discovery:
+  filename_patterns:
+    - MRU Recent Files & Folders.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Last Modified Date/Time - UTC+00:00 (M/d/yyyy)
+    - Shortcut Target Path
+    - Shortcut Name
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

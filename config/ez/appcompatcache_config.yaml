@@ -1,0 +1,21 @@
+artifact: AppCompatCache
+tool: EZ Tools
+description: Program Execution
+discovery:
+  filename_patterns:
+    - AppCompatCache.csv
+  foldername_patterns:
+    - ProgramExecution
+  required_headers:
+    - ControlSet
+    - CacheEntryPosition
+    - Path
+    - LastModifiedTimeUTC
+    - Executed
+    - Duplicate
+    - SourceFile
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+

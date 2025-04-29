@@ -1,0 +1,16 @@
+﻿artifact: Axiom_AppCompat
+tool: Axiom
+description: Program Execution
+discovery:
+  filename_patterns:
+    - Shim Cache.csv
+  foldername_patterns:
+    - axiom
+  required_headers:
+    - Path
+    - File Name
+    - Last Modified Date/Time - UTC+00:00 (M/d/yyyy)
+  strict_filename_match: true
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

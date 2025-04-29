@@ -1,0 +1,34 @@
+artifact: ActivityTimeline
+tool: EZ Tools
+description: Windows Activity Timeline
+discovery:
+  filename_patterns:
+    - Activity.csv
+  foldername_patterns:
+    - FileFolderAccess
+  required_headers:
+    - Id
+    - ActivityTypeOrg
+    - ActivityType
+    - Executable
+    - DisplayText
+    - ContentInfo
+    - Payload
+    - ClipboardPayload
+    - StartTime
+    - EndTime
+    - Duration
+    - LastModifiedTime
+    - LastModifiedOnClient
+    - OriginalLastModifiedOnClient
+    - ExpirationTime
+    - CreatedInCloud
+    - IsLocalOnly
+    - ETag
+    - PackageIdHash
+    - PlatformDeviceId
+    - DevicePlatform
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
