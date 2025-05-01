@@ -9,15 +9,17 @@
 ---
 
 ## Release
-Forensic Timeliner v1.0.0 Latest
-🚀 What's New in v1.0.0
+🚀 What's New in v2.0.0 – Forensic Timeliner (C# Edition)
 
-    Complete rewrite in Python
-    Support for EZ Tools, Axiom, Chainsaw, Hayabusa, and Nirsoft
-    Interactive menu and config-driven processing
-    Auto discover CSV files
+Forensic Timeliner has been fully rewritten in C# for maximum speed, maintainability, and native Windows performance. This major release introduces a new YAML-driven architecture and full compatibility with Timeline Explorer for seamless forensic review.
 
-Built and tested for Windows (.exe included below).
+✨ Highlights in v2.0.0
+
+Fully rewritten in C# for faster execution and easier packaging
+Timeline Explorer Color Coding Support
+YAML-based artifact configs for modular, transparent artifact handling
+Integrated support for keyword tagging and .tle_sess session generation
+Enhanced CSV discovery logic with filename, folder, and header pattern matching.
 
 ---
 
@@ -95,25 +97,22 @@ Update Yaml files in config folders for custom naming.
 ## Screenshots
 
 Interactive Menu
-<img width="1421" alt="image" src="https://github.com/user-attachments/assets/fb300ad4-91e3-42d4-9bf8-ac266ffd2fee" />
+<img width="472" alt="image" src="https://github.com/user-attachments/assets/5548a452-4d07-4325-ac1f-03155a0f5714" />
 
-Use the Excel Macro to color your timeline
-<img width="1433" alt="image" src="https://github.com/user-attachments/assets/72cb8fed-0285-4b20-b14b-7479462086b9" />
+
 
 ---
 ## Downloads
 
-Latest Release: [v1.0.0](https://github.com/acquiredsecurity/forensic-timeliner/releases/tag/v1.0.0)
+Latest Release: [v2.0.0](https://github.com/acquiredsecurity/forensic-timeliner/releases)
 
-🔽 Download the compiled Windows binary: 
-[forensic_timeliner.exe](https://github.com/acquiredsecurity/forensic-timeliner/releases/download/v1.0.0/forensic-timeliner.exe)
 
 [Sample Data](https://drive.google.com/file/d/1dplyT1Rf1gIYkItAeKlbWKAKgR91uFK-/view?usp=sharing)
 
 
+Timeline Explorer Support
+<img width="1434" alt="image" src="https://github.com/user-attachments/assets/5ccc7b6d-9eb4-4a66-9ced-66efb483c06d" />
 
-✅ No install required  
-Tested on Windows 10/11 
 
 ---
 
