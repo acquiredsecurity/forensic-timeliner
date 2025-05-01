@@ -149,37 +149,59 @@ Timeline Explorer Support
 
 ## Timeline Output Field Structure
 
-- All output is exported as RFC-4180-compliant CSV
-- Each timeline includes the follwoing fields:
-  - \[
-        "DateTime", "TimestampInfo", "ArtifactName", "Tool", "Description",
-        "DataDetails", "DataPath", "FileExtension", "EventId",
-        "User", "Computer", "FileSize", "IPAddress",
-        "SourceAddress", "DestinationAddress", "SHA1", "Count", "EvidencePath"
-    ]
+🧾 Timeline Output Field Structure
+All output is exported as RFC-4180-compliant CSV and ready for review in Timeline Explorer, Excel, or other forensic tools.
 
-Event Log Filters in YAML  
-    {
-    "Application": \[1000, 1001],
-    "Microsoft-Windows-PowerShell/Operational": \[4100, 4103, 4104],
-    "Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational": \[72, 98, 104, 131, 140],
-    "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational": \[21, 22],
-    "Microsoft-Windows-TaskScheduler/Operational": \[106, 140, 141, 129, 200, 201],
-    "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational": \[261, 1149],
-    "Microsoft-Windows-WinRM/Operational": \[169],
-    "Security": \[1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756],
-    "SentinelOne/Operational": \[1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110],
-    "System": \[7045],
-}
+Each timeline entry includes the following fields:
 
-MFT Filters in YAML
+[ 
+  "DateTime", 
+  "TimestampInfo", 
+  "ArtifactName", 
+  "Tool", 
+  "Description", 
+  "DataDetails", 
+  "DataPath", 
+  "FileExtension", 
+  "EventId", 
+  "User", 
+  "Computer", 
+  "FileSize", 
+  "IPAddress", 
+  "SourceAddress", 
+  "DestinationAddress", 
+  "SHA1", 
+  "Count", 
+  "EvidencePath" 
+]
 
-- MFT Processing and Filtering
-  - MFT filtering is done automatically. Only created time stamps are provided using Created0x10" The follwing filters are passed by default to look for these extensions in the users folder. 
-  - DEFAULT_EXTENSIONS = \[".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"]
-  - DEFAULT_PATHS = \["Users"]
-  - You can add additional extensions and paths to search using the foll the filters
-    --MFTExtensionFilter   --MFTPathFilter          
+⚙️ YAML-Based Filtering
+📘 Event Log Filters
+Define EventChannelFilters per channel in your YAML configuration like so:
+
+EventChannelFilters:
+  Application: [1000, 1001]
+  Microsoft-Windows-PowerShell/Operational: [4100, 4103, 4104]
+  Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational: [72, 98, 104, 131, 140]
+  Microsoft-Windows-TerminalServices-LocalSessionManager/Operational: [21, 24, 25]
+  Microsoft-Windows-TaskScheduler/Operational: [106, 140, 141, 129, 200, 201]
+  Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational: [261, 1149]
+  Microsoft-Windows-WinRM/Operational: [169]
+  Security: [1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756]
+  SentinelOne/Operational: [1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110]
+  System: [104, 7045]
+
+
+💾 MFT Processing and Filtering
+MFT parsing includes automatic timestamp normalization and extension/path filtering.
+
+By default, only Created0x10 timestamps are included to focus on file creation events.
+
+Default filters:
+
+DEFAULT_EXTENSIONS = [".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"]
+DEFAULT_PATHS = ["Users"]
+        
   
 
 ---
