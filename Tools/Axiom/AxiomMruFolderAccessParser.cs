@@ -46,7 +46,7 @@ public class AxiomMruFolderAccessParser : IArtifactParser
                     var parsedDt = dict.GetDateTime("Registry Key Modified Date/Time - UTC+00:00 (M/d/yyyy)");
                     if (parsedDt == null) continue;
 
-                    var path = dict.GetString("Folder Accessed");
+                    var path = dict.GetString("File & Folder Access");
                     if (string.IsNullOrWhiteSpace(path)) continue;
 
                     string dtStr = parsedDt.Value.ToString("o").Replace("+00:00", "Z");

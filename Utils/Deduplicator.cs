@@ -1,4 +1,5 @@
 ﻿// Deduplicator.cs
+using System.Text;
 using ForensicTimeliner.Models;
 
 namespace ForensicTimeliner.Utils
@@ -31,7 +32,7 @@ namespace ForensicTimeliner.Utils
                 var rawLines = File.ReadAllLines(outputPath);
                 if (rawLines.Length <= 1)
                 {
-                    Logger.PrintAndLog("[!] Not enough data to deduplicate.", "WARN");
+                    Logger.PrintAndLog("[#] Not enough data to deduplicate.", "WARN");
                     return;
                 }
 
@@ -48,12 +49,12 @@ namespace ForensicTimeliner.Utils
                     }
                 }
 
-                File.WriteAllLines(outputPath, new[] { header }.Concat(deduped), System.Text.Encoding.UTF8);
+                File.WriteAllLines(outputPath, new[] { header }.Concat(deduped), new UTF8Encoding(false));
                 Logger.PrintAndLog($"[#] - Post-export deduplication complete: removed {content.Count() - deduped.Count} rows (final count: {deduped.Count})", "SUCCESS");
             }
             catch (Exception ex)
             {
-                Logger.PrintAndLog($"[!] - Post-export deduplication failed: {ex.Message}", "ERROR");
+                Logger.PrintAndLog($"[#] - Post-export deduplication failed: {ex.Message}", "ERROR");
             }
         }
     }

@@ -124,21 +124,31 @@ public static class LoggerSummary
         }
         table.AddRow(totalRow.ToArray());
 
-        // Write the main artifact+tool table
-        AnsiConsole.Write(new Padder(table).PadLeft((Console.WindowWidth - 80) / 2));
-
-        // 🛠️ ADD GRAND TOTAL BELOW
-        var grandTotal = ToolArtifactSummary.Sum(kv => kv.Value);
-
-        var grandTable = new Table()
+        // Final Summary Breakdown
+        var summaryTable = new Table()
             .Border(TableBorder.Rounded)
             .BorderColor(Color.Green)
-            .AddColumn(new TableColumn("[bold]Artifact[/]").Centered())
-            .AddColumn(new TableColumn("[bold]Count[/]").Centered());
+            .AddColumn(new TableColumn("[bold]Stage[/]").Centered())
+            .AddColumn(new TableColumn("[bold]Rows[/]").Centered());
 
-        grandTable.AddRow("[bold]GRAND TOTAL[/]", $"[bold green]{grandTotal}[/]");
+        summaryTable.AddRow("Collected", $"[green]{TimelineState.RowCountCollected:N0}[/]");
+        summaryTable.AddRow("Date Filtered", TimelineState.RowsFilteredByDate > 0
+            ? $"[red]-{TimelineState.RowsFilteredByDate:N0}[/]"
+            : "[dim]0[/]");
 
+        summaryTable.AddRow("Deduplicated", TimelineState.RowsDeduplicated > 0
+            ? $"[red]-{TimelineState.RowsDeduplicated:N0}[/]"
+            : "[dim]0[/]");
+
+        summaryTable.AddRow("[bold]Final Exported[/]", $"[bold green]{TimelineState.RowCountAfterDedup:N0}[/]");
+
+        // Write the main artifact+tool table (already present)
+        AnsiConsole.Write(new Padder(table).PadLeft((Console.WindowWidth - 40) / 2));
+
+        // Write the number summary
         AnsiConsole.WriteLine();
-        AnsiConsole.Write(new Padder(grandTable).PadLeft((Console.WindowWidth - 40) / 2));
+        AnsiConsole.Write(new Padder(summaryTable).PadLeft((Console.WindowWidth - 40) / 2 + 2));
+
     }
 }
+

@@ -5,10 +5,14 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace ForensicTimeliner.Utils;
 
+
+
 public static class DiscoveryConfig
 {
     public static Dictionary<string, ArtifactDefinition> ARTIFACT_DEFINITIONS = new();
     public static Dictionary<string, IArtifactParser> ARTIFACT_PARSERS = new();
+    public static KeywordConfig? TAGGER_CONFIG { get; private set; }
+
 
     // Keep the existing tuple structure
     private static List<(string Tool, string Artifact, string Path)> LoadedYamlSummary = new();
@@ -26,6 +30,12 @@ public static class DiscoveryConfig
             try
             {
                 var yamlText = File.ReadAllText(file);
+                if (Path.GetFileName(file).Equals("keywords.yaml", StringComparison.OrdinalIgnoreCase))
+                {
+                    var keywordDef = deserializer.Deserialize<KeywordConfig>(yamlText);
+                    TAGGER_CONFIG = keywordDef;
+                    continue; // Skip artifact registration for keyword file
+                }
                 var definition = deserializer.Deserialize<ArtifactDefinition>(yamlText);
 
                 if (!string.IsNullOrWhiteSpace(definition.Artifact))
@@ -67,3 +77,4 @@ public static class DiscoveryConfig
         ARTIFACT_PARSERS[artifactName] = parser;
     }
 }
+

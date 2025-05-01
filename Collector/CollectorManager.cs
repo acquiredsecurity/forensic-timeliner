@@ -1,6 +1,4 @@
-﻿// Utils/CollectorManager.cs
-
-using ForensicTimeliner.CLI;
+﻿using ForensicTimeliner.CLI;
 using ForensicTimeliner.Models;
 using ForensicTimeliner.Utils;
 
@@ -27,11 +25,12 @@ public static class CollectorManager
             {
                 var parsedRows = parser.Parse(args.BaseDir, args.BaseDir, def, args);
 
-                if (args.StartDate.HasValue || args.EndDate.HasValue)
-                    parsedRows = DateFilter.FilterByDateRange(parsedRows, args.StartDate, args.EndDate);
+                // No date filtering here - that will be handled in Program.cs
 
                 var sanitizedRows = SanitizeRows(parsedRows);
                 allRows.AddRange(sanitizedRows);
+
+                Logger.LogInfo($"[√] - [{def.Artifact}] Parsed {parsedRows.Count} timeline rows");
             }
             catch (Exception ex)
             {
@@ -54,42 +53,39 @@ public static class CollectorManager
     }
 
     private static List<TimelineRow> SanitizeRows(List<TimelineRow> rows)
-{
-    List<TimelineRow> sanitized = new();
-
-    foreach (var row in rows)
     {
+        List<TimelineRow> sanitized = new();
 
-
-        var sanitizedRow = new TimelineRow
+        foreach (var row in rows)
         {
-            DateTime = row.DateTime,
-            TimestampInfo = SanitizeField(row.TimestampInfo),
-            ArtifactName = SanitizeField(row.ArtifactName),
-            Tool = SanitizeField(row.Tool),
-            Description = SanitizeField(row.Description),
-            DataDetails = SanitizeField(row.DataDetails),
-            DataPath = SanitizeField(row.DataPath),
-            FileExtension = SanitizeField(row.FileExtension),
-            EventId = SanitizeField(row.EventId),
-            User = SanitizeField(row.User),
-            Computer = SanitizeField(row.Computer),
-            FileSize = row.FileSize,
-            IPAddress = SanitizeField(row.IPAddress),
-            SourceAddress = SanitizeField(row.SourceAddress),
-            DestinationAddress = SanitizeField(row.DestinationAddress),
-            SHA1 = SanitizeField(row.SHA1),
-            Count = SanitizeField(row.Count),
-            EvidencePath = SanitizeField(row.EvidencePath),
-            RawData = SanitizeField(row.RawData),
-        };
+            var sanitizedRow = new TimelineRow
+            {
+                DateTime = row.DateTime,
+                TimestampInfo = SanitizeField(row.TimestampInfo),
+                ArtifactName = SanitizeField(row.ArtifactName),
+                Tool = SanitizeField(row.Tool),
+                Description = SanitizeField(row.Description),
+                DataDetails = SanitizeField(row.DataDetails),
+                DataPath = SanitizeField(row.DataPath),
+                FileExtension = SanitizeField(row.FileExtension),
+                EventId = SanitizeField(row.EventId),
+                User = SanitizeField(row.User),
+                Computer = SanitizeField(row.Computer),
+                FileSize = row.FileSize,
+                IPAddress = SanitizeField(row.IPAddress),
+                SourceAddress = SanitizeField(row.SourceAddress),
+                DestinationAddress = SanitizeField(row.DestinationAddress),
+                SHA1 = SanitizeField(row.SHA1),
+                Count = SanitizeField(row.Count),
+                EvidencePath = SanitizeField(row.EvidencePath),
+                RawData = SanitizeField(row.RawData),
+            };
 
-        sanitized.Add(sanitizedRow);
+            sanitized.Add(sanitizedRow);
+        }
+
+        return sanitized;
     }
-
-    return sanitized;
-}
-
 
     private static string SanitizeField(string value)
     {

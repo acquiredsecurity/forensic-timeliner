@@ -17,14 +17,14 @@ public class ParsedArgs
     public bool ProcessAxiom { get; set; } = false;
     public List<string> MFTExtensionFilter { get; set; } = new() { ".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z" };
     public List<string> MFTPathFilter { get; set; } = new() { "Users" };
-    public int BatchSize { get; set; } = 10000;
+    public bool EnableTagger { get; set; } = false;
+
     public DateTime? StartDate { get; set; } = null;
     public DateTime? EndDate { get; set; } = null;
     public bool Deduplicate { get; set; } = false;
     public bool Interactive { get; set; } = false;
-    public bool Preview { get; set; } = false;
     public bool ALL { get; set; } = false;
-    public string ExportFormat { get; set; } = "csv";  // Default to CSV
+    public string ExportFormat { get; set; } = "csv";  
     public string? LoadConfigOverride { get; set; }
     public bool Help { get; set; } = false;
     public bool NoBanner { get; set; } = false;
@@ -56,9 +56,9 @@ public static class ArgParser
                 case "--ProcessHayabusa": parsedArgs.ProcessHayabusa = true; break;
                 case "--ProcessNirsoft": parsedArgs.ProcessNirsoft = true; break;
                 case "--ProcessAxiom": parsedArgs.ProcessAxiom = true; break;
-
                 case "--Deduplicate":
                 case "-d": parsedArgs.Deduplicate = true; break;
+                case "--EnableTagger": parsedArgs.EnableTagger = true;  break;
                 case "--Interactive":
                 case "--i":
                 case "-i": parsedArgs.Interactive = true; break;

@@ -6,7 +6,9 @@ namespace ForensicTimeliner.Utils;
 
 public static class Logger
 {
-    private static readonly string LogFilePath = "forensic_timeliner.log";
+    private static readonly string LogFilePath = Path.Combine(
+        Path.GetDirectoryName(Environment.ProcessPath)!,
+        "forensic_timeliner.log");
 
     public static void PrintBanner()
     {

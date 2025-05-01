@@ -54,7 +54,7 @@ public class AppCompatParser : IArtifactParser
                     rows.Add(new TimelineRow
                     {
                         DateTime = dtStr,
-                        TimestampInfo = "Last Modified Time",
+                        TimestampInfo = "Last Modified",
                         ArtifactName = artifact.Artifact,
                         Tool = artifact.Tool,
                         Description = artifact.Description,

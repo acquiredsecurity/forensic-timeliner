@@ -76,8 +76,9 @@ public class AxiomEventlogsParser : IArtifactParser
                             TimestampInfo = "Event Time",
                             ArtifactName = "Event Logs",
                             Tool = artifact.Tool,
-                            Description = description,
-                            DataDetails = datadetails,
+                            Description = datadetails,
+                            DataDetails = description,
+
                             DataPath = datapath,
                             Computer = dict.GetString("Computer"),
                             EventId = dict.GetString("Event ID"),

@@ -29,7 +29,6 @@ public class EventlogParser : IArtifactParser
 
             try
             {
-                // Load and filter records first
                 List<IDictionary<string, object>> filteredRecords = new();
 
                 using (var reader = new StreamReader(file))
@@ -64,9 +63,9 @@ public class EventlogParser : IArtifactParser
                             TimestampInfo = "Event Time",
                             ArtifactName = "Event Logs",
                             Tool = artifact.Tool,
-                            Description = dict.GetString("Channel"),
-                            DataDetails = dict.GetString("MapDescription"),
-                            DataPath = dict.GetString("PayloadData1"),
+                            Description = dict.GetString("MapDescription"),
+                            DataDetails = dict.GetString("Channel"),
+                            DataPath = BuildEventlogDataPath(dict),
                             Computer = dict.GetString("Computer"),
                             User = dict.GetString("UserName"),
                             DestinationAddress = dict.GetString("RemoteHost"),
@@ -121,5 +120,40 @@ public class EventlogParser : IArtifactParser
         }
 
         return false;
+    }
+
+    private static string BuildEventlogDataPath(IDictionary<string, object> dict)
+    {
+        var parts = new List<string>();
+
+        var channel = dict.GetString("Channel");
+        var eventId = dict.GetString("EventID");
+        var computer = dict.GetString("Computer");
+
+        if (!string.IsNullOrWhiteSpace(channel)) parts.Add($"Channel: {channel}");
+        if (!string.IsNullOrWhiteSpace(eventId)) parts.Add($"EventID: {eventId}");
+        if (!string.IsNullOrWhiteSpace(computer)) parts.Add($"Computer: {computer}");
+
+        for (int i = 1; i <= 6; i++)
+        {
+            var payload = dict.GetString($"PayloadData{i}");
+            if (!string.IsNullOrWhiteSpace(payload))
+            {
+                if (payload.Length > 10000)
+                {
+                    payload = payload.Substring(0, 10000) + "...[truncated]";
+                }
+                parts.Add(payload);
+            }
+        }
+
+        var combined = string.Join(" | ", parts);
+
+        if (!string.IsNullOrEmpty(combined) && !combined.StartsWith(" "))
+        {
+            combined = " " + combined;
+        }
+
+        return combined;
     }
 }

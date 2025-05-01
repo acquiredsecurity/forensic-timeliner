@@ -63,7 +63,7 @@ public class AxiomShellbagsParser : IArtifactParser
                             TimestampInfo = label,
                             ArtifactName = "Shellbags",
                             Tool = artifact.Tool,
-                            Description = "Folder Accessed",
+                            Description = "File & Folder Access",
                             DataPath = dict.GetString("Path"),
                             EvidencePath = Path.GetRelativePath(baseDir, file)
                         });

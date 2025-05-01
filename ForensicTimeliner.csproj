@@ -5,6 +5,7 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<SelfContained>true</SelfContained>
+			<Nullable>enable</Nullable>
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>

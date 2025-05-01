@@ -1,5 +1,6 @@
 ﻿using ForensicTimeliner.CLI;
 using Spectre.Console;
+using System.Globalization;
 using System.Linq;
 
 namespace ForensicTimeliner.Interactive;
@@ -17,15 +18,15 @@ public static class InteractiveMenu
                 .BorderStyle(Style.Parse("magenta"))
         );
 
+        // Tool selection
         var toolChoices = AnsiConsole.Prompt(
             new MultiSelectionPrompt<string>()
                 .Title("[bold yellow]Select your tools:[/]")
                 .PageSize(10)
                 .InstructionsText("[grey](Press [blue]<space>[/] to toggle, [green]<enter>[/] to accept)[/]")
-                .AddChoices("EZ Tools / KAPE", "Axiom", "Hayabusa", "Chainsaw", "Nirsoft", "All")   // <-- Added "Axiom" here
+                .AddChoices("EZ Tools / KAPE", "Axiom", "Hayabusa", "Chainsaw", "Nirsoft", "All")
         );
 
-        // If user selects "All", clear previous and force all tools enabled
         bool allSelected = toolChoices.Contains("All");
 
         config.ProcessEZ = allSelected || toolChoices.Contains("EZ Tools / KAPE");
@@ -33,9 +34,18 @@ public static class InteractiveMenu
         config.ProcessHayabusa = allSelected || toolChoices.Contains("Hayabusa");
         config.ProcessChainsaw = allSelected || toolChoices.Contains("Chainsaw");
         config.ProcessNirsoft = allSelected || toolChoices.Contains("Nirsoft");
-        
 
-        config.BaseDir = AnsiConsole.Ask<string>("Set the base directory that contains the CSV output to build into a timeline:", "C:\\triage\\hostname");
+        // Base directory
+        config.BaseDir = AnsiConsole.Ask<string>(
+            "Set the base directory that contains the CSV output to build into a timeline:",
+            "C:\\triage\\hostname"
+        ).Trim();
+
+        if (!Directory.Exists(config.BaseDir))
+        {
+            AnsiConsole.MarkupLine($"[#] Base directory not found: {config.BaseDir}", "WARN");
+            Environment.Exit(1);
+        }
 
         if (config.ProcessEZ)
         {
@@ -46,38 +56,62 @@ public static class InteractiveMenu
                 .Header("Info", Justify.Center));
         }
 
-        var outputFile = Path.Combine(config.BaseDir, "timeline", "forensic_timeliner.csv");
-        config.OutputFile = AnsiConsole.Ask("Where would you like to save your unified Forensic Timeline?", outputFile);
+        // Export directory
+        var exportDir = AnsiConsole.Ask<string>(
+            "Where would you like to save your timeline export (directory only)?",
+            Path.Combine(config.BaseDir, "timeline")
+        ).Trim();
 
-        var extension = config.ExportFormat == "json" ? ".json" : ".csv";
-
-        if (!Path.HasExtension(config.OutputFile))
+        if (!Directory.Exists(exportDir))
         {
-            config.OutputFile += extension;
+            Directory.CreateDirectory(exportDir);
+            AnsiConsole.MarkupLine($"[bold green][[+]] Created directory: {exportDir}[/]");
         }
 
+        // Export format selection
         config.ExportFormat = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
                 .Title("Select export format:")
-                .PageSize(3)
-                .AddChoices("csv", "json")
+                .PageSize(5)
+                .AddChoices("csv", "json", "jsonl")
         );
 
+        // ✅ Let Program.cs handle filename + timestamp + extension
+        config.OutputFile = exportDir;
+
+        AnsiConsole.MarkupLine($"[bold green][[✓]] Timeline export directory set to:[/] [blue]{exportDir}[/]");
+
+        // Deduplication toggle
         config.Deduplicate = AnsiConsole.Confirm("Enable deduplication?", false);
 
+        // Date filtering
         if (AnsiConsole.Confirm("Apply date range filter?", false))
         {
-            var start = AnsiConsole.Ask<string>("Start date (YYYY-MM-DD):");
-            var end = AnsiConsole.Ask<string>("End date (YYYY-MM-DD):");
+            config.StartDate = PromptForValidDate("Start date (YYYY-MM-DD):");
 
-            if (DateTime.TryParse(start, out var startDate))
-                config.StartDate = startDate;
-
-            if (DateTime.TryParse(end, out var endDate))
-                config.EndDate = endDate;
+            if (AnsiConsole.Confirm("Would you like to set an End Date?", false))
+            {
+                config.EndDate = PromptForValidDate("End date (YYYY-MM-DD):");
+            }
         }
 
         AnsiConsole.MarkupLine("\n[bold green][[✓]] Interactive configuration complete.[/]");
         return config;
+    }
+
+    private static DateTime PromptForValidDate(string prompt, string prefill = null)
+    {
+        while (true)
+        {
+            string input = prefill ?? AnsiConsole.Ask<string>(prompt).Trim();
+            prefill = null; // Only use prefill once
+
+            if (DateTime.TryParseExact(input, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            {
+                return parsedDate;
+            }
+
+            AnsiConsole.MarkupLine("[#] Invalid date format. Please enter date as YYYY-MM-DD.[/]", "ERROR");
+        }
     }
 }

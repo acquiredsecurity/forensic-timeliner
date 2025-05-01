@@ -20,7 +20,7 @@ public class AxiomChromeHistoryParser : IArtifactParser
         var files = Discovery.FindArtifactFiles(inputDir, baseDir, artifact.Artifact);
         if (!files.Any())
         {
-            Logger.PrintAndLog($"[!] - [{artifact.Artifact}] No matching files found in: {inputDir}", "WARN");
+            Logger.PrintAndLog($"[#] - [{artifact.Artifact}] No matching files found in: {inputDir}", "WARN");
             return rows;
         }
 

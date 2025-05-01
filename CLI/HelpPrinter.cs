@@ -49,11 +49,15 @@ public static class HelpPrinter
 
         paramTable.AddRow(
             new Markup("[white bold]--IncludeRawData[/]"),
-            new Markup("[green]Add flattened RawData field to each timeline row[/]"));
+            new Markup("[green]Experimental not complete. Add flattened RawData field to each timeline row[/]"));
 
         paramTable.AddRow(
             new Markup("[white bold]--ExportFormat[/]"),
-            new Markup("[green]Choose output format (csv or json)[/]"));
+            new Markup("[green]Choose output format (csv, json, jsonl)[/]"));
+
+        paramTable.AddRow(
+            new Markup("[white bold]--EnableTagger[/]"),
+            new Markup("[green]Use the keywords yaml to create a Timeline Explorer session file with tags, csv only.[/]"));
 
         paramTable.AddRow(
             new Markup("[white bold]--Interactive[/]"),

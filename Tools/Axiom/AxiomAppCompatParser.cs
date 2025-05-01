@@ -54,7 +54,7 @@ public class AxiomAppCompatParser : IArtifactParser
                         TimestampInfo = "Last Update",
                         ArtifactName = "AppCompatCache",
                         Tool = artifact.Tool,
-                        Description = "Program Executed",
+                        Description = "Program Execution",
                         DataPath = dict.GetString("File Path"),
                         DataDetails = dict.GetString("File Name"),
                         EvidencePath = Path.GetRelativePath(baseDir, file)
