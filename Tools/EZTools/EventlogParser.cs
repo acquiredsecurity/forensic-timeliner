@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using CsvHelper.Configuration;
 using ForensicTimeliner.CLI;
 using ForensicTimeliner.Interfaces;
@@ -98,27 +98,46 @@ public class EventlogParser : IArtifactParser
 
     private static bool PassesFilter(IDictionary<string, object> dict, ArtifactDefinition artifact)
     {
-        string channel = dict.GetString("Channel").Trim().ToLowerInvariant();
-        string eventIdStr = dict.GetString("EventId");
-
-        if (!int.TryParse(eventIdStr, out var eventId))
+        if (!dict.TryGetValue("EventId", out var eventIdObj) || !int.TryParse(eventIdObj?.ToString(), out var eventId))
             return false;
 
-        var filters = artifact.Filters?.EventChannelFilters;
+        string channel = dict.GetString("Channel").Trim().ToLowerInvariant();
 
-        if (filters != null)
+        // First: Check Event Channel Filters
+        var eventFilters = artifact.Filters?.EventChannelFilters;
+        if (eventFilters != null)
         {
-            var normalized = filters.ToDictionary(
+            var normalized = eventFilters.ToDictionary(
                 kvp => kvp.Key.Trim().ToLowerInvariant(),
                 kvp => kvp.Value
             );
 
             if (normalized.TryGetValue(channel, out var validIds) && validIds.Contains(eventId))
-            {
                 return true;
+        }
+
+        // Second: Check Provider Filters
+        var providerFilters = artifact.Filters?.ProviderFilters;
+        if (providerFilters != null)
+        {
+            string? provider =
+                dict.TryGetValue("Provider", out var p1) ? p1?.ToString() :
+                dict.TryGetValue("Event.System.Provider", out var p2) ? p2?.ToString() :
+                null;
+
+            if (!string.IsNullOrWhiteSpace(provider))
+            {
+                var normalized = providerFilters.ToDictionary(
+                    kvp => kvp.Key.Trim().ToLowerInvariant(),
+                    kvp => kvp.Value
+                );
+
+                if (normalized.TryGetValue(provider.Trim().ToLowerInvariant(), out var validIds) && validIds.Contains(eventId))
+                    return true;
             }
         }
 
+        // If no filters matched
         return false;
     }
 
