@@ -51,11 +51,15 @@ Enhanced CSV discovery logic with filename, folder, and header pattern matching.
   - output data into a unified timeline
 
 - Automatic CSV discovery from triage directories (all configurable) with YAML
-  -   simply provide the base directory of where the triage output lives and the tool will attempt to discover the csv files based on
+    - Yaml files already use default namings for tools with default output
+    - For tools like Hayabusa where you can set the file output name you should name the file some variaition of Hayabusa.csv and put it in a folder named Hayabusa   
+    - Simply provide the base directory of where the triage output lives and the tool will attempt to discover the csv files based on
     - File Name
     - Folder Name
     - File Headers
- Addiitonal filtering for MFT and Windows Event Logs.
+    - For Event Logs Channel\Provider Filters
+    - For MFT File Extension and Path Filters
+
 
 
 - Timeline enrichment with with keyword tagging for use with Timeline Explorer. Automatically create a TLE session file based on keyword searching for CSV output.
@@ -90,7 +94,7 @@ ForensicTimeliner.exe --BaseDir C:\triage\hostname --ALL --OutputFile C:\timelin
   -  Hayabusa -  "filename_patterns" \["hayabusa", "haya"],
   -  Nirsoft Web History - "filename_patterns": \["nirsoft", "history", "browsing", "web", "browse"],     
 
-Update Yaml files in config folders for custom naming.
+Update Yaml files in config folders for custom naming as needed
   
 
 ---
@@ -113,6 +117,14 @@ Latest Release: [v2.0.0](https://github.com/acquiredsecurity/forensic-timeliner/
 
 Timeline Explorer Support
 <img width="1434" alt="image" src="https://github.com/user-attachments/assets/5ccc7b6d-9eb4-4a66-9ced-66efb483c06d" />
+
+- Auto coloring aoolied in TLE with latest plugin files
+- Automatically Build a TLE Session File with tagged rows based on keywords
+  - Edit the Keywords config file and add your keywords
+  - Run ForensicTimeliner.exe from the command line using the --EnableTagger flag
+  ```powershell, cmd
+.\ForensicTimeliner.exe --ProcessEZ --BaseDir "C:\Users\admin0x\Desktop\sample_data\host_t800" --OutputFile "C:\Users\admin0x\Desktop\test" --ExportFormat csv --EnableTagger
+```
 
 
 ---
