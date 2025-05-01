@@ -38,7 +38,7 @@ Updated YAML files for new artifacts
 - [Command Line Arguments](#command-line-arguments)
 - [Custom Config](#custom-config)
 - [Timeline Output](#timeline-output-field-structure)
-- [Auto File Discovery](#auto-file-discovery)
+- [Yaml Config](#yaml-config)
 - [Artifact and Output Support Table](#artifact-and-output-support-table)
 - [License](#license)
 
@@ -85,6 +85,7 @@ Download the exe and run:
 
 ```powershell, cmd
 ForensicTimeliner.exe --Interactive
+```
 
 ```powershell, cmd
 ForensicTimeliner.exe --BaseDir C:\triage\hostname --ALL --OutputFile C:\timeline.csv
@@ -113,7 +114,7 @@ Interactive Menu
 ---
 ## Downloads
 
-Latest Release: [v2.0.0](https://github.com/acquiredsecurity/forensic-timeliner/releases)
+Latest Release: [ v2.010](https://github.com/acquiredsecurity/forensic-timeliner/releases)
 
 
 [Sample Data](https://drive.google.com/file/d/1dplyT1Rf1gIYkItAeKlbWKAKgR91uFK-/view?usp=sharing)
@@ -126,10 +127,12 @@ Timeline Explorer Support
 - Automatically Build a TLE Session File with tagged rows based on keywords
   - Edit the Keywords config file and add your keywords
   - Run ForensicTimeliner.exe from the command line using the --EnableTagger flag
-  ```powershell, cmd
+
+```
 .\ForensicTimeliner.exe --ProcessEZ --BaseDir "C:\Users\admin0x\Desktop\sample_data\host_t800" --OutputFile "C:\Users\admin0x\Desktop\test" --ExportFormat csv --EnableTagger
 ```
 - Open TLE Session file from your output directory. If you move the file you need to updste the session file path.
+
 
 ---
 
@@ -137,60 +140,41 @@ Timeline Explorer Support
 
 ## Command Line Arguments
 
-```C#
-| Argument                | Type         | Default           | Description                                                                 |
+| Argument                | Type         | Default           | Description                                                                |
 |------------------------|--------------|-------------------|-----------------------------------------------------------------------------|
-| `--BaseDir`            | `string`     | `C:\triage`       | Root directory to recursively search for supported artifact CSVs           |
-| `--OutputFile`         | `string`     | `"timeline.csv"`  | Output file or folder for exported timeline                                |
-| `--ExportFormat`       | `string`     | `csv`             | Export format: `csv`, `json`, or `jsonl`                                   |
-| `--StartDate`          | `datetime`   | `null`            | Filter: only include rows after this date                                  |
-| `--EndDate`            | `datetime`   | `null`            | Filter: only include rows before this date                                 |
-| `--Deduplicate` / `-d` | `bool`       | `false`           | Remove duplicate timeline rows after export                                |
-| `--EnableTagger`       | `bool`       | `false`           | Enables keyword-based tagging via `config/keywords/keywords.yaml`          |
-| `--IncludeRawData`     | `bool`       | `false`           | Adds a `RawData` column for unmodified source row contents (if available) experimental  |
-| `--NoBanner`           | `bool`       | `false`           | Skip printing the banner/logo at start                                     |
-| `--Help` / `-h`        | `bool`       | `false`           | Show help and usage information                                            |
-| `--ALL` / `-a`         | `bool`       | `false`           | Process all tools listed below (based on discovery)                        |
-| `--Interactive` / `-i` | `bool`       | `false`           | Launch an interactive CLI to build a custom command                        |
-| `--ProcessEZ`          | `bool`       | `false`           | Enable EZ Tools artifact parsing                                           |
-| `--ProcessAxiom`       | `bool`       | `false`           | Enable Axiom artifact parsing                                              |
-| `--ProcessChainsaw`    | `bool`       | `false`           | Enable Chainsaw artifact parsing                                           |
-| `--ProcessHayabusa`    | `bool`       | `false`           | Enable Hayabusa artifact parsing                                           |
-| `--ProcessNirsoft`     | `bool`       | `false`           | Enable Nirsoft artifact parsing                                            |                                     |
-```
+| `--BaseDir`            | `string`     | `C:\triage`       | Root directory to recursively search for supported artifact CSVs            |
+| `--OutputFile`         | `string`     | `"timeline.csv"`  | Output file or folder for exported timeline                                 |
+| `--ExportFormat`       | `string`     | `csv`             | Export format: `csv`, `json`, or `jsonl`                                    |
+| `--StartDate`          | `datetime`   | `null`            | Filter: only include rows after this date                                   |
+| `--EndDate`            | `datetime`   | `null`            | Filter: only include rows before this date                                  |
+| `--Deduplicate` / `-d` | `bool`       | `false`           | Remove duplicate timeline rows after export                                 |
+| `--EnableTagger`       | `bool`       | `false`           | Enables keyword-based tagging via `config/keywords/keywords.yaml`           |
+| `--IncludeRawData`     | `bool`       | `false`           | Adds a `RawData` column for unmodified source row contents (if available) experimental |
+| `--NoBanner`           | `bool`       | `false`           | Skip printing the banner/logo at start                                      |
+| `--Help` / `-h`        | `bool`       | `false`           | Show help and usage information                                             |
+| `--ALL` / `-a`         | `bool`       | `false`           | Process all tools listed below (based on discovery)                         |
+| `--Interactive` / `-i` | `bool`       | `false`           | Launch an interactive CLI to build a custom command                         |
+| `--ProcessEZ`          | `bool`       | `false`           | Enable EZ Tools artifact parsing                                            |
+| `--ProcessAxiom`       | `bool`       | `false`           | Enable Axiom artifact parsing                                               |
+| `--ProcessChainsaw`    | `bool`       | `false`           | Enable Chainsaw artifact parsing                                            |
+| `--ProcessHayabusa`    | `bool`       | `false`           | Enable Hayabusa artifact parsing                                            |
+| `--ProcessNirsoft`     | `bool`       | `false`           | Enable Nirsoft artifact parsing                                             |
 
 ---
 
-Timeline Output Field Structure
+## Timeline Output Field Structure
 
 🧾 Timeline Output Field Structure
 All output is exported as RFC-4180-compliant CSV and ready for review in Timeline Explorer, Excel, or other forensic tools.
 
 Each timeline entry includes the following fields:
+```
+DateTime,TimestampInfo,ArtifactName,Tool,Description,DataDetails,DataPath,FileExtension,EventId,User,Computer,FileSize,IPAddress,SourceAddress,DestinationAddress,SHA1,Count,EvidencePath
+```
 
-[ 
-  "DateTime", 
-  "TimestampInfo", 
-  "ArtifactName", 
-  "Tool", 
-  "Description", 
-  "DataDetails", 
-  "DataPath", 
-  "FileExtension", 
-  "EventId", 
-  "User", 
-  "Computer", 
-  "FileSize", 
-  "IPAddress", 
-  "SourceAddress", 
-  "DestinationAddress", 
-  "SHA1", 
-  "Count", 
-  "EvidencePath" 
-]
+## YAML Config
 
-⚙️ YAML-Based Filtering
-📘 Event Log Filters
+Event Log Filters
 Define EventChannelFilters per channel in your YAML configuration like so:
 
 EventChannelFilters:
@@ -205,11 +189,18 @@ EventChannelFilters:
   SentinelOne/Operational: [1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110]
   System: [104, 7045]
 
+provider_filters:
+    edgeupdate: [0]
+    SentinelHelperService: [0]
+    brave: [0]
+    Edge: [256]
+    SentinelOne: [1, 31, 55, 57, 67, 68, 77, 81] 
 
-💾 MFT Processing and Filtering
+
+MFT Processing and Filtering
 MFT parsing includes automatic timestamp normalization and extension/path filtering.
 
-By default, only Created0x10 timestamps are included to focus on file creation events.
+By default, only Created0x10 timestamps are included to focus on file creation events and limit the overall timeline size
 
 Default filters:
 
@@ -220,11 +211,6 @@ DEFAULT_PATHS = ["Users"]
 
 ---
 
-## Auto File Discovery
-
-
-
----
 
 ## Artifact and Output Support Table
 
@@ -256,7 +242,8 @@ DEFAULT_PATHS = ["Users"]
 | Service Tampering         | Chainsaw                 | service_tampering.csv                                               |
 | Shellbags                 | EZ Tools, Axiom          | _UsrClass.csv, Shellbags.csv                                        |
 | Sigma Rule Matches        | Chainsaw                 | sigma.csv                                                           |
-| UserAssist                | Axiom                    | UserAssist.csv                                                      |
+| UserAssist                | EZ Tools, Axiom          | UserAssist.csv                                                      |
+| TypedUrls                 | EZ Tools                 | *__TypedURLS__NTUSER.CSV                                            |
 | Threat Events (Chainsaw)  | Chainsaw                 | account_tampering.csv, defense_evasion.csv, credential_access.csv   |
 | Web Browsing History      | Nirsoft, Axiom           | WebResults.csv, Chrome/Firefox/Edge History.csv                     |
 | VPN / RAS Logs            | Chainsaw                 | microsoft_rasvpn_events.csv, microsoft_rds_events.csv               |
