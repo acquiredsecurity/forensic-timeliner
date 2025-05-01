@@ -32,11 +32,9 @@ Updated YAML files for new artifacts
 
 - [Main Features](#main-features)
 - [Quick Start](#quick-start)
-- [Screenshots](#screenshots)
 - [Downloads](#downloads)
-- [Running Forensic Timeliner](#running-forensic-timeliner)
+- [Screenshots](#screenshots)
 - [Command Line Arguments](#command-line-arguments)
-- [Custom Config](#custom-config)
 - [Timeline Output](#timeline-output-field-structure)
 - [Yaml Config](#yaml-config)
 - [Artifact and Output Support Table](#artifact-and-output-support-table)
@@ -91,25 +89,15 @@ ForensicTimeliner.exe --Interactive
 ForensicTimeliner.exe --BaseDir C:\triage\hostname --ALL --OutputFile C:\timeline.csv
 ```
 
-- Use default naming for your csv files and make sure they are inside the base directory you set. There is a fallback to auto discover csv files based on file headers.
-- file naming
-  - Ez Tools / Kape - default
-  - Axiom - default
-  - Chainsaw - default
-  -  Hayabusa -  "filename_patterns" \["hayabusa", "haya"],
-  -  Nirsoft Web History - "filename_patterns": \["nirsoft", "history", "browsing", "web", "browse"],     
+```
+.\ForensicTimeliner.exe --ProcessEZ --BaseDir "C:\Users\admin0x\Desktop\sample_data\host_t800" --OutputFile "C:\Users\admin0x\Desktop\test" --ExportFormat csv --EnableTagger
+```
+- Open TLE Session file from your output directory. If you move the file you need to updste the session file path.
 
-Update Yaml files in config folders for custom naming as needed
+- Use default naming for your csv files and make sure they are inside the base directory you set. There is a fallback to auto discover csv files based on file headers, or adjust the filename in the YAML settings.
+
+- Use the --EnableTagger feature view command line to build a Timeline Explorer session file based on keyword tagging. Adjust keywords in config\keywords\keywords.yaml
   
-
----
-## Screenshots
-
-Interactive Menu
-
-<img width="472" alt="image" src="https://github.com/user-attachments/assets/5548a452-4d07-4325-ac1f-03155a0f5714" />
-
-
 
 ---
 ## Downloads
@@ -120,6 +108,14 @@ Latest Release: [ v2.010](https://github.com/acquiredsecurity/forensic-timeliner
 [Sample Data](https://drive.google.com/file/d/1dplyT1Rf1gIYkItAeKlbWKAKgR91uFK-/view?usp=sharing)
 
 
+---
+
+## Screenshots
+
+Interactive Menu
+
+<img width="472" alt="image" src="https://github.com/user-attachments/assets/5548a452-4d07-4325-ac1f-03155a0f5714" />
+
 Timeline Explorer Support
 <img width="1434" alt="image" src="https://github.com/user-attachments/assets/5ccc7b6d-9eb4-4a66-9ced-66efb483c06d" />
 
@@ -127,13 +123,6 @@ Timeline Explorer Support
 - Automatically Build a TLE Session File with tagged rows based on keywords
   - Edit the Keywords config file and add your keywords
   - Run ForensicTimeliner.exe from the command line using the --EnableTagger flag
-
-```
-.\ForensicTimeliner.exe --ProcessEZ --BaseDir "C:\Users\admin0x\Desktop\sample_data\host_t800" --OutputFile "C:\Users\admin0x\Desktop\test" --ExportFormat csv --EnableTagger
-```
-- Open TLE Session file from your output directory. If you move the file you need to updste the session file path.
-
-
 ---
 
 
