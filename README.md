@@ -122,14 +122,14 @@ Latest Release: [v2.0.0](https://github.com/acquiredsecurity/forensic-timeliner/
 Timeline Explorer Support
 <img width="1434" alt="image" src="https://github.com/user-attachments/assets/5ccc7b6d-9eb4-4a66-9ced-66efb483c06d" />
 
-- Auto coloring aoolied in TLE with latest plugin files
+- Auto coloring applied in TLE with latest plugin files
 - Automatically Build a TLE Session File with tagged rows based on keywords
   - Edit the Keywords config file and add your keywords
   - Run ForensicTimeliner.exe from the command line using the --EnableTagger flag
   ```powershell, cmd
 .\ForensicTimeliner.exe --ProcessEZ --BaseDir "C:\Users\admin0x\Desktop\sample_data\host_t800" --OutputFile "C:\Users\admin0x\Desktop\test" --ExportFormat csv --EnableTagger
 ```
-
+- Open TLE Session file from your output directory. If you move the file you need to updste the session file path.
 
 ---
 
@@ -156,15 +156,12 @@ Timeline Explorer Support
 | `--ProcessAxiom`       | `bool`       | `false`           | Enable Axiom artifact parsing                                              |
 | `--ProcessChainsaw`    | `bool`       | `false`           | Enable Chainsaw artifact parsing                                           |
 | `--ProcessHayabusa`    | `bool`       | `false`           | Enable Hayabusa artifact parsing                                           |
-| `--ProcessNirsoft`     | `bool`       | `false`           | Enable Nirsoft artifact parsing                                            |
-| `--MFTExtensionFilter` | `string[]`   | `.identifier,.exe,.ps1,...` | Extensions to include during MFT parsing                         |
-| `--MFTPathFilter`      | `string[]`   | `Users`           | Folder name filters during MFT parsing                                     |
+| `--ProcessNirsoft`     | `bool`       | `false`           | Enable Nirsoft artifact parsing                                            |                                     |
 ```
 
 ---
 
-
-## Timeline Output Field Structure
+Timeline Output Field Structure
 
 🧾 Timeline Output Field Structure
 All output is exported as RFC-4180-compliant CSV and ready for review in Timeline Explorer, Excel, or other forensic tools.
