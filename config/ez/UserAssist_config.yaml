@@ -1,0 +1,21 @@
+artifact: UserAssist
+tool: EZ Tools
+description: UserAssist
+discovery:
+  filename_patterns:
+    - UserAssist
+  foldername_patterns:
+    - Registry
+  required_headers:
+    - BatchKeyPath
+    - BatchValueName
+    - ProgramName
+    - RunCounter
+    - LastExecuted
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+filters:
+  extensions: []
+  paths: []

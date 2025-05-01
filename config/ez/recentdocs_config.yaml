@@ -1,0 +1,24 @@
+artifact: RecentDocs
+tool: EZ Tools
+description: Recently accessed documents
+discovery:
+  filename_patterns:
+    - RecentDocs
+  foldername_patterns:
+    - Registry
+  required_headers:
+    - BatchKeyPath
+    - ValueName
+    - BatchValueName
+    - TargetName
+    - LnkName
+    - MruPosition
+    - OpenedOn
+    - ExtensionLastOpened
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true
+filters:
+  extensions: []
+  paths: []

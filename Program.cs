@@ -106,8 +106,11 @@ class Program
             DiscoveryConfig.RegisterParser("LNK", new LnkParser());
             DiscoveryConfig.RegisterParser("MFT", new MftParser());
             DiscoveryConfig.RegisterParser("Prefetch", new PrefetchParser());
+            DiscoveryConfig.RegisterParser("RecentDocs", new RecentDocsParser());
             DiscoveryConfig.RegisterParser("Registry", new RegistryParser());
             DiscoveryConfig.RegisterParser("Shellbags", new ShellbagsParser());
+            DiscoveryConfig.RegisterParser("TypedURLs", new TypedURLsParser());
+            DiscoveryConfig.RegisterParser("UserAssist", new UserAssistParser());
 
             // Hayabusa
             DiscoveryConfig.RegisterParser("Hayabusa", new HayabusaParser());
@@ -141,12 +144,16 @@ class Program
                 Banner.Print();
             }
 
-            // Get all rows first (no date filtering in CollectorManager)
+            // Get all rows first
             var rows = CollectorManager.GetAllRows(parsedArgs);
             AnsiConsole.MarkupLine($"[green]✓[/] Collected [cyan]{rows.Count:N0}[/] total rows from all artifacts");
             TimelineState.RowCountCollected = rows.Count;
 
+            // Initialize this value to match collected rows count
+            // This ensures RowsFilteredByDate will be 0 when no date filtering is applied
+            TimelineState.RowCountAfterDateFilter = rows.Count;
 
+            // Apply date filtering if requested
             if (parsedArgs.StartDate.HasValue || parsedArgs.EndDate.HasValue)
             {
                 string dateRangeText = "";
@@ -166,10 +173,11 @@ class Program
                 AnsiConsole.MarkupLine($"[yellow]>[/] Filtering timeline {dateRangeText}");
                 int beforeCount = rows.Count;
 
-                rows = FilterRowsByDate(rows, parsedArgs.StartDate, parsedArgs.EndDate);
+                rows = DateFilter.FilterRowsByDate(rows, parsedArgs.StartDate, parsedArgs.EndDate);
                 AnsiConsole.MarkupLine($"[green]✓[/] Kept [cyan]{rows.Count:N0}[/] rows after date filtering ([red]-{beforeCount - rows.Count:N0}[/] rows removed)");
-                TimelineState.RowCountAfterDateFilter = rows.Count;
 
+                // Update the RowCountAfterDateFilter inside the conditional block
+                TimelineState.RowCountAfterDateFilter = rows.Count;
             }
 
             parsedArgs.OutputFile ??= "timeline.csv";
@@ -222,8 +230,6 @@ class Program
             string outputPath = "";
             try
             {
-
-
                 // Special case for 0 rows
                 if (rows.Count == 0)
                 {
@@ -279,12 +285,39 @@ class Program
                 Environment.Exit(1);
             }
 
+            // Set the default deduplicated count to match the date filtered count
+            // This ensures that if deduplication isn't run, the values will match
+            TimelineState.RowCountAfterDedup = TimelineState.RowCountAfterDateFilter;
+
             if (parsedArgs.Deduplicate)
             {
-                Deduplicator.RunPostExportDeduplication(outputPath);
-
                 try
                 {
+                    // Store the current count before deduplication
+                    int countBeforeDedup = 0;
+
+                    if (parsedArgs.ExportFormat == "csv")
+                    {
+                        countBeforeDedup = File.ReadLines(outputPath).Count() - 1;
+                    }
+                    else if (parsedArgs.ExportFormat == "jsonl")
+                    {
+                        countBeforeDedup = File.ReadLines(outputPath).Count();
+                    }
+                    else if (parsedArgs.ExportFormat == "json")
+                    {
+                        var jsonText = File.ReadAllText(outputPath);
+                        var parsed = JsonSerializer.Deserialize<List<Models.TimelineRow>>(jsonText, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                        countBeforeDedup = parsed?.Count ?? 0;
+                    }
+
+                    Deduplicator.RunPostExportDeduplication(outputPath);
+
+                    // Now count the rows after deduplication
                     if (parsedArgs.ExportFormat == "csv")
                     {
                         TimelineState.RowCountAfterDedup = File.ReadLines(outputPath).Count() - 1;
@@ -307,13 +340,10 @@ class Program
                 catch (Exception ex)
                 {
                     Logger.LogWarning($"Failed to determine final row count after deduplication: {ex.Message}");
-                    TimelineState.RowCountAfterDedup = 0;
+                    // Keep the default value set earlier
                 }
             }
-            else
-            {
-                TimelineState.RowCountAfterDedup = rows.Count;
-            }
+
             // Run keyword tagger only if export format is CSV and tagging is enabled
             if (parsedArgs.EnableTagger && parsedArgs.ExportFormat == "csv")
             {
@@ -330,7 +360,7 @@ class Program
             }
 
             AnsiConsole.MarkupLine($"[magenta]      Timeline written to: {outputPath}[/]");
-            LoggerSummary.PrintFinalSummary();
+            LoggerSummary.PrintFinalSummary(parsedArgs);
         }
         catch (Exception ex)
         {
@@ -349,70 +379,5 @@ class Program
             AnsiConsole.MarkupLine("Press any key to exit...");
             Console.ReadKey(true); // true parameter hides the key press from display
         }
-    }
-
-    // New date filtering method that replaces DateFilter.cs
-    private static List<Models.TimelineRow> FilterRowsByDate(List<Models.TimelineRow> rows, DateTime? start, DateTime? end)
-    {
-        if (!start.HasValue && !end.HasValue)
-            return rows;
-
-        var filtered = new List<Models.TimelineRow>();
-        int parseFailures = 0;
-        int startFiltered = 0;
-        int endFiltered = 0;
-
-        foreach (var row in rows)
-        {
-            if (string.IsNullOrWhiteSpace(row.DateTime))
-                continue;
-
-            DateTime parsedDate;
-            bool success = DateTime.TryParse(row.DateTime, CultureInfo.InvariantCulture,
-                                          DateTimeStyles.None, out parsedDate);
-
-            if (!success)
-            {
-                parseFailures++;
-                if (parseFailures <= 5) // Only log the first few failures
-                {
-                    Logger.LogError($"Failed to parse date: {row.DateTime}");
-                }
-                continue;
-            }
-
-            // Apply date range filter
-            if (start.HasValue && parsedDate < start.Value)
-            {
-                startFiltered++;
-                continue;
-            }
-
-            if (end.HasValue && parsedDate > end.Value)
-            {
-                endFiltered++;
-                continue;
-            }
-
-            // Row passed all filters
-            filtered.Add(row);
-        }
-
-        if (parseFailures > 0)
-        {
-            Logger.LogWarning($"Date filtering had {parseFailures} parse failures");
-        }
-
-        if (start.HasValue)
-        {
-            Logger.LogInfo($"Filtered out {startFiltered} rows before {start.Value}");
-        }
-
-        if (end.HasValue)
-        {
-            Logger.LogInfo($"Filtered out {endFiltered} rows after {end.Value}");
-        }
-
-        return filtered;
     }
 }

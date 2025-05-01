@@ -9,14 +9,13 @@ using System.Globalization;
 
 namespace ForensicTimeliner.Tools.EZTools;
 
-public class RegistryParser : IArtifactParser
+public class UserAssistParser : IArtifactParser
 {
     public List<TimelineRow> Parse(string inputDir, string baseDir, ArtifactDefinition artifact, ParsedArgs args)
     {
         var rows = new List<TimelineRow>();
 
         Logger.PrintAndLog($"[>] - [{artifact.Artifact}] Scanning for relevant CSVs under: [{inputDir}]", "SCAN");
-
 
         var files = Discovery.FindArtifactFiles(inputDir, baseDir, artifact.Artifact);
         if (!files.Any())
@@ -43,7 +42,7 @@ public class RegistryParser : IArtifactParser
                 foreach (var record in records)
                 {
                     var dict = (IDictionary<string, object>)record;
-                    var parsedDt = dict.GetDateTime("LastWriteTimestamp");
+                    var parsedDt = dict.GetDateTime("LastExecuted");
                     if (parsedDt == null) continue;
 
                     string dtStr = parsedDt.Value.ToString("o").Replace("+00:00", "Z");
@@ -51,13 +50,14 @@ public class RegistryParser : IArtifactParser
                     rows.Add(new TimelineRow
                     {
                         DateTime = dtStr,
-                        TimestampInfo = "Last Write",
+                        TimestampInfo = "Last Executed",
                         ArtifactName = "Registry",
                         Tool = artifact.Tool,
-                        Description = dict.GetString("Category"),
-                        DataDetails = dict.GetString("Description"),
-                        DataPath = dict.GetString("ValueData") + "\\" + dict.GetString("ValueData2") + "\\" + dict.GetString("ValueData3"),
-                        EvidencePath = Path.GetRelativePath(baseDir, file)
+                        Description = artifact.Description,
+                        DataDetails = dict.GetString("ProgramName"),
+                        DataPath = dict.GetString("BatchValueName"),
+                        EvidencePath = dict.GetString("BatchKeyPath"),
+                        Count = dict.GetString("RunCounter")
                     });
 
                     timelineCount++;

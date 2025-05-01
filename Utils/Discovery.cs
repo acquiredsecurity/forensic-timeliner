@@ -31,29 +31,40 @@ public static class Discovery
 
         foreach (var filePath in csvFiles)
         {
-            string folderName = Path.GetFileName(Path.GetDirectoryName(filePath) ?? "");
+            // Get the full directory hierarchy to check for "Registry" anywhere in the path
+            string fullPath = Path.GetDirectoryName(filePath) ?? "";
             string fileName = Path.GetFileName(filePath);
-
-
             string normalizedFileName = StripDatePrefix(fileName);
 
-            bool folderMatched = artifact.Discovery.StrictFolderMatch
-                ? artifact.Discovery.FoldernamePatterns.Any(p => folderName.Equals(p, StringComparison.OrdinalIgnoreCase))
-                : artifact.Discovery.FoldernamePatterns.Any(p => folderName.Contains(p, StringComparison.OrdinalIgnoreCase));
+            // Check if any parent folder in the hierarchy matches the folder patterns
+            bool folderMatched = false;
+            if (artifact.Discovery.FoldernamePatterns.Any())
+            {
+                folderMatched = artifact.Discovery.StrictFolderMatch
+                    ? artifact.Discovery.FoldernamePatterns.Any(p =>
+                        fullPath.Split(Path.DirectorySeparatorChar)
+                               .Any(folder => folder.Equals(p, StringComparison.OrdinalIgnoreCase)))
+                    : artifact.Discovery.FoldernamePatterns.Any(p =>
+                        fullPath.Contains(p, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                // If no folder patterns are specified, consider it a match
+                folderMatched = true;
+            }
 
             bool fileMatched = artifact.Discovery.StrictFilenameMatch
                 ? artifact.Discovery.FilenamePatterns.Any(p => string.Equals(normalizedFileName, p, StringComparison.OrdinalIgnoreCase))
                 : artifact.Discovery.FilenamePatterns.Any(p => normalizedFileName.Contains(p, StringComparison.OrdinalIgnoreCase));
 
-         
             if (artifact.Discovery.StrictFilenameMatch && !fileMatched)
             {
-                continue; 
+                continue;
             }
 
             if (artifact.Discovery.StrictFolderMatch && !folderMatched)
             {
-                continue; 
+                continue;
             }
 
             if (fileMatched && folderMatched)
@@ -62,6 +73,7 @@ public static class Discovery
                 continue;
             }
 
+            // Continue with header checking as before
             if (!fileMatched && !folderMatched && artifact.Discovery.RequiredHeaders.Any())
             {
                 try
@@ -100,11 +112,19 @@ public static class Discovery
 
     private static string StripDatePrefix(string fileName)
     {
-
+        // Improved method to handle various date prefix formats
         if (fileName.Length > 16 && fileName[8] == '_' && fileName[15] == '_')
         {
             return fileName.Substring(16);
         }
+
+        // Check for timestamp_Name pattern (simpler version)
+        int underscorePos = fileName.IndexOf('_');
+        if (underscorePos > 0 && underscorePos <= 15 && int.TryParse(fileName.Substring(0, underscorePos), out _))
+        {
+            return fileName.Substring(underscorePos + 1);
+        }
+
         return fileName;
     }
 }

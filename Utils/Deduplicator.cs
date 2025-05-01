@@ -1,5 +1,4 @@
-﻿// Deduplicator.cs
-using System.Text;
+﻿using System.Text;
 using ForensicTimeliner.Models;
 
 namespace ForensicTimeliner.Utils
@@ -37,7 +36,8 @@ namespace ForensicTimeliner.Utils
                 }
 
                 var header = rawLines[0];
-                var content = rawLines.Skip(1);
+                var content = rawLines.Skip(1).ToList();
+                var initialCount = content.Count;
                 var seen = new HashSet<string>();
                 var deduped = new List<string>();
 
@@ -49,8 +49,11 @@ namespace ForensicTimeliner.Utils
                     }
                 }
 
+                int removedRows = initialCount - deduped.Count;
+
+                // Write the actual file
                 File.WriteAllLines(outputPath, new[] { header }.Concat(deduped), new UTF8Encoding(false));
-                Logger.PrintAndLog($"[#] - Post-export deduplication complete: removed {content.Count() - deduped.Count} rows (final count: {deduped.Count})", "SUCCESS");
+                Logger.PrintAndLog($"[#] - Post-export deduplication complete: removed {removedRows} rows (final count: {deduped.Count})", "SUCCESS");
             }
             catch (Exception ex)
             {

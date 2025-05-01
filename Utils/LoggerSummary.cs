@@ -3,6 +3,7 @@ using System.Drawing;
 using Spectre.Console;
 using System.Threading;
 using Color = Spectre.Console.Color;
+using ForensicTimeliner.CLI;
 
 namespace ForensicTimeliner.Utils;
 
@@ -71,8 +72,11 @@ public static class LoggerSummary
         ["LNK"] = "LNK",
         ["MFT"] = "MFT",
         ["Prefetch"] = "Prefetch",
+        ["RecentDocs"] = "RecentDocs",
         ["Registry"] = "Registry",
         ["Shellbags"] = "Shellbags",
+        ["TypedURLs"] = "TypedURLs",
+        ["UserAssist"] = "UserAssist",
 
     };
 
@@ -86,7 +90,7 @@ public static class LoggerSummary
         ToolArtifactSummary[key] += rowCount;
     }
 
-    public static void PrintFinalSummary()
+    public static void PrintFinalSummary(ParsedArgs parsedArgs)
     {
         if (ToolArtifactSummary.Count == 0)
             return;
@@ -132,9 +136,10 @@ public static class LoggerSummary
             .AddColumn(new TableColumn("[bold]Rows[/]").Centered());
 
         summaryTable.AddRow("Collected", $"[green]{TimelineState.RowCountCollected:N0}[/]");
+        
         summaryTable.AddRow("Date Filtered", TimelineState.RowsFilteredByDate > 0
-            ? $"[red]-{TimelineState.RowsFilteredByDate:N0}[/]"
-            : "[dim]0[/]");
+           ? $"[red]-{TimelineState.RowsFilteredByDate:N0}[/]"
+           : "[dim]0[/]");
 
         summaryTable.AddRow("Deduplicated", TimelineState.RowsDeduplicated > 0
             ? $"[red]-{TimelineState.RowsDeduplicated:N0}[/]"

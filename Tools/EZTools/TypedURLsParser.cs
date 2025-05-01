@@ -9,14 +9,13 @@ using System.Globalization;
 
 namespace ForensicTimeliner.Tools.EZTools;
 
-public class RegistryParser : IArtifactParser
+public class TypedURLsParser : IArtifactParser
 {
     public List<TimelineRow> Parse(string inputDir, string baseDir, ArtifactDefinition artifact, ParsedArgs args)
     {
         var rows = new List<TimelineRow>();
 
         Logger.PrintAndLog($"[>] - [{artifact.Artifact}] Scanning for relevant CSVs under: [{inputDir}]", "SCAN");
-
 
         var files = Discovery.FindArtifactFiles(inputDir, baseDir, artifact.Artifact);
         if (!files.Any())
@@ -43,10 +42,11 @@ public class RegistryParser : IArtifactParser
                 foreach (var record in records)
                 {
                     var dict = (IDictionary<string, object>)record;
-                    var parsedDt = dict.GetDateTime("LastWriteTimestamp");
+                    var parsedDt = dict.GetDateTime("Timestamp");
                     if (parsedDt == null) continue;
 
                     string dtStr = parsedDt.Value.ToString("o").Replace("+00:00", "Z");
+                    string url = dict.GetString("Url");
 
                     rows.Add(new TimelineRow
                     {
@@ -54,10 +54,12 @@ public class RegistryParser : IArtifactParser
                         TimestampInfo = "Last Write",
                         ArtifactName = "Registry",
                         Tool = artifact.Tool,
-                        Description = dict.GetString("Category"),
-                        DataDetails = dict.GetString("Description"),
-                        DataPath = dict.GetString("ValueData") + "\\" + dict.GetString("ValueData2") + "\\" + dict.GetString("ValueData3"),
-                        EvidencePath = Path.GetRelativePath(baseDir, file)
+                        Description = "Typed URL",
+                        DataPath = url,
+                        DataDetails = url,
+                        EvidencePath = dict.GetString("BatchKeyPath"),
+                        User = ExtractUserName(file),
+                        IPAddress = ExtractHostFromUrl(url)
                     });
 
                     timelineCount++;
@@ -73,5 +75,47 @@ public class RegistryParser : IArtifactParser
         }
 
         return rows;
+    }
+
+    // Helper method to extract username from the file path
+    private string ExtractUserName(string filePath)
+    {
+        // Attempt to extract username from file path like:
+        // 20250403121648_TypedURLs__C_Users_admin0x_NTUSER.DAT.csv
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+
+        int userIndex = fileName.IndexOf("_Users_");
+        if (userIndex > 0)
+        {
+            int startIndex = userIndex + 7; // Length of "_Users_"
+            int endIndex = fileName.IndexOf("_NTUSER", startIndex);
+            if (endIndex > startIndex)
+            {
+                return fileName.Substring(startIndex, endIndex - startIndex);
+            }
+        }
+
+        return "";
+    }
+
+    // Helper method to extract the host domain from a URL
+    private string ExtractHostFromUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return "";
+
+        try
+        {
+            // Try to parse the URL to get the host
+            if (Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && uri != null)
+            {
+                return uri.Host;
+            }
+        }
+        catch
+        {
+            // Ignore parsing errors
+        }
+
+        return "";
     }
 }
