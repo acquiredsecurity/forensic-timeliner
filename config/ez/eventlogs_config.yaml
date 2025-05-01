@@ -30,5 +30,7 @@ filters:
     Microsoft-Windows-TerminalServices-LocalSessionManager/Operational: [21, 24, 25]
     Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational: [261, 1149]
     Microsoft-Windows-TaskScheduler/Operational: [106, 140, 141, 129, 200, 201]
+    Microsoft-Windows-Windows Defender/Operational: [1116, 1117]
     Microsoft-Windows-WinRM/Operational: [169]
     SentinelOne/Operational: [1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110]
+    Microsoft-Windows-WinRM/Operational: [169]
