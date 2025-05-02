@@ -166,17 +166,22 @@ DateTime,TimestampInfo,ArtifactName,Tool,Description,DataDetails,DataPath,FileEx
 Event Log Filters
 Define EventChannelFilters per channel in your YAML configuration like so:
 
-EventChannelFilters:
+## Event Log Filters
+
+Define EventChannelFilters per channel in your YAML configuration like so:
+
+```
+event_channel_filters:
+  Security: [1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756]
+  System: [7045]
   Application: [1000, 1001]
   Microsoft-Windows-PowerShell/Operational: [4100, 4103, 4104]
   Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational: [72, 98, 104, 131, 140]
-  Microsoft-Windows-TerminalServices-LocalSessionManager/Operational: [21, 24, 25]
-  Microsoft-Windows-TaskScheduler/Operational: [106, 140, 141, 129, 200, 201]
+  Microsoft-Windows-TerminalServices-LocalSessionManager/Operational: [21, 22]
   Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational: [261, 1149]
+  Microsoft-Windows-TaskScheduler/Operational: [106, 140, 141, 129, 200, 201]
   Microsoft-Windows-WinRM/Operational: [169]
-  Security: [1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756]
   SentinelOne/Operational: [1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110]
-  System: [104, 7045]
 
 provider_filters:
     edgeupdate: [0]
@@ -184,7 +189,7 @@ provider_filters:
     brave: [0]
     Edge: [256]
     SentinelOne: [1, 31, 55, 57, 67, 68, 77, 81] 
-
+```
 
 MFT Processing and Filtering
 MFT parsing includes automatic timestamp normalization and extension/path filtering.
@@ -192,10 +197,10 @@ MFT parsing includes automatic timestamp normalization and extension/path filter
 By default, only Created0x10 timestamps are included to focus on file creation events and limit the overall timeline size
 
 Default filters:
-
+```
 DEFAULT_EXTENSIONS = [".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z"]
 DEFAULT_PATHS = ["Users"]
-        
+```     
   
 
 ---
