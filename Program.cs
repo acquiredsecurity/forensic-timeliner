@@ -15,6 +15,7 @@ using System.Text.Json;
 
 namespace ForensicTimeliner;
 
+
 class Program
 {
     static void Main(string[] args)
@@ -24,13 +25,16 @@ class Program
             // If EXE was double-clicked or no args supplied, default to interactive mode
             args = new[] { "--Interactive" };
         }
+
+        ParsedArgs parsedArgs = new(); // ✅ Moved here so it's accessible in finally
+
         try
         {
             // Force System.Text.Json source generator to compile this context
             _ = TimelineRowJsonContext.Default.ListTimelineRow;
 
             // Parse arguments first
-            var parsedArgs = ArgParser.Parse(args);
+            parsedArgs = ArgParser.Parse(args);
             parsedArgs.ExportFormat = string.IsNullOrWhiteSpace(parsedArgs.ExportFormat)
                 ? "csv"
                 : parsedArgs.ExportFormat.Trim().ToLowerInvariant();
@@ -72,7 +76,8 @@ class Program
             }
 
             // Load default discovery signatures
-            DiscoveryConfig.LoadFromYaml();
+            DiscoveryConfig.LoadFromYaml(skipVisuals: parsedArgs.NoPrompt);
+
 
             // Register YAML parsers
             // Axiom
@@ -375,9 +380,11 @@ class Program
         }
         finally
         {
-            // Add the "Press any key to exit" prompt
-            AnsiConsole.MarkupLine("Press any key to exit...");
-            Console.ReadKey(true); // true parameter hides the key press from display
+            if (!parsedArgs.NoPrompt)
+            {
+                AnsiConsole.MarkupLine("Press any key to exit...");
+                Console.ReadKey(true); // Only shown in interactive mode
+            }
         }
     }
 }

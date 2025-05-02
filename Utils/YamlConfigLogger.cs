@@ -8,9 +8,12 @@ namespace ForensicTimeliner.Utils;
 
 public static class YamlConfigLogger
 {
-    public static void PrintLoadedConfigs(List<(string Tool, string Artifact, string Path, bool Enabled)> configs)
+    public static void PrintLoadedConfigs(
+        List<(string Tool, string Artifact, string Path, bool Enabled)> configs,
+        bool skipVisual = false
+    )
     {
-        if (configs.Count == 0)
+        if (skipVisual || configs.Count == 0)
             return;
 
         AnsiConsole.Write(new Rule("[bold lime]Artifact Yaml Configs Loaded[/]").Centered());
@@ -40,8 +43,9 @@ public static class YamlConfigLogger
                 .Border(TableBorder.Rounded)
                 .Title($"[bold cyan]{group.Key}[/]")
                 .AddColumn(new TableColumn("[bold]Artifact[/]").NoWrap())
-                .AddColumn(new TableColumn("[bold]Path[/]")) 
+                .AddColumn(new TableColumn("[bold]Path[/]"))
                 .AddColumn(new TableColumn("[bold]Enabled[/]").NoWrap());
+
             foreach (var (tool, artifact, path, enabled) in group)
             {
                 string enabledStatus = enabled ? "[green]Yes[/]" : "[red]No[/]";
