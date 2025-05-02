@@ -19,8 +19,9 @@ Fully rewritten in C# for faster execution and easier packaging
 YAML-based artifact configs for modular, transparent artifact handling
 Integrated support for keyword tagging and .tle_sess session generation
 Enhanced CSV discovery logic with filename, folder, and header pattern matching.
-Bugs
 
+
+Bugs
 Fixed Issues with how Deduplication and Date Filters display in the final menu
 Add Support for additional EZ Registry Artifacts
 Updated YAML files for new artifacts
