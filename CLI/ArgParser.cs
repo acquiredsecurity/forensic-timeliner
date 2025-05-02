@@ -69,6 +69,7 @@ public static class ArgParser
                 case "-H": parsedArgs.Help = true; break;
                 case "--NoBanner": parsedArgs.NoBanner = true; break;
                 case "--IncludeRawData": parsedArgs.IncludeRawData = true; break;
+                case "--Silent": parsedArgs.NoBanner = true; parsedArgs.NoPrompt = true; break;
 
             }
         }

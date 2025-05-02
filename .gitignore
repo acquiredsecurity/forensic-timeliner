@@ -9,6 +9,8 @@
 # Build results
 bin/
 obj/
+/publish/
+
 
 # Other
 *.log
