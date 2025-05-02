@@ -13,7 +13,7 @@
 
 Forensic Timeliner has been fully rewritten in C# for maximum speed, maintainability, and native Windows performance. This major release introduces a new YAML-driven architecture and full compatibility with Timeline Explorer for seamless forensic review.
 
-✨ Highlights in v2.010.0
+- Highlights in v2.010.0
 
 Fully rewritten in C# for faster execution and easier packaging
 YAML-based artifact configs for modular, transparent artifact handling
@@ -21,7 +21,8 @@ Integrated support for keyword tagging and .tle_sess session generation
 Enhanced CSV discovery logic with filename, folder, and header pattern matching.
 
 
-Bugs
+- Bugs
+
 Fixed Issues with how Deduplication and Date Filters display in the final menu
 Add Support for additional EZ Registry Artifacts
 Updated YAML files for new artifacts
