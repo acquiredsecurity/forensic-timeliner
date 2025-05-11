@@ -5,20 +5,20 @@
 </div>
 
 
-> A high-speed forensic processing engine purpose-built for DFIR investigators. Quickly consolidate CSV output from top-tier triage tools into a unified mini timeline with built-in filtering, artifact detection, date filtering keyword tagging, and deduplication.
+> A high-speed forensic processing engine built for DFIR investigators. Quickly consolidate CSV output from top-tier triage tools into a unified mini timeline with built-in filtering, artifact detection, date filtering keyword tagging, and deduplication.
 ---
 
 ## Release
 🚀 What's New in v2.011.0 – Forensic Timeliner 
 
-This release introduces major enhancements to filtering, timestamp support, and configuration flexibility while maintaining full compatibility with Timeline Explorer. It focuses on improving visibility, usability, and control over how forensic artifacts are ingested and parsed.
+This release introduces major enhancements to filtering, timestamp support for MFT, and configuration flexibility while maintaining full compatibility with Timeline Explorer. It focuses on improving visibility, usability, and control over how forensic artifacts are ingested and parsed.
 
 🔧 Highlights in v2.011.0
 New ignore_filters Toggle
-Per-artifact YAML option to bypass all extension/path or event ID/provider filters, providing full MFT & Event Log ingestion when needed.
+Per-artifact YAML option to bypass all extension/path or event ID/provider filters FOR MFT and Event Logs, providing full MFT & Event Log ingestion when needed.
 
 Multi-Timestamp Support for MFT
-Add multiple MFT timestamps per entry (e.g. Created0x10, LastModified0x10, etc.), each with a dynamic TimestampInfo and description like MFT - Modified.
+Added multiple MFT timestamps per entry (e.g. Created0x10, LastModified0x10, etc.)
 
 Dynamic Timeline Descriptions
 MFT shows multi-timestamp artifacts with enriched timestamp descriptions (e.g., MFT - Created, MFT - Accessed) for improved filtering and readability.
