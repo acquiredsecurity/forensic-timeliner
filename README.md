@@ -165,6 +165,16 @@ DateTime,TimestampInfo,ArtifactName,Tool,Description,DataDetails,DataPath,FileEx
 
 ## YAML Config
 
+Timeline parsers can be customized using per-artifact YAML definitions. These control:
+
+- Artifact discovery (`filename_patterns`, `foldername_patterns`, etc.)
+- Filtering (`event_channel_filters`, `provider_filters`, `paths`, `extensions`)
+- Timestamp mapping (`timestamp_fields`) ** MFT Only
+- Optional overrides (`ignore_filters`) ** MFT & Event Logs
+  - Set ignore_filters: true to skip ball filter for MFT and Event Logs. 
+
+---
+
 Event Log Filters
 Define EventChannelFilters per channel in your YAML configuration like so:
 
