@@ -48,16 +48,29 @@ public class RegistryParser : IArtifactParser
 
                     string dtStr = parsedDt.Value.ToString("o").Replace("+00:00", "Z");
 
+                    string valueName = dict.GetString("ValueName");
+                    string valueData1 = dict.GetString("ValueData");
+                    string valueData2 = dict.GetString("ValueData2");
+                    string valueData3 = dict.GetString("ValueData3");
+
+                    string description = dict.GetString("Description");
+                    string comment = dict.GetString("Comment");
+                    string fullDescription = string.IsNullOrWhiteSpace(comment) ? description : $"{description} - {comment}";
+
+                    string keyPath = dict.GetString("KeyPath");
+                    string relativePath = Path.GetRelativePath(baseDir, file);
+                    string evidencePath = string.IsNullOrWhiteSpace(keyPath) ? relativePath : $"{relativePath} | {keyPath}";
+
                     rows.Add(new TimelineRow
                     {
                         DateTime = dtStr,
                         TimestampInfo = "Last Write",
                         ArtifactName = "Registry",
                         Tool = artifact.Tool,
-                        Description = dict.GetString("Category"),
-                        DataDetails = dict.GetString("Description"),
-                        DataPath = dict.GetString("ValueData") + "\\" + dict.GetString("ValueData2") + "\\" + dict.GetString("ValueData3"),
-                        EvidencePath = Path.GetRelativePath(baseDir, file)
+                        Description = fullDescription,
+                        DataDetails = fullDescription,
+                        DataPath = $"{valueName}\\{valueData1}\\{valueData2}\\{valueData3}",
+                        EvidencePath = evidencePath
                     });
 
                     timelineCount++;

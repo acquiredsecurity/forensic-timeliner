@@ -12,9 +12,11 @@ public class ArtifactDefinition
     public bool StrictFilenameMatch { get; set; } = true;
     public bool StrictFolderMatch { get; set; } = true;
 
+    public bool IgnoreFilters { get; set; } = false;
     public Dictionary<string, string> TimestampFields { get; set; } = new();
     public Dictionary<string, List<int>> EventChannelFilters { get; set; } = new();
-  
+    
+
 
 }
 
@@ -36,4 +38,6 @@ public class DiscoveryRule
     public bool StrictFilenameMatch { get; set; }
     public bool StrictFolderMatch { get; set; }
     public bool StrictHeaderMatch { get; set; }
+    
+
 }

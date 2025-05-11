@@ -1,6 +1,7 @@
 artifact: EventLogs
 tool: EZ Tools
 description: Event Logs
+ignore_filters: false
 discovery:
   filename_patterns:
     - _EvtxECmd_Output.csv
@@ -39,3 +40,35 @@ filters:
     brave: [0]
     Edge: [256]
     SentinelOne: [1, 31, 55, 57, 67, 68, 77, 81] 
+
+# --------------------------------------------------------------------------------
+# YAML Configuration Notes for Event Logs Artifact
+#
+# ignore_filters:
+#   - When true, disables both channel and provider filtering.
+#   - All event log rows will be included regardless of Event ID or Provider.
+#
+# filters:
+#   event_channel_filters:
+#     - Maps log channels (e.g., Security, System) to allowed Event IDs.
+#     - Only events matching both channel and listed Event IDs are included.
+#     - Set ignore_filters: true to bypass this.
+#
+#   provider_filters:
+#     - Filters events by their Provider name (e.g., "SentinelOne") and Event IDs.
+#     - Useful for filtering logs that use custom providers instead of standard channels.
+#
+#   extensions & paths:
+#     - These are ignored by the event log parser but must be defined to match schema.
+#     - Leave them as empty lists: extensions: [], paths: []
+#
+# required_headers:
+#   - All listed columns must be present in the CSV for it to be parsed.
+#   - If any required header is missing, the file will be skipped.
+#
+# discovery:
+#   - Controls how the parser finds input files.
+#   - filename_patterns: looks for files like "_EvtxECmd_Output.csv"
+#   - foldername_patterns: looks for folders like "EventLogs"
+#   - strict_* flags: allow partial or fuzzy matching when set to false.
+# --------------------------------------------------------------------------------

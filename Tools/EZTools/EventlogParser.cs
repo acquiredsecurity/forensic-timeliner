@@ -98,6 +98,9 @@ public class EventlogParser : IArtifactParser
 
     private static bool PassesFilter(IDictionary<string, object> dict, ArtifactDefinition artifact)
     {
+        if (artifact.IgnoreFilters)
+            return true;
+
         if (!dict.TryGetValue("EventId", out var eventIdObj) || !int.TryParse(eventIdObj?.ToString(), out var eventId))
             return false;
 

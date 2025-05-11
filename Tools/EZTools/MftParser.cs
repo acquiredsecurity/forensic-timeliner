@@ -27,14 +27,8 @@ public class MftParser : IArtifactParser
 
             try
             {
-                 ForensicTimeliner.Utils.ProgressUtils.ProcessCsvWithProgress(file, artifact.Artifact, (dict, task) =>
-
+                ForensicTimeliner.Utils.ProgressUtils.ProcessCsvWithProgress(file, artifact.Artifact, (dict, task) =>
                 {
-                    var parsedDt = dict.GetDateTime("Created0x10");
-                    if (parsedDt == null) return;
-
-                    string dtStr = parsedDt.Value.ToString("o").Replace("+00:00", "Z");
-
                     string parentPath = dict.GetString("ParentPath");
                     string fileName = dict.GetString("FileName");
                     if (string.IsNullOrWhiteSpace(fileName)) return;
@@ -42,31 +36,44 @@ public class MftParser : IArtifactParser
                     string fullPath = Path.Combine(parentPath, fileName).Replace("\\", "/");
                     string ext = dict.GetString("Extension").ToLowerInvariant();
 
-                    var allowedPaths = artifact.Filters?.Paths ?? new List<string>();
-                    if (allowedPaths.Any() && !allowedPaths.Any(p => fullPath.Contains(p, StringComparison.OrdinalIgnoreCase)))
-                        return;
-
-                    var allowedExts = artifact.Filters?.Extensions ?? new List<string>();
-                    if (allowedExts.Any() && !allowedExts.Contains(ext))
-                        return;
-
-                    rows.Add(new TimelineRow
+                    if (!artifact.IgnoreFilters)
                     {
-                        DateTime = dtStr,
-                        TimestampInfo = "Created",
-                        ArtifactName = artifact.Artifact,
-                        Tool = artifact.Tool,
-                        Description = artifact.Description,
-                        DataPath = fullPath,
-                        DataDetails = fileName,
-                        FileSize = dict.GetLong("FileSize"),
-                        FileExtension = ext.TrimStart('.'),
-                        EvidencePath = Path.GetRelativePath(baseDir, file)
-                    });
+                        var allowedPaths = artifact.Filters?.Paths ?? new List<string>();
+                        if (allowedPaths.Any() && !allowedPaths.Any(p => fullPath.Contains(p, StringComparison.OrdinalIgnoreCase)))
+                            return;
 
-                    parsedRows++;
-                    task.Increment(1);
+                        var allowedExts = artifact.Filters?.Extensions ?? new List<string>();
+                        if (allowedExts.Any() && !allowedExts.Contains(ext))
+                            return;
+                    }
+
+                    // Iterate over all timestamp fields defined in YAML
+                    foreach (var tsField in artifact.TimestampFields)
+                    {
+                        var parsedDt = dict.GetDateTime(tsField.Key);
+                        if (parsedDt == null) continue;
+
+                        string dtStr = parsedDt.Value.ToString("o").Replace("+00:00", "Z");
+
+                        rows.Add(new TimelineRow
+                        {
+                            DateTime = dtStr,
+                            TimestampInfo = tsField.Value,  // e.g., "Modified", "Accessed"
+                            ArtifactName = artifact.Artifact,
+                            Tool = artifact.Tool,
+                            Description = $"{artifact.Description} - {tsField.Value}",
+                            DataPath = fullPath,
+                            DataDetails = fileName,
+                            FileSize = dict.GetLong("FileSize"),
+                            FileExtension = ext.TrimStart('.'),
+                            EvidencePath = Path.GetRelativePath(baseDir, file)
+                        });
+
+                        parsedRows++;
+                        task.Increment(1);
+                    }
                 });
+
 
                 Logger.PrintAndLog($"[✓] - [{artifact.Artifact}] Parsed {parsedRows} timeline rows from: {Path.GetFileName(file)}", "SUCCESS");
                 LoggerSummary.TrackSummary(artifact.Tool, artifact.Artifact, parsedRows);

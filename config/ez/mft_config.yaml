@@ -1,6 +1,13 @@
 artifact: MFT
 tool: EZ Tools
-description: MFT Created
+description: MFT
+ignore_filters: false
+timestamp_fields:
+  Created0x10: Created
+  # Created0x30: Created30	
+  # LastModified0x10: Modified		
+  # LastRecordChange0x10: LastRecordChange	
+  # LastAccess0x10: Last Accessed	
 discovery:
   filename_patterns:
     - _MFTECmd_$MFT_Output.csv
@@ -49,4 +56,35 @@ filters:
     - .7z
   paths:
     - Users
+
+# --------------------------------------------------------------------------------
+# YAML Configuration Notes for MFT Artifact
+#
+# timestamp_fields:
+#   - Maps CSV timestamp columns to timeline labels.
+#   - You can enable or disable specific timestamps by commenting them out.
+#     Example: "Created0x10: Created", "LastModified0x10: Modified"
+#   - Each enabled field creates a separate timeline row per record.
+#
+# ignore_filters:
+#   - When set to true, disables all path and extension filtering.
+#   - All MFT records will be included regardless of content.
+#
+# filters:
+#   extensions:
+#     - Only include records with one of these file extensions (e.g., .exe, .zip).
+#     - Comparison is case-insensitive and includes leading dot.
+#   paths:
+#     - Only include records with a FullPath containing these substrings.
+#     - Useful to limit results to user or suspicious directories (e.g., "Users").
+#
+# required_headers:
+#   - All fields listed here must be present in the input CSV for it to be processed.
+#   - If any required header is missing, the file will be skipped.
+#
+# discovery:
+#   - Controls how the parser finds input files.
+#   - Filename/folder/header patterns are used to locate MFT output (e.g. from MFTECmd).
+#   - Set strict_* flags to false to allow partial or fuzzy matching.
+# --------------------------------------------------------------------------------
 
