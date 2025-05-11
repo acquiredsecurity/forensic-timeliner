@@ -230,7 +230,7 @@ DEFAULT_PATHS = ["Users"]
 
 | Artifact                   | Supported Tool(s)       | Example Filename(s)                                                |
 |---------------------------|--------------------------|----------------------------------------------------------------------|
-| Amcache                   | EZ Tools, Axiom          | AssociatedFileEntries.csv, AmCache File Entries.csv                 |
+| Amcache                   | EZ Tools, Axiom          | UnAssociatedFileEntries.csv, AssociatedFileEntries.csv, AmCache File Entries.csv                 |
 | AppCompatCache            | EZ Tools, Axiom          | AppCompatCache.csv, Shim Cache.csv                                  |
 | AutoRuns                 | Axiom                    | Autorun Items.csv                                                   |
 | Chrome History            | Axiom                    | Chrome Web History.csv                                              |
