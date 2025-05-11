@@ -12,6 +12,7 @@
 ![Stars](https://img.shields.io/github/stars/acquiredsecurity/forensic-timeliner?style=for-the-badge)
 ![Contributors](https://img.shields.io/github/contributors/acquiredsecurity/forensic-timeliner?style=for-the-badge)
 ![Maintained](https://img.shields.io/badge/Maintenance-Actively--Developed-brightgreen?style=for-the-badge)
+[![CodeFactor](https://www.codefactor.io/repository/github/acquiredsecurity/forensic-timeliner/badge)](https://www.codefactor.io/repository/github/acquiredsecurity/forensic-timeliner)
 
 ---
 
