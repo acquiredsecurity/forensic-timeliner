@@ -193,8 +193,6 @@ Define EventChannelFilters per channel in your YAML configuration like so:
 
 ```
 event_channel_filters:
-  Security: [1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756]
-  System: [7045]
   Application: [1000, 1001]
   Microsoft-Windows-PowerShell/Operational: [4100, 4103, 4104]
   Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational: [72, 98, 104, 131, 140]
@@ -203,6 +201,8 @@ event_channel_filters:
   Microsoft-Windows-TaskScheduler/Operational: [106, 140, 141, 129, 200, 201]
   Microsoft-Windows-WinRM/Operational: [169]
   SentinelOne/Operational: [1, 31, 55, 57, 67, 68, 77, 81, 93, 97, 100, 101, 104, 110]
+  Security: [1102, 4624, 4625, 4648, 4698, 4702, 4720, 4722, 4723, 4724, 4725, 4726, 4732, 4756]
+  System: [7045]
 
 provider_filters:
     edgeupdate: [0]
