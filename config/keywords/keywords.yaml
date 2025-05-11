@@ -25,5 +25,5 @@ keywords:
 #   - Matching rows are **not modified** in the output; no extra columns are added.
 #   - Tagging occurs **after** export, ensuring full timeline context is available.
 #   - This flag creates a session file for Timeline Explorer. The csv file and session file must be opened from the original output directory or you must edit the session file in a text editor
-#   - Rows are tagged for use in Timeline Explorer based in keywords 
+#   - Rows are tagged for use in Timeline Explorer based on the keywords provided 
 #--------------------------------------------------------------------------------
