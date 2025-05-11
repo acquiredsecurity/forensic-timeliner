@@ -9,23 +9,23 @@
 ---
 
 ## Release
-🚀 What's New in v2.010.0– Forensic Timeliner (C# Edition)
+🚀 What's New in v2.011.0 – Forensic Timeliner (C# Edition)
 
-Forensic Timeliner has been fully rewritten in C# for maximum speed, maintainability, and native Windows performance. This major release introduces a new YAML-driven architecture and full compatibility with Timeline Explorer for seamless forensic review.
+This release introduces major enhancements to filtering, timestamp support, and configuration flexibility while maintaining full compatibility with Timeline Explorer. It focuses on improving visibility, usability, and control over how forensic artifacts are ingested and parsed.
 
-- Highlights in v2.010.0
+🔧 Highlights in v2.011.0
+New ignore_filters Toggle
+Per-artifact YAML option to bypass all extension/path or event ID/provider filters, providing full MFT & Event Log ingestion when needed.
 
-Fully rewritten in C# for faster execution and easier packaging
-YAML-based artifact configs for modular, transparent artifact handling
-Integrated support for keyword tagging and .tle_sess session generation
-Enhanced CSV discovery logic with filename, folder, and header pattern matching.
+Multi-Timestamp Support for MFT
+Add multiple MFT timestamps per entry (e.g. Created0x10, LastModified0x10, etc.), each with a dynamic TimestampInfo and description like MFT - Modified.
 
+Dynamic Timeline Descriptions
+MFT shows multi-timestamp artifacts with enriched timestamp descriptions (e.g., MFT - Created, MFT - Accessed) for improved filtering and readability.
 
 - Bugs
-
-Fixed Issues with how Deduplication and Date Filters display in the final menu
-Add Support for additional EZ Registry Artifacts
-Updated YAML files for new artifacts
+Registry Value
+Fixed an issue with registry ValueName not being added to lines
 
 ---
 
