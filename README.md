@@ -9,7 +9,7 @@
 ---
 
 ## Release
-🚀 What's New in v2.011.0 – Forensic Timeliner (C# Edition)
+🚀 What's New in v2.011.0 – Forensic Timeliner 
 
 This release introduces major enhancements to filtering, timestamp support, and configuration flexibility while maintaining full compatibility with Timeline Explorer. It focuses on improving visibility, usability, and control over how forensic artifacts are ingested and parsed.
 
