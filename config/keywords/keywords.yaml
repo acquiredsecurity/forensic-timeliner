@@ -2,3 +2,28 @@ keywords:
   - label: "Keywords"
     keywords:
       - mimikatz
+
+# --------------------------------------------------------------------------------
+# YAML Configuration Notes for Keyword Tagging
+#
+# keywords:
+#   - Each keyword group contains a label and a list of keywords.
+#   - All keywords under a label will be searched across timeline fields.
+#     The default search fields are: DataPath, DataDetails, and Description.
+#   - Matching is case-insensitive and checks for partial substring matches.
+#   - The label is used for reporting and optional tag visualization.
+#
+# Example:
+#   - label: "Keywords"
+#     keywords:
+#       - mimikatz
+#       - powershell
+#       - rundll32
+#
+# --EnableTagger:
+#   - When this flag is set, the timeline export will be scanned for matches.
+#   - Matching rows are **not modified** in the output; no extra columns are added.
+#   - Tagging occurs **after** export, ensuring full timeline context is available.
+#   - This foag creates a session file for Timeline Explorer. The csv file and session file must be opened from the original output directory or you must edit the session file in a text editor
+#   - Rows are tagged for use in Timeline Explorer based in keywords 
+#--------------------------------------------------------------------------------
