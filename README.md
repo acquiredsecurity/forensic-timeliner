@@ -5,7 +5,7 @@
 </div>
 
 
-> A high-speed forensic processing engine built for DFIR investigators. Quickly consolidate CSV output from top-tier triage tools into a unified mini timeline with built-in filtering, artifact detection, date filtering keyword tagging, and deduplication.
+> A high-speed forensic processing engine built for DFIR investigators. Quickly consolidate CSV output from top-tier triage tools into a unified mini timeline with built-in filtering, artifact detection, date filtering, keyword tagging, and deduplication.
 
 ![Version](https://img.shields.io/badge/version-v2.011.0-blue?style=for-the-badge)
 ![Downloads](https://img.shields.io/github/downloads/acquiredsecurity/forensic-timeliner/total?style=for-the-badge)
