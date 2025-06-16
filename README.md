@@ -12,7 +12,7 @@
 ![Stars](https://img.shields.io/github/stars/acquiredsecurity/forensic-timeliner?style=for-the-badge)
 ![Contributors](https://img.shields.io/github/contributors/acquiredsecurity/forensic-timeliner?style=for-the-badge)
 ![Maintained](https://img.shields.io/badge/Maintenance-Actively--Developed-brightgreen?style=for-the-badge)
-[![CodeFactor](https://www.codefactor.io/repository/github/acquiredsecurity/forensic-timeliner/badge)](https://www.codefactor.io/repository/github/acquiredsecurity/forensic-timeliner)
+[![CodeFactor](https://www.codefactor.io/repository/github/acquiredsecurity/forensic-timeliner/?style=for-the-badge)](https://www.codefactor.io/repository/github/acquiredsecurity/forensic-timeliner)
 ![C#](https://img.shields.io/badge/C%23-239120.svg?style=for-the-badge&logo=c-sharp&logoColor=white)
 ![.NET 9](https://img.shields.io/badge/.NET_9-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 
