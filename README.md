@@ -19,23 +19,24 @@
 ---
 
 ## Release
-🚀 What's New in v2.011.0 – Forensic Timeliner 
+## 🔖 Forensic Timeliner v2.2 – Release Notes
 
-This release introduces major enhancements to filtering, timestamp support for MFT, and configuration flexibility while maintaining full compatibility with Timeline Explorer. It focuses on improving visibility, usability, and control over how forensic artifacts are ingested and parsed.
+### ✨ New Features
 
-🔧 Highlights in v2.011.0
-New ignore_filters Toggle
-Per-artifact YAML option to bypass all extension/path or event ID/provider filters FOR MFT and Event Logs, providing full MFT & Event Log ingestion when needed.
+- **Interactive Menu Enhancements**
+  - Added prompts to **display filter configuration** for:
+    - 🔹 **MFT** (timestamp, path, and extension filters)
+    - 🔹 **Event Logs** (channel and provider filters)
+    - 🔹 **Keyword tagging rules** from `keywords.yaml`
+  - Prompts now appear automatically if EZ Tools is selected and config files are present.
+  - Filter previews are displayed as rich tables using `Spectre.Console`.
 
-Multi-Timestamp Support for MFT
-Added multiple MFT timestamps per entry (e.g. Created0x10, LastModified0x10, etc.)
+- **Keyword Tagging Support for TLE**
+  - New interactive option to enable the **Timeline Explorer keyword tagger**.
+  - Generates a `.tle_sess` file with tagged rows based on user-defined keyword groups.
+  - Interactive preview of keyword groups before enabling.
 
-Dynamic Timeline Descriptions
-MFT shows multi-timestamp artifacts with enriched timestamp descriptions (e.g., MFT - Created, MFT - Accessed) for improved filtering and readability.
-
-- Bugs
-Registry Value
-Fixed an issue with registry ValueName not being added to lines
+---
 
 ---
 
@@ -186,16 +187,13 @@ Timeline parsers can be customized using per-artifact YAML definitions. These co
 
 ---
 
-Event Log Filters
-Define EventChannelFilters per channel in your YAML configuration like so:
-
 ## Event Log Filters
 
-Define EventChannelFilters per channel in your YAML configuration like so:
+Define EventChannelFilters per channel in your YAML configuration as seen below. Spport for [] to include an entire event log as needed.
 
 ```
 event_channel_filters:
-  Application: [1000, 1001]
+  Application: []
   Microsoft-Windows-PowerShell/Operational: [4100, 4103, 4104]
   Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational: [72, 98, 104, 131, 140]
   Microsoft-Windows-TerminalServices-LocalSessionManager/Operational: [21, 22]
