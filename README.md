@@ -115,7 +115,7 @@ ForensicTimeliner.exe --BaseDir C:\triage\hostname --ALL --OutputFile C:\timelin
 ---
 ## Downloads
 
-Latest Release: [ v2.011](https://github.com/acquiredsecurity/forensic-timeliner/releases)
+Latest Release: [ v2.2](https://github.com/acquiredsecurity/forensic-timeliner/releases/tag/v2.2)
 
 Download sample data for testing purposes here.
 
