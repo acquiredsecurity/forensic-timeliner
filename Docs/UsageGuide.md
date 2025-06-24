@@ -283,13 +283,9 @@ Artifacts:
         - "com"
         - "scr"
       Paths:
-        - "Windows\\System32"
-        - "Windows\\SysWOW64"
-        - "Users\\*\\Desktop"
-        - "Users\\*\\Downloads"
-        - "Users\\*\\Documents"
         - "ProgramData"
         - "Temp"
+        - "Users"
     Timestamps:
       Created0x10: "Created"
       Modified0x10: "Modified"
@@ -382,7 +378,7 @@ The generated `.tle` file contains:
 
 ### Using the Timeline Explorer Session
 1. Open Timeline Explorer
-2. File → Open → Select the `.tle` file
+2. File → Session →   Open → Select the `.tle` file
 3. Timeline data loads with pre-configured:
    - Column widths and ordering
    - Keyword highlighting
