@@ -19,15 +19,15 @@
 ---
 
 ## Release
-## 🔖 Forensic Timeliner v2.2 – Release Notes
+## Forensic Timeliner v2.2 – Release Notes
 
 ### ✨ New Features
 
 - **Interactive Menu Enhancements**
   - Added prompts to **display filter configuration** for:
-    - 🔹 **MFT** (timestamp, path, and extension filters)
-    - 🔹 **Event Logs** (channel and provider filters)
-    - 🔹 **Keyword tagging rules** from `keywords.yaml`
+    - **MFT** (timestamp, path, and extension filters)
+    - **Event Logs** (channel and provider filters)
+    - **Keyword tagging rules** from `keywords.yaml`
   - Prompts now appear automatically if EZ Tools is selected and config files are present.
   - Filter previews are displayed as rich tables using `Spectre.Console`.
 
