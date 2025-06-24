@@ -1,4 +1,4 @@
-# 🧠 Chainsaw Artifact Documentation
+# Chainsaw Artifact Documentation
 
 This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's timeline format.
 
