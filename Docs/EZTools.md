@@ -25,7 +25,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `ActivityTimelineParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                       | Notes                               |
 | -------------- | ---------------------------------- | ----------------------------------- |
@@ -44,7 +44,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `AmcacheParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field              | Notes                  |
 | -------------- | ------------------------- | ---------------------- |
@@ -66,7 +66,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `AppCompatParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field        | Notes                              |
 | -------------- | ------------------- | ---------------------------------- |
@@ -85,7 +85,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `DeletedParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field        | Notes                  |
 | -------------- | ------------------- | ---------------------- |
@@ -105,7 +105,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `EventlogParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field     | Source Field   | Notes                                |
 | ------------------ | -------------- | ------------------------------------ |
@@ -134,7 +134,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `JumplistsParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field(s)        | Notes                             |
 | -------------- | ---------------------- | --------------------------------- |
@@ -154,7 +154,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `LnkParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field(s)          | Notes                              |
 | -------------- | ------------------------ | ---------------------------------- |
@@ -175,7 +175,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `MftParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field(s)         | Notes                             |
 | -------------- | ----------------------- | --------------------------------- |
@@ -200,7 +200,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `PrefetchParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field       | Notes                            |
 | -------------- | ------------------ | -------------------------------- |
@@ -219,7 +219,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `RecentDocsParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field(s)                          | Notes                                     |
 | -------------- | ---------------------------------------- | ----------------------------------------- |
@@ -240,7 +240,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `RegistryParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field            | Notes                             |
 | -------------- | ----------------------- | --------------------------------- |
@@ -259,7 +259,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `ShellbagsParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field(s)     | Notes                    |
 | -------------- | ------------------- | ------------------------ |
@@ -278,7 +278,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `TypedURLsParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field        | Notes                               |
 | -------------- | ------------------- | ----------------------------------- |
@@ -299,7 +299,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 **Parser:** `UserAssistParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field       | Notes                  |
 | -------------- | ------------------ | ---------------------- |
