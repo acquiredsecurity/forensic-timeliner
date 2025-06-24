@@ -1,4 +1,4 @@
-# 🔹 Hayabusa
+# Hayabusa
 
 **Parser:** `HayabusaParser.cs`
 
