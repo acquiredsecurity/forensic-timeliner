@@ -21,7 +21,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Activity Timeline
+## Activity Timeline
 
 **Parser:** `ActivityTimelineParser.cs`
 
@@ -40,7 +40,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Amcache
+## Amcache
 
 **Parser:** `AmcacheParser.cs`
 
@@ -62,7 +62,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 AppCompatCache
+## AppCompatCache
 
 **Parser:** `AppCompatParser.cs`
 
@@ -81,7 +81,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Deleted Files
+## Deleted Files
 
 **Parser:** `DeletedParser.cs`
 
@@ -101,7 +101,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Event Logs
+## Event Logs
 
 **Parser:** `EventlogParser.cs`
 
@@ -130,7 +130,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 JumpLists
+## JumpLists
 
 **Parser:** `JumplistsParser.cs`
 
@@ -150,7 +150,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 LNK Files
+## LNK Files
 
 **Parser:** `LnkParser.cs`
 
@@ -171,7 +171,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 MFT
+## MFT
 
 **Parser:** `MftParser.cs`
 
@@ -196,7 +196,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Prefetch
+## Prefetch
 
 **Parser:** `PrefetchParser.cs`
 
@@ -215,7 +215,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Recent Docs
+## Recent Docs
 
 **Parser:** `RecentDocsParser.cs`
 
@@ -236,7 +236,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Registry
+## Registry
 
 **Parser:** `RegistryParser.cs`
 
@@ -255,7 +255,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Shellbags
+## Shellbags
 
 **Parser:** `ShellbagsParser.cs`
 
@@ -274,7 +274,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 Typed URLs
+## Typed URLs
 
 **Parser:** `TypedURLsParser.cs`
 
@@ -295,7 +295,7 @@ This page documents how the following EZ Tools artifacts are parsed into Forensi
 
 ---
 
-## 🔹 UserAssist
+## UserAssist
 
 **Parser:** `UserAssistParser.cs`
 
