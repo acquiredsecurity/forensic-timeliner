@@ -49,7 +49,7 @@
 * [Timeline Output](#timeline-output-field-structure)
 * [Yaml Config](#yaml-config)
 * [Tool Documentation](#-tool-documentation)
-* [Usage Guide](Docs/UsageGuide.md) - Comprehensive Usage Guide)
+* [Usage Guide](Docs/UsageGuide.md) - (Comprehensive Usage Guide)
 * [Artifact and Output Support Table](#artifact-and-output-support-table)
 * [License](#license)
 
