@@ -1,4 +1,4 @@
-# 🧠 Axiom Artifact Documentation
+# Axiom Artifact Documentation
 
 This page documents how Magnet Axiom artifacts are parsed into Forensic Timeliner's timeline format.
 
