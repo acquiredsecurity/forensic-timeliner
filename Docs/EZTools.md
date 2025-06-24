@@ -1,4 +1,4 @@
-# 🧠 EZ Tools Artifact Documentation
+# EZ Tools Artifact Documentation
 
 This page documents how the following EZ Tools artifacts are parsed into Forensic Timeliner's timeline format.
 
