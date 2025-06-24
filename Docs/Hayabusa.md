@@ -2,7 +2,7 @@
 
 **Parser:** `HayabusaParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field | Notes                                    |
 | -------------- | ------------ | ---------------------------------------- |
@@ -31,7 +31,7 @@
 
 * **Progress tracking**: Displays real-time progress during CSV processing with row count updates.
 
-### 📝 Expected CSV Format
+### Expected CSV Format
 
 Hayabusa typically outputs CSV files with these key columns:
 - **Timestamp**: Primary event timestamp (ISO format preferred)
