@@ -1,4 +1,4 @@
-# 🧠 Nirsoft Artifact Documentation
+# Nirsoft Artifact Documentation
 
 This page documents how Nirsoft utility artifacts are parsed into Forensic Timeliner's timeline format.
 
@@ -8,11 +8,11 @@ This page documents how Nirsoft utility artifacts are parsed into Forensic Timel
 
 ---
 
-## 🔹 Browsing History View
+## Browsing History View
 
 **Parser:** `BrowsingHistoryViewParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field    | Notes                                    |
 | -------------- | --------------- | ---------------------------------------- |
@@ -45,7 +45,7 @@ Nirsoft BrowsingHistoryView typically outputs CSV files with these key columns:
 - **Web Browser**: Source browser (Chrome, Firefox, Edge, IE, etc.)
 - **User Profile**: User account/profile name
 
-### 💡 Integration Notes
+### Integration Notes
 
 - Place Nirsoft CSV outputs in folders with "Nirsoft" in the name for automatic discovery
 - BrowsingHistoryView consolidates history from multiple browsers into a single output
@@ -55,14 +55,14 @@ Nirsoft BrowsingHistoryView typically outputs CSV files with these key columns:
 
 ---
 
-## ⚙️ Common Nirsoft Behaviors
+## Common Nirsoft Behaviors
 
 * **Automatic CSV discovery**: Uses the Discovery utility to find Nirsoft CSV files based on filename patterns, folder names, and file headers
 * **Cross-tool compatibility**: Nirsoft utilities often have consistent CSV output formats
 * **Multi-user support**: Many Nirsoft tools extract data across user profiles
 * **Activity enrichment**: Intelligent categorization of activities based on content analysis
 
-### 📝 General Nirsoft CSV Characteristics
+### General Nirsoft CSV Characteristics
 
 Nirsoft utilities typically output CSV files with these features:
 - **Consistent field naming**: Predictable column names across different utilities
@@ -70,7 +70,7 @@ Nirsoft utilities typically output CSV files with these features:
 - **Multi-source aggregation**: Tools often combine data from multiple sources
 - **User context**: Strong support for multi-user environments
 
-### 💡 General Integration Notes
+### General Integration Notes
 
 - Nirsoft tools are designed for standalone forensic analysis and integrate well with timeline analysis
 - Most Nirsoft utilities support CSV export making them ideal for timeline integration
