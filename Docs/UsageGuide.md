@@ -117,10 +117,10 @@ ForensicTimeliner.exe --ProcessAxiom --BaseDir "C:\Axiom_Export\WebHistory" --Ou
 ### Nirsoft Processing
 ```bash
 # Basic Nirsoft processing
-ForensicTimeliner.exe --ProcessNirsoft --BaseDir "C:\nirsoft_output" --OutputFile "C:\nirsoft_timeline.csv"
+ForensicTimeliner.exe --ProcessNirsoft --BaseDir "C:\nirsoft_output" --OutputFile "C:\WebResults.csv"
 
 # Nirsoft with browser history focus
-ForensicTimeliner.exe --ProcessNirsoft --BaseDir "C:\nirsoft_output" --OutputFile "C:\browser_timeline.csv" --EnableTagger
+ForensicTimeliner.exe --ProcessNirsoft --BaseDir "C:\nirsoft_output" --OutputFile "C:\WebResults.csv" --EnableTagger
 ```
 
 ---
@@ -133,7 +133,7 @@ ForensicTimeliner.exe --ProcessNirsoft --BaseDir "C:\nirsoft_output" --OutputFil
 ForensicTimeliner.exe --ProcessEZ --ProcessHayabusa --ProcessChainsaw --BaseDir "C:\combined_analysis" --OutputFile "C:\unified_timeline.csv"
 
 # All tools with advanced options
-ForensicTimeliner.exe --ALL --BaseDir "C:\full_triage" --OutputFile "C:\complete_timeline" --EnableTagger --EnableDeduplication --IncludeRawData --ExportFormat csv
+ForensicTimeliner.exe --ALL --BaseDir "C:\full_triage" --OutputFile "C:\complete_timeline" --EnableTagger --EnableDeduplication  --ExportFormat csv
 ```
 
 ### Date and Time Filtering
