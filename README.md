@@ -98,10 +98,10 @@ Detailed documentation for each supported tool showing how artifacts are parsed 
 * **[Nirsoft](Docs/Nirsoft.md)** - Cross-browser history analysis and Windows utility artifacts
 
 Each documentation page includes:
-- 🧩 **Field Mapping Tables** - How source CSV fields map to timeline format
-- ⚙️ **Special Behaviors** - Unique processing logic and features
-- 📝 **Expected CSV Format** - Required input format and structure
-- 💡 **Integration Notes** - Tips for optimal usage and file organization
+- **Field Mapping Tables** - How source CSV fields map to timeline format
+- **Special Behaviors** - Unique processing logic and features
+- **Expected CSV Format** - Required input format and structure
+- **Integration Notes** - Tips for optimal usage and file organization
 
 ---
 
