@@ -48,7 +48,7 @@
 * [Command Line Arguments](#command-line-arguments)
 * [Timeline Output](#timeline-output-field-structure)
 * [Yaml Config](#yaml-config)
-* [**📚 Tool Documentation**](#-tool-documentation)
+* [Tool Documentation](#-tool-documentation)
 * [Artifact and Output Support Table](#artifact-and-output-support-table)
 * [License](#license)
 
