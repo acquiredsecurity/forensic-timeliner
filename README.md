@@ -40,18 +40,17 @@
 
 ---
 
-
-## Table of Contents
-
-- [Main Features](#main-features)
-- [Quick Start](#quick-start)
-- [Downloads](#downloads)
-- [Screenshots](#screenshots)
-- [Command Line Arguments](#command-line-arguments)
-- [Timeline Output](#timeline-output-field-structure)
-- [Yaml Config](#yaml-config)
-- [Artifact and Output Support Table](#artifact-and-output-support-table)
-- [License](#license)
+**Table of Contents**
+* [Main Features](#main-features)
+* [Quick Start](#quick-start)
+* [Downloads](#downloads)
+* [Screenshots](#screenshots)
+* [Command Line Arguments](#command-line-arguments)
+* [Timeline Output](#timeline-output-field-structure)
+* [Yaml Config](#yaml-config)
+* [**📚 Tool Documentation**](#-tool-documentation)
+* [Artifact and Output Support Table](#artifact-and-output-support-table)
+* [License](#license)
 
 ---
 
@@ -84,6 +83,25 @@
 - Date filtering and deduplication controls
 
 - Interactive Setup and Yaml Discovery Preview
+
+---
+
+## 📚 Tool Documentation
+
+Detailed documentation for each supported tool showing how artifacts are parsed and mapped to the unified timeline format:
+
+### Supported Tools
+* **[EZ Tools](Docs/EZTools.md)** - Comprehensive Windows artifact analysis (Activity Timeline, Amcache, AppCompatCache, Event Logs, JumpLists, LNK Files, MFT, Prefetch, Registry, Shellbags, UserAssist, and more)
+* **[Hayabusa](Docs/Hayabusa.md)** - Sigma-based Windows event log analysis and threat hunting
+* **[Chainsaw](Docs/Chainsaw.md)** - MITRE ATT&CK focused event log analysis (Account Tampering, Credential Access, Lateral Movement, Persistence, PowerShell, and more)
+* **[Axiom](Docs/Axiom.md)** - Magnet Forensics comprehensive artifact extraction (Web History, Prefetch, Registry, File System, and more)
+* **[Nirsoft](Docs/Nirsoft.md)** - Cross-browser history analysis and Windows utility artifacts
+
+Each documentation page includes:
+- 🧩 **Field Mapping Tables** - How source CSV fields map to timeline format
+- ⚙️ **Special Behaviors** - Unique processing logic and features
+- 📝 **Expected CSV Format** - Required input format and structure
+- 💡 **Integration Notes** - Tips for optimal usage and file organization
 
 ---
 
