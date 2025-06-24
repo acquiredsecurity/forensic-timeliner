@@ -447,10 +447,10 @@ C:\forensic_analysis\
 ├── triage_data\
 │   ├── EZTools\          # EZ Tools output
 │   ├── KAPE\             # KAPE output
-│   ├── Hayabusa\         # Hayabusa CSV files
+│   ├── Hayabusa\         # Hayabusa CSV files hayabusa.csv
 │   ├── Chainsaw\         # Chainsaw output
 │   ├── Axiom\            # Axiom exports
-│   └── Nirsoft\          # Nirsoft utility output
+│   └── Nirsoft\          # Nirsoft utility output WebResults.csv
 ├── timelines\            # Generated timeline files
 ├── config\               # Custom YAML configurations
 └── keywords\             # Keyword tagging files
@@ -467,29 +467,12 @@ C:\forensic_analysis\
 
 ## Troubleshooting Tips
 
-### Common Issues and Solutions
 
-**No CSV files found:**
-```bash
-# Use interactive mode to preview discovery
-ForensicTimeliner.exe --Interactive --BaseDir "C:\your_data"
-
-# Check file naming and directory structure
-# Ensure CSV files are in expected locations
-```
-
-**Memory issues with large datasets:**
-```bash
-# Process tools separately
-ForensicTimeliner.exe --ProcessEZ --BaseDir "C:\data" --OutputFile "C:\part1.csv"
-
-# Use deduplication to reduce output size
-ForensicTimeliner.exe --ALL --BaseDir "C:\data" --OutputFile "C:\timeline.csv" --EnableDeduplication
-```
 
 **Timeline Explorer session issues:**
 - Ensure the `.tle` file and `.csv` file are in the same directory
 - Update file paths in the `.tle` file if you move files
 - Verify Timeline Explorer can access the file paths specified
+- Line Ketyword Tagging may be prone to false positives
 
-This comprehensive guide should help users understand all the available options and how to use them effectively for different forensic analysis scenarios.
+
