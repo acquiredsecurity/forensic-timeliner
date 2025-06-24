@@ -26,11 +26,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Activity Timeline
+## Activity Timeline
 
 **Parser:** `AxiomActivityTimelineParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                      | Notes                                    |
 | -------------- | ------------------------------------------------- | ---------------------------------------- |
@@ -52,11 +52,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Amcache
+## Amcache
 
 **Parser:** `AxiomAmcacheParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                      | Notes                         |
 | -------------- | ------------------------------------------------- | ----------------------------- |
@@ -73,11 +73,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 AppCompat Cache
+## AppCompat Cache
 
 **Parser:** `AxiomAppCompatParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                      | Notes                         |
 | -------------- | ------------------------------------------------- | ----------------------------- |
@@ -92,11 +92,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 AutoRuns
+## AutoRuns
 
 **Parser:** `AxiomAutoRunsParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                         | Notes                         |
 | -------------- | ---------------------------------------------------- | ----------------------------- |
@@ -115,11 +115,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Chrome History
+## Chrome History
 
 **Parser:** `AxiomChromeHistoryParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                      | Notes                              |
 | -------------- | ------------------------------------------------- | ---------------------------------- |
@@ -142,11 +142,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Edge History
+## Edge History
 
 **Parser:** `AxiomEdgeParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                   | Notes                              |
 | -------------- | ---------------------------------------------- | ---------------------------------- |
@@ -165,11 +165,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Event Logs
+## Event Logs
 
 **Parser:** `AxiomEventlogsParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                    | Notes                                  |
 | -------------- | ----------------------------------------------- | -------------------------------------- |
@@ -194,11 +194,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Firefox History
+## Firefox History
 
 **Parser:** `AxiomFirefoxParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                   | Notes                              |
 | -------------- | ---------------------------------------------- | ---------------------------------- |
@@ -217,11 +217,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 IE History
+## IE History
 
 **Parser:** `AxiomIEHistoryParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                 | Notes                              |
 | -------------- | -------------------------------------------- | ---------------------------------- |
@@ -241,11 +241,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Jump Lists
+## Jump Lists
 
 **Parser:** `AxiomJumpListsParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                      | Notes                                |
 | -------------- | ------------------------------------------------- | ------------------------------------ |
@@ -266,11 +266,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 LNK Files
+## LNK Files
 
 **Parser:** `AxiomLnkParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                      | Notes                                |
 | -------------- | ------------------------------------------------- | ------------------------------------ |
@@ -291,11 +291,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 MRU Folder Access
+## MRU Folder Access
 
 **Parser:** `AxiomMruFolderAccessParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                         | Notes                         |
 | -------------- | ---------------------------------------------------- | ----------------------------- |
@@ -314,11 +314,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 MRU Open & Saved
+## MRU Open & Saved
 
 **Parser:** `AxiomMruOpenSavedParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                         | Notes                         |
 | -------------- | ---------------------------------------------------- | ----------------------------- |
@@ -337,11 +337,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 MRU Recent
+## MRU Recent
 
 **Parser:** `AxiomMruRecentParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                         | Notes                         |
 | -------------- | ---------------------------------------------------- | ----------------------------- |
@@ -360,11 +360,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Opera History
+## Opera History
 
 **Parser:** `AxiomOperaParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                   | Notes                              |
 | -------------- | ---------------------------------------------- | ---------------------------------- |
@@ -383,11 +383,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Prefetch
+## Prefetch
 
 **Parser:** `AxiomPrefetchParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                      | Notes                                |
 | -------------- | ------------------------------------------------- | ------------------------------------ |
@@ -408,11 +408,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Recycle Bin
+## Recycle Bin
 
 **Parser:** `AxiomRecycleBinParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                 | Notes                         |
 | -------------- | -------------------------------------------- | ----------------------------- |
@@ -427,11 +427,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 Shellbags
+## Shellbags
 
 **Parser:** `AxiomShellbagsParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                         | Notes                                |
 | -------------- | ---------------------------------------------------- | ------------------------------------ |
@@ -449,11 +449,11 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 
 ---
 
-## 🔹 UserAssist
+## UserAssist
 
 **Parser:** `AxiomUserAssistParser.cs`
 
-### 🧩 Field Mapping
+### Field Mapping
 
 | Timeline Field | Source Field                                 | Notes                         |
 | -------------- | -------------------------------------------- | ----------------------------- |
@@ -467,14 +467,14 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 | Count          | Application Run Count                        | Execution count               |
 | EvidencePath   | File path                                    | Relative to baseDir           |
 
-### ⚙️ Special Behavior
+### Special Behavior
 
 * **Path validation**: Skips records with empty File Name values
 * **Execution tracking**: Includes run count for frequency analysis
 
 ---
 
-## ⚙️ Common Axiom Behaviors
+## Common Axiom Behaviors
 
 * **Standardized timestamp format**: All parsers use Axiom's "UTC+00:00 (M/d/yyyy)" format
 * **Automatic CSV discovery**: Uses the Discovery utility for file detection
@@ -482,7 +482,7 @@ This page documents how Magnet Axiom artifacts are parsed into Forensic Timeline
 * **Progress tracking**: Most parsers include progress indication for large files
 * **Data validation**: Comprehensive validation to skip invalid or empty records
 
-### 📝 Expected CSV Format
+### Expected CSV Format
 
 Axiom typically outputs CSV files with these characteristics:
 - **Consistent timestamp format**: "Date/Time - UTC+00:00 (M/d/yyyy)" pattern
@@ -490,7 +490,7 @@ Axiom typically outputs CSV files with these characteristics:
 - **Standardized field naming**: Predictable column names across artifact types
 - **Unicode support**: Full international character support
 
-### 💡 Integration Notes
+### Integration Notes
 
 - Place Axiom CSV outputs in folders with "Axiom" in the name for automatic discovery
 - The tool automatically maps Axiom's detailed field structure to the unified timeline format
