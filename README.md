@@ -48,7 +48,7 @@
 * [Command Line Arguments](#command-line-arguments)
 * [Timeline Output](#timeline-output-field-structure)
 * [Yaml Config](#yaml-config)
-* [Tool Documentation](#-tool-documentation)
+* [Tool Documentation](#-tool-output-processing-documentation)
 * [Usage Guide](Docs/UsageGuide.md) - (Comprehensive Usage Guide)
 * [Artifact and Output Support Table](#artifact-and-output-support-table)
 * [License](#license)
@@ -187,7 +187,7 @@ Timeline parsers can be customized using per-artifact YAML definitions. These co
 
 ---
 
-## 📚 Tool Documentation
+## 📚 Tool Output Processing Documentation
 
 Detailed documentation for each supported tool showing how artifacts are parsed and mapped to the unified timeline format:
 
