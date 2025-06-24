@@ -25,11 +25,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Account Tampering
+## Account Tampering
 
 **Parser:** `AccountTamperingParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -46,11 +46,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Antivirus
+## Antivirus
 
 **Parser:** `AntivirusParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -69,11 +69,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Applocker
+## Applocker
 
 **Parser:** `ApplockerParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -91,11 +91,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Chainsaw MFT
+## Chainsaw MFT
 
 **Parser:** `ChainsawMftParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -112,11 +112,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Credential Access
+## Credential Access
 
 **Parser:** `CredentialAccessParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -134,11 +134,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Defense Evasion
+## Defense Evasion
 
 **Parser:** `DefenseEvasionParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -155,11 +155,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Indicator Removal
+## Indicator Removal
 
 **Parser:** `IndicatorRemovalParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -177,11 +177,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Lateral Movement
+## Lateral Movement
 
 **Parser:** `LateralMovementParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field     | Source Field               | Notes                              |
 | ------------------ | -------------------------- | ---------------------------------- |
@@ -202,11 +202,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Login Attacks
+## Login Attacks
 
 **Parser:** `LoginAttacksParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -223,11 +223,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Log Tampering
+## Log Tampering
 
 **Parser:** `LogTamperingParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -244,11 +244,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Microsoft RAS VPN Events
+## Microsoft RAS VPN Events
 
 **Parser:** `MicrosoftRasVpnEventsParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field     | Source Field               | Notes                              |
 | ------------------ | -------------------------- | ---------------------------------- |
@@ -267,11 +267,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Microsoft RDS Events
+## Microsoft RDS Events
 
 **Parser:** `MicrosoftRdsEventsParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -289,11 +289,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Persistence
+## Persistence
 
 **Parser:** `PersistenceParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -311,11 +311,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 PowerShell
+## PowerShell
 
 **Parser:** `PowershellParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -333,11 +333,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 RDP Events
+## RDP Events
 
 **Parser:** `RdpEventsParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -355,11 +355,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Service Installation
+## Service Installation
 
 **Parser:** `ServiceInstallationParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -377,11 +377,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Service Tampering
+## Service Tampering
 
 **Parser:** `ServiceTamperingParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -399,11 +399,11 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## 🔹 Sigma Rules
+## Sigma Rules
 
 **Parser:** `SigmaParser.cs`
 
-### 🧩 Field Mapping
+###  Field Mapping
 
 | Timeline Field | Source Field               | Notes                              |
 | -------------- | -------------------------- | ---------------------------------- |
@@ -421,7 +421,7 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 ---
 
-## ⚙️ Special Behavior
+## Special Behavior
 
 * **Flexible timestamp detection**: All parsers support multiple timestamp fields in order of preference:
   - `timestamp` (primary)
@@ -434,7 +434,7 @@ This page documents how Chainsaw artifacts are parsed into Forensic Timeliner's 
 
 * **Unified event log format**: All parsers normalize different Chainsaw outputs to a consistent timeline format.
 
-### 📝 Expected CSV Format
+### Expected CSV Format
 
 Chainsaw typically outputs CSV files with these common columns:
 - **timestamp/TimeCreated/UtcTime**: Event timestamp
@@ -443,7 +443,7 @@ Chainsaw typically outputs CSV files with these common columns:
 - **detections**: Sigma rule or detection details
 - **path**: Source file path for evidence tracking
 
-### 💡 Integration Notes
+### Integration Notes
 
 - Place Chainsaw CSV outputs in folders with "Chainsaw" in the name for automatic discovery
 - Each parser handles specific attack categories (MITRE ATT&CK techniques)
