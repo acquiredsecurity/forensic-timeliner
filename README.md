@@ -86,25 +86,6 @@
 
 ---
 
-## 📚 Tool Documentation
-
-Detailed documentation for each supported tool showing how artifacts are parsed and mapped to the unified timeline format:
-
-### Supported Tools
-* **[EZ Tools](Docs/EZTools.md)** - Comprehensive Windows artifact analysis (Activity Timeline, Amcache, AppCompatCache, Event Logs, JumpLists, LNK Files, MFT, Prefetch, Registry, Shellbags, UserAssist, and more)
-* **[Hayabusa](Docs/Hayabusa.md)** - Sigma-based Windows event log analysis and threat hunting
-* **[Chainsaw](Docs/Chainsaw.md)** - MITRE ATT&CK focused event log analysis (Account Tampering, Credential Access, Lateral Movement, Persistence, PowerShell, and more)
-* **[Axiom](Docs/Axiom.md)** - Magnet Forensics comprehensive artifact extraction (Web History, Prefetch, Registry, File System, and more)
-* **[Nirsoft](Docs/Nirsoft.md)** - Cross-browser history analysis and Windows utility artifacts
-
-Each documentation page includes:
-- **Field Mapping Tables** - How source CSV fields map to timeline format
-- **Special Behaviors** - Unique processing logic and features
-- **Expected CSV Format** - Required input format and structure
-- **Integration Notes** - Tips for optimal usage and file organization
-
----
-
 ## Quick Start
 
 TL;DR!
@@ -202,6 +183,25 @@ Timeline parsers can be customized using per-artifact YAML definitions. These co
 - Timestamp mapping (`timestamp_fields`) ** MFT Only
 - Optional overrides (`ignore_filters`) ** MFT & Event Logs
   - Set ignore_filters: true to skip all filters for MFT and Event Logs. 
+
+---
+
+## 📚 Tool Documentation
+
+Detailed documentation for each supported tool showing how artifacts are parsed and mapped to the unified timeline format:
+
+### Supported Tools
+* **[EZ Tools](Docs/EZTools.md)** - Comprehensive Windows artifact analysis (Activity Timeline, Amcache, AppCompatCache, Event Logs, JumpLists, LNK Files, MFT, Prefetch, Registry, Shellbags, UserAssist, and more)
+* **[Hayabusa](Docs/Hayabusa.md)** - Sigma-based Windows event log analysis and threat hunting
+* **[Chainsaw](Docs/Chainsaw.md)** - MITRE ATT&CK focused event log analysis (Account Tampering, Credential Access, Lateral Movement, Persistence, PowerShell, and more)
+* **[Axiom](Docs/Axiom.md)** - Magnet Forensics comprehensive artifact extraction (Web History, Prefetch, Registry, File System, and more)
+* **[Nirsoft](Docs/Nirsoft.md)** - Cross-browser history analysis and Windows utility artifacts
+
+Each documentation page includes:
+- **Field Mapping Tables** - How source CSV fields map to timeline format
+- **Special Behaviors** - Unique processing logic and features
+- **Expected CSV Format** - Required input format and structure
+- **Integration Notes** - Tips for optimal usage and file organization
 
 ---
 
