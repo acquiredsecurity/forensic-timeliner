@@ -153,6 +153,7 @@ Timeline Explorer Support
 | `--EnableTagger`       | `bool`       | `false`           | Enables keyword-based tagging via `config/keywords/keywords.yaml`           |
 | `--IncludeRawData`     | `bool`       | `false`           | Adds a `RawData` column for unmodified source row contents (if available) experimental |
 | `--NoBanner`           | `bool`       | `false`           | Skip printing the banner/logo at start                                      |
+| `--NoPrompt`           | `bool`       | `false`           | Bypass prompts to run with a script or for automation pipeline              |
 | `--Help` / `-h`        | `bool`       | `false`           | Show help and usage information                                             |
 | `--ALL` / `-a`         | `bool`       | `false`           | Process all tools listed below (based on discovery)                         |
 | `--Interactive` / `-i` | `bool`       | `false`           | Launch an interactive CLI to build a custom command                         |
