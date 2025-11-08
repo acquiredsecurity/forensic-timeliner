@@ -15,7 +15,7 @@ public class BrowsingHistoryViewParser : IArtifactParser
     {
         var rows = new List<TimelineRow>();
 
-        Logger.PrintAndLog($"[>] - [{artifact.Artifact}] Scanning for relevant CSVs under: [{inputDir}", "SCAN");
+        Logger.PrintAndLog($"[>] - [{artifact.Artifact}] Scanning for relevant CSVs under: [{inputDir}]", "SCAN");
 
         var files = Discovery.FindArtifactFiles(inputDir, baseDir, artifact.Artifact);
         if (!files.Any())
