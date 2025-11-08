@@ -6,6 +6,7 @@ discovery:
     - account_tampering.csv
   foldername_patterns:
     - chainsaw
+    - EventLogs
   required_headers:
     - timestamp
     - Event ID

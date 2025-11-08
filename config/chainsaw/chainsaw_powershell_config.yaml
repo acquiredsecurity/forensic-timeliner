@@ -8,6 +8,7 @@ discovery:
     - powershell_script.csv
   foldername_patterns:
     - chainsaw
+    - EventLogs
   required_headers:
     - timestamp
     - detections
