@@ -6,6 +6,7 @@ discovery:
     - login_attacks.csv
   foldername_patterns:
     - chainsaw
+    - EventLogs
   required_headers:
     - timestamp
     - Event ID

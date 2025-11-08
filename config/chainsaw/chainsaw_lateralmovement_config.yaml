@@ -6,6 +6,7 @@ discovery:
     - lateral_movement.csv
   foldername_patterns:
     - chainsaw
+    - EventLogs
   required_headers:
     - timestamp
     - Event ID

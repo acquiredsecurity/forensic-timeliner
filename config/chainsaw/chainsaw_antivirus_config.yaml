@@ -6,6 +6,7 @@ discovery:
     - antivirus.csv
   foldername_patterns:
     - chainsaw
+    - EventLogs
   required_headers:
     - timestamp
     - EventID

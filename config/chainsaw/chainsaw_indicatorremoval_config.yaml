@@ -6,6 +6,7 @@ discovery:
     - indicator_removal.csv
   foldername_patterns:
     - chainsaw
+    - EventLogs
   required_headers:
     - timestamp
     - detections
