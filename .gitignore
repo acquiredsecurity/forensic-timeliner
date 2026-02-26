@@ -17,3 +17,16 @@ obj/
 *.cache
 *.pdb
 README.md
+
+# OS
+.DS_Store
+
+# Claude Code
+.claude/
+.mcp.json
+
+# Platform (web app, client, scripts) — separate repos
+ForensicTimeliner.Web/
+forensic-timeliner-client/
+Scripts/
+sample_data/
