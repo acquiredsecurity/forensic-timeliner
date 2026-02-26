@@ -1,0 +1,40 @@
+artifact: ForensicWebHistory
+tool: BrowserHistory
+description: Web History (forensic-webhistory cross-platform extractor)
+discovery:
+  filename_patterns:
+    - chrome
+    - firefox
+    - safari
+    - brave
+    - edge
+    - opera
+    - vivaldi
+    - arc
+    - chromium
+    - browser
+    - webhistory
+  foldername_patterns:
+    - browser
+    - webhistory
+    - web-history
+    - browser-test
+  required_headers:
+    - URL
+    - Title
+    - Visit Time
+    - Visit Count
+    - Visited From
+    - Visit Type
+    - Visit Duration
+    - Web Browser
+    - User Profile
+    - Browser Profile
+    - URL Length
+    - Typed Count
+    - History File
+    - Record ID
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: false
+enabled: true

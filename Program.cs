@@ -1,10 +1,12 @@
 ﻿using ForensicTimeliner.CLI;
+using ForensicTimeliner.Models;
 using ForensicTimeliner.Collector;
 using ForensicTimeliner.Interactive;
 using ForensicTimeliner.Tools.Axiom;
 using ForensicTimeliner.Tools.Chainsaw;
 using ForensicTimeliner.Tools.EZTools;
 using ForensicTimeliner.Tools.Hayabusa;
+using ForensicTimeliner.Tools.BrowserHistory;
 using ForensicTimeliner.Tools.Nirsoft;
 using ForensicTimeliner.Utils;
 using Spectre.Console;
@@ -142,6 +144,9 @@ class Program
 
             // Nirsoft
             DiscoveryConfig.RegisterParser("NirsoftBrowsingHistory", new BrowsingHistoryViewParser());
+
+            // Browser History (forensic-webhistory cross-platform extractor)
+            DiscoveryConfig.RegisterParser("ForensicWebHistory", new ForensicWebHistoryParser());
 
             // Print banner unless --NoBanner is set
             if (!parsedArgs.NoBanner)
@@ -365,7 +370,10 @@ class Program
             }
 
             AnsiConsole.MarkupLine($"[magenta]      Timeline written to: {outputPath}[/]");
-            LoggerSummary.PrintFinalSummary(parsedArgs);
+            if (!parsedArgs.NoPrompt)
+            {
+                LoggerSummary.PrintFinalSummary(parsedArgs);
+            }
         }
         catch (Exception ex)
         {
