@@ -1,5 +1,5 @@
 artifact: ForensicWebHistoryCarved
-tool: BrowserHistory
+tool: AS Tools
 description: Recovered/Deleted Web History (forensic-webhistory SQLite carver)
 discovery:
   filename_patterns:

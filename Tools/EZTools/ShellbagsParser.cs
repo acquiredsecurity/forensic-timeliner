@@ -57,7 +57,9 @@ public class ShellbagsParser : IArtifactParser
 
                         string rawTs = dict[pair.Key]?.ToString() ?? "";
                         if (string.IsNullOrWhiteSpace(rawTs)) continue;
-                        if (!DateTime.TryParse(rawTs, out DateTime dt)) continue;
+                        if (!DateTime.TryParse(rawTs, System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                            out DateTime dt)) continue;
 
                         string dtStr = dt.ToString("o").Replace("+00:00", "Z");
 

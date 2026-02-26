@@ -3,7 +3,7 @@ tool: EZ Tools
 description: File & Folder Access
 discovery:
   filename_patterns:
-    - _LECmd_Output.csv
+    - LECmd_Output.csv
   foldername_patterns:
     - FileFolderAccess
   required_headers:

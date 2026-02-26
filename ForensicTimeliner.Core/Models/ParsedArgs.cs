@@ -10,6 +10,8 @@ public class ParsedArgs
     public bool ProcessNirsoft { get; set; } = false;
     public bool ProcessAxiom { get; set; } = false;
     public bool ProcessBrowserHistory { get; set; } = false;
+    public bool ProcessEvtxForensic { get; set; } = false;
+    public bool ProcessAS { get; set; } = false;
     public List<string> MFTExtensionFilter { get; set; } = new() { ".identifier", ".exe", ".ps1", ".zip", ".rar", ".7z" };
     public List<string> MFTPathFilter { get; set; } = new() { "Users" };
     public bool EnableTagger { get; set; } = false;

@@ -17,7 +17,7 @@ public static class Exporter
         "DataDetails", "DataPath", "FileExtension", "EventId",
         "User", "Computer", "FileSize", "IPAddress",
         "SourceAddress", "DestinationAddress", "SHA1", "Count",
-        "EvidencePath", "RawData"
+        "EvidencePath", "NaturalLanguage", "RawData"
     };
 
     public static string Export(List<TimelineRow> data, string outputPath, string format)
@@ -85,7 +85,7 @@ public static class Exporter
                 var prop = typeof(TimelineRow).GetProperty(col);
                 var val = prop?.GetValue(row)?.ToString() ?? "";
 
-                if (col is "DataDetails" or "DataPath" or "Description" or "RawData")
+                if (col is "DataDetails" or "DataPath" or "Description" or "NaturalLanguage" or "RawData")
                 {
                     val = SanitizeCsvField(val);
                 }

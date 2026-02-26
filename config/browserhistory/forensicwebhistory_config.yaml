@@ -1,5 +1,5 @@
 artifact: ForensicWebHistory
-tool: BrowserHistory
+tool: AS Tools
 description: Web History (forensic-webhistory cross-platform extractor)
 discovery:
   filename_patterns:

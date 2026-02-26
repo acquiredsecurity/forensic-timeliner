@@ -10,7 +10,7 @@ timestamp_fields:
   # LastAccess0x10: Last Accessed	
 discovery:
   filename_patterns:
-    - _MFTECmd_$MFT_Output.csv
+    - MFTECmd_$MFT_Output.csv
   foldername_patterns:
     - FileSystem
   required_headers:

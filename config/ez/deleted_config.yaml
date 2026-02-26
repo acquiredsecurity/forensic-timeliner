@@ -3,7 +3,7 @@ tool: EZ Tools
 description: Deleted Files
 discovery:
   filename_patterns:
-    - _RBCmd_Output.csv
+    - RBCmd_Output.csv
   foldername_patterns:
     - FileDeletion
   required_headers:

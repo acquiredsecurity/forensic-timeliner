@@ -29,7 +29,8 @@ namespace ForensicTimeliner.Utils
                 if (string.IsNullOrWhiteSpace(row.DateTime))
                     continue;
 
-                if (!DateTime.TryParse(row.DateTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                if (!DateTime.TryParse(row.DateTime, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsedDate))
                 {
                     parseFailures++;
                     if (parseFailures <= 5)

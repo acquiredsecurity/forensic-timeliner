@@ -1,4 +1,6 @@
 ﻿// Utils/CsvRowHelpers.cs
+using System.Globalization;
+
 namespace ForensicTimeliner.Utils;
 
 public static class CsvRowHelpers
@@ -15,6 +17,10 @@ public static class CsvRowHelpers
 
     public static DateTime? GetDateTime(this IDictionary<string, object> dict, string key)
     {
-        return DateTime.TryParse(GetString(dict, key), out var dt) ? dt : null;
+        var s = GetString(dict, key);
+        if (string.IsNullOrWhiteSpace(s)) return null;
+        return DateTime.TryParse(s, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out var dt) ? dt : null;
     }
 }

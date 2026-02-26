@@ -3,8 +3,8 @@ tool: EZ Tools
 description: File & Folder Access
 discovery:
   filename_patterns:
-    - _AutomaticDestinations.csv
-    - _CustomDestinations.csv
+    - AutomaticDestinations.csv
+    - CustomDestinations.csv
   foldername_patterns:
     - FileFolderAccess
   required_headers:

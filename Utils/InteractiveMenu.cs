@@ -25,7 +25,7 @@ public static class InteractiveMenu
                 .Title("[bold yellow]Select your tools:[/]")
                 .PageSize(10)
                 .InstructionsText("[grey](Press [blue]<space>[/] to toggle, [green]<enter>[/] to accept)[/]")
-                .AddChoices("EZ Tools / KAPE", "Axiom", "Hayabusa", "Chainsaw", "Nirsoft", "Browser History", "All")
+                .AddChoices("EZ Tools / KAPE", "Axiom", "Hayabusa", "Chainsaw", "Nirsoft", "AS Tools", "All")
         );
 
         bool allSelected = toolChoices.Contains("All");
@@ -35,7 +35,7 @@ public static class InteractiveMenu
         config.ProcessHayabusa = allSelected || toolChoices.Contains("Hayabusa");
         config.ProcessChainsaw = allSelected || toolChoices.Contains("Chainsaw");
         config.ProcessNirsoft = allSelected || toolChoices.Contains("Nirsoft");
-        config.ProcessBrowserHistory = allSelected || toolChoices.Contains("Browser History");
+        config.ProcessAS = allSelected || toolChoices.Contains("AS Tools");
 
         // Base directory
         config.BaseDir = AnsiConsole.Ask<string>(

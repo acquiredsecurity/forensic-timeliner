@@ -20,6 +20,7 @@ public class TimelineRow
     public string DestinationAddress { get; set; } = "";
     public string SHA1 { get; set; } = "";
     public string Count { get; set; } = "";
+    public string NaturalLanguage { get; set; } = "";
     public string RawData { get; set; }
 
 }

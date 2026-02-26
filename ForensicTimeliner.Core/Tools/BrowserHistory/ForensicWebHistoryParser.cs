@@ -106,7 +106,10 @@ public class ForensicWebHistoryParser : IArtifactParser
                         DataDetails = title,
                         User = dict.GetString("User Profile"),
                         Count = visitCount,
-                        EvidencePath = Path.GetRelativePath(baseDir, file)
+                        NaturalLanguage = dict.GetString("NaturalLanguage"),
+                        EvidencePath = Path.GetRelativePath(baseDir, file),
+                        RawData = System.Text.Json.JsonSerializer.Serialize(
+                            dict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString() ?? ""))
                     });
 
                     timelineCount++;

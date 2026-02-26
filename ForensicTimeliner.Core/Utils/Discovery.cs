@@ -73,8 +73,21 @@ public static class Discovery
                 continue;
             }
 
-            // Continue with header checking as before
-            if (!fileMatched && !folderMatched && artifact.Discovery.RequiredHeaders.Any())
+            // Partial match (filename or folder matched, but not both).
+            // If strict_header_match is set, confirm via header check; otherwise accept directly.
+            if (fileMatched || folderMatched)
+            {
+                if (!artifact.Discovery.StrictHeaderMatch || !artifact.Discovery.RequiredHeaders.Any())
+                {
+                    matches.Add(filePath);
+                    continue;
+                }
+                // Fall through to header check below for confirmation
+            }
+
+            // Header-based matching: fallback when no filename/folder match,
+            // or confirmation for partial matches with strict_header_match
+            if (artifact.Discovery.RequiredHeaders.Any())
             {
                 try
                 {
@@ -92,7 +105,7 @@ public static class Discovery
 
                     if (matchedHeaders >= threshold)
                     {
-                        Console.WriteLine($"[Discovery] Header match fallback for {artifact.Artifact}: {Path.GetFileName(filePath)} (matched {matchedHeaders}/{required.Count})");
+                        Console.WriteLine($"[Discovery] Header match for {artifact.Artifact}: {Path.GetFileName(filePath)} (matched {matchedHeaders}/{required.Count})");
                         matches.Add(filePath);
                     }
                     else if (matchedHeaders >= required.Count * 0.9)

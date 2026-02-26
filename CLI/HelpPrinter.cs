@@ -100,6 +100,10 @@ public static class HelpPrinter
             new Markup("[green]Enable Nirsoft WebHistoryView parsing[/]"));
 
         toolTable.AddRow(
+            new Markup("[white bold]--ProcessAS[/]"),
+            new Markup("[green]Enable AS Tools parsing (evtx-forensic, forensic-webhistory)[/]"));
+
+        toolTable.AddRow(
             new Markup("[white bold]--ALL[/]"),
             new Markup("[green]Enable all artifact types (except Axiom)[/]"));
 

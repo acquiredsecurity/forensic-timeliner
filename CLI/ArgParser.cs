@@ -28,6 +28,8 @@ public static class ArgParser
                 case "--ProcessNirsoft": parsedArgs.ProcessNirsoft = true; break;
                 case "--ProcessAxiom": parsedArgs.ProcessAxiom = true; break;
                 case "--ProcessBrowserHistory": parsedArgs.ProcessBrowserHistory = true; break;
+                case "--ProcessEvtxForensic": parsedArgs.ProcessEvtxForensic = true; break;
+                case "--ProcessAS": parsedArgs.ProcessAS = true; break;
                 case "--Deduplicate":
                 case "-d": parsedArgs.Deduplicate = true; break;
                 case "--EnableTagger": parsedArgs.EnableTagger = true;  break;

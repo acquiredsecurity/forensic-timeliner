@@ -4,7 +4,7 @@ description: Event Logs
 ignore_filters: false
 discovery:
   filename_patterns:
-    - _EvtxECmd_Output.csv
+    - EvtxECmd_Output.csv
   foldername_patterns:
     - EventLogs
   required_headers:

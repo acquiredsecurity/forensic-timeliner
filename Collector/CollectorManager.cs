@@ -50,6 +50,7 @@ public static class CollectorManager
                (tool.Contains("chainsaw") && args.ProcessChainsaw) ||
                (tool.Contains("nirsoft") && args.ProcessNirsoft) ||
                (tool.Contains("browserhistory") && args.ProcessBrowserHistory) ||
+               (tool.Contains("evtx-forensic") && args.ProcessEvtxForensic) ||
                args.ALL;
     }
 

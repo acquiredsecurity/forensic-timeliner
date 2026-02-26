@@ -7,6 +7,7 @@ using ForensicTimeliner.Tools.Chainsaw;
 using ForensicTimeliner.Tools.EZTools;
 using ForensicTimeliner.Tools.Hayabusa;
 using ForensicTimeliner.Tools.BrowserHistory;
+using ForensicTimeliner.Tools.EvtxForensic;
 using ForensicTimeliner.Tools.Nirsoft;
 using ForensicTimeliner.Utils;
 using Spectre.Console;
@@ -78,7 +79,7 @@ class Program
             }
 
             // Load default discovery signatures
-            DiscoveryConfig.LoadFromYaml(skipVisuals: parsedArgs.NoPrompt);
+            DiscoveryConfig.LoadFromYaml(configFolderPath, skipVisuals: parsedArgs.NoPrompt);
 
 
             // Register YAML parsers
@@ -149,6 +150,8 @@ class Program
             DiscoveryConfig.RegisterParser("ForensicWebHistory", new ForensicWebHistoryParser());
             DiscoveryConfig.RegisterParser("ForensicWebHistoryCarved", new ForensicWebHistoryCarvedParser());
 
+            // evtx-forensic (cross-platform Rust EVTX analyzer)
+            DiscoveryConfig.RegisterParser("EvtxForensic", new EvtxForensicParser());
 
             // Print banner unless --NoBanner is set
             if (!parsedArgs.NoBanner)

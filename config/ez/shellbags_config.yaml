@@ -3,8 +3,8 @@ tool: EZ Tools
 description: File & Folder Access
 discovery:
   filename_patterns:
-    - _UsrClass.csv
-    - _NTUSER.csv
+    - UsrClass.csv
+    - NTUSER.csv
   foldername_patterns:
     - FileFolderAccess
   required_headers:

@@ -3,8 +3,8 @@ tool: EZ Tools
 description: Registry
 discovery:
   filename_patterns:
-    - _RECmd_Batch_Kroll_Batch_Output.csv
-    - _RECmd_Batch_DFIRBatch_Output.csv
+    - RECmd_Batch_Kroll_Batch_Output.csv
+    - RECmd_Batch_DFIRBatch_Output.csv
   foldername_patterns:
     - Registry
   required_headers:

@@ -49,6 +49,7 @@ public static class CollectorManager
                (tool.Contains("hayabusa") && args.ProcessHayabusa) ||
                (tool.Contains("chainsaw") && args.ProcessChainsaw) ||
                (tool.Contains("nirsoft") && args.ProcessNirsoft) ||
+               (tool.Contains("as tools") && args.ProcessAS) ||
                args.ALL;
     }
 

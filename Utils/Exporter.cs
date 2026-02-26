@@ -193,9 +193,10 @@ public static class Exporter
         if (string.IsNullOrWhiteSpace(dateTime))
             return "1970-01-01T00:00:00Z";
 
-        if (DateTime.TryParse(dateTime, out var parsed))
+        if (DateTime.TryParse(dateTime, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed))
         {
-            return parsed.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");
+            return parsed.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ");
         }
 
         return "1970-01-01T00:00:00Z";
