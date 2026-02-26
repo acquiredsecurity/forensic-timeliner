@@ -7,7 +7,7 @@
 
 > A high-speed forensic processing engine built for DFIR investigators. Quickly consolidate CSV output from top-tier triage tools into a unified mini timeline with built-in filtering, artifact detection, date filtering, keyword tagging, and deduplication.
 
-![Version](https://img.shields.io/badge/version-v2.2-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-v2.3-blue?style=for-the-badge)
 ![Downloads](https://img.shields.io/github/downloads/acquiredsecurity/forensic-timeliner/total?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/acquiredsecurity/forensic-timeliner?style=for-the-badge)
 ![Contributors](https://img.shields.io/github/contributors/acquiredsecurity/forensic-timeliner?style=for-the-badge)
@@ -18,22 +18,35 @@
 ---
 
 ## Release
-## Forensic Timeliner v2.2 – Release Notes
+## Forensic Timeliner v2.3 – Release Notes
 
-### ✨ New Features
+### New Features
 
-- **Interactive Menu Enhancements**
-  - Added prompts to **display filter configuration** for:
-    - **MFT** (timestamp, path, and extension filters)
-    - **Event Logs** (channel and provider filters)
-    - **Keyword tagging rules** from `keywords.yaml`
-  - Prompts now appear automatically if EZ Tools is selected and config files are present.
-  - Filter previews are displayed as rich tables using `Spectre.Console`.
+- **Cross-Platform Browser History Parsing**
+  - New `ForensicWebHistoryParser` — parses live browser history CSV from [forensic-webhistory](https://github.com/AcquiredSec/forensic-webhistory) (Rust tool)
+  - Supports Chrome, Firefox, Safari, Brave, Edge, Opera, Vivaldi, and Arc
+  - Activity detection: Search queries, Downloads, and File Open events automatically enriched in description
+  - Header validation to distinguish from other CSV formats
 
-- **Keyword Tagging Support for TLE**
-  - New interactive option to enable the **Timeline Explorer keyword tagger**.
-  - Generates a `.tle_sess` file with tagged rows based on user-defined keyword groups.
-  - Interactive preview of keyword groups before enabling.
+- **Recovered Browser History Support**
+  - New `ForensicWebHistoryCarvedParser` — parses recovered/deleted browser entries
+  - Handles carved SQLite database rows with reduced column set
+  - Identifies recovery source (e.g., "Carved from WAL", "Carved from Journal")
+
+- **Core Library Refactoring**
+  - Extracted all parsers, models, utilities, and interfaces into `ForensicTimeliner.Core` class library
+  - Enables reuse by the web platform without code duplication
+  - All existing parsers (EZ Tools, Hayabusa, Chainsaw, Nirsoft, Axiom) moved to Core
+
+### Bug Fixes
+
+- Fixed date filtering display — `RowsFilteredByDate` was incorrectly calculated when no date filtering was applied, showing all rows as "filtered"
+- Fixed deduplication counter initialization (`RowCountAfterDedup`)
+
+### Other Changes
+
+- License updated to CC BY-NC 4.0
+- Added `--NoPrompt` flag for scripting and automation pipelines
 
 ---
 
@@ -56,12 +69,13 @@
 
 ## Main Features
 
--Combine csv output from
+- Combine csv output from
   - EZ Tools / Kape
   - Axiom
   - Chainsaw
   - Hayabusa
   - Nirsoft
+  - forensic-webhistory (cross-platform browser history)
   - output data into a unified timeline
 
 - Automatic CSV discovery from triage directories (all configurable) with YAML
@@ -114,7 +128,7 @@ ForensicTimeliner.exe --BaseDir C:\triage\hostname --ALL --OutputFile C:\timelin
 ---
 ## Downloads
 
-Latest Release: [ v2.2](https://github.com/acquiredsecurity/forensic-timeliner/releases/tag/v2.2)
+Latest Release: [ v2.3](https://github.com/acquiredsecurity/forensic-timeliner/releases/tag/v2.3)
 
 Download sample data for testing purposes here.
 
@@ -162,6 +176,7 @@ Timeline Explorer Support
 | `--ProcessChainsaw`    | `bool`       | `false`           | Enable Chainsaw artifact parsing                                            |
 | `--ProcessHayabusa`    | `bool`       | `false`           | Enable Hayabusa artifact parsing                                            |
 | `--ProcessNirsoft`     | `bool`       | `false`           | Enable Nirsoft artifact parsing                                             |
+| `--ProcessBrowserHistory` | `bool`    | `false`           | Enable cross-platform browser history parsing (forensic-webhistory)         |
 
 ---
 
@@ -197,6 +212,7 @@ Detailed documentation for each supported tool showing how artifacts are parsed 
 * **[Chainsaw](Docs/Chainsaw.md)** - MITRE ATT&CK focused event log analysis (Account Tampering, Credential Access, Lateral Movement, Persistence, PowerShell, and more)
 * **[Axiom](Docs/Axiom.md)** - Magnet Forensics comprehensive artifact extraction (Web History, Prefetch, Registry, File System, and more)
 * **[Nirsoft](Docs/Nirsoft.md)** - Cross-browser history analysis and Windows utility artifacts
+* **Browser History (forensic-webhistory)** - Cross-platform browser history extraction with SQLite carving for Chrome, Firefox, Safari, Brave, Edge, Opera, Vivaldi, and Arc
 
 Each documentation page includes:
 - **Field Mapping Tables** - How source CSV fields map to timeline format
@@ -279,7 +295,8 @@ DEFAULT_PATHS = ["Users"]
 | UserAssist                | EZ Tools, Axiom          | UserAssist.csv                                                      |
 | TypedUrls                 | EZ Tools                 | *__TypedURLS__NTUSER.CSV                                            |
 | Threat Events (Chainsaw)  | Chainsaw                 | account_tampering.csv, defense_evasion.csv, credential_access.csv   |
-| Web Browsing History      | Nirsoft, Axiom           | WebResults.csv, Chrome/Firefox/Edge History.csv                     |
+| Web Browsing History      | Nirsoft, Axiom, forensic-webhistory | WebResults.csv, Chrome/Firefox/Edge History.csv, forensic_webhistory*.csv |
+| Carved Browser History    | forensic-webhistory      | forensic_webhistory_carved*.csv                                     |
 | VPN / RAS Logs            | Chainsaw                 | microsoft_rasvpn_events.csv, microsoft_rds_events.csv               |
 | Login Attacks             | Chainsaw                 | login_attacks.csv                                                   |
 | Log Tampering             | Chainsaw                 | log_tampering.csv                                                   |
@@ -294,7 +311,7 @@ DEFAULT_PATHS = ["Users"]
 
 ## License
 
-MIT License
+Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
 
 ---
 
