@@ -1,26 +1,21 @@
-using CsvHelper;
+﻿using CsvHelper;
 using CsvHelper.Configuration;
+using ForensicTimeliner.Models;
 using ForensicTimeliner.Interfaces;
 using ForensicTimeliner.Models;
 using ForensicTimeliner.Utils;
 using Spectre.Console;
 using System.Globalization;
 
-namespace ForensicTimeliner.Tools.BrowserHistory;
+namespace ForensicTimeliner.Tools.Nirsoft;
 
-/// <summary>
-/// Parser for forensic-webhistory CSV output (cross-platform Rust browser history extractor).
-/// CSV format is NirSoft BrowsingHistoryView-compatible with 14 columns:
-/// URL, Title, Visit Time, Visit Count, Visited From, Visit Type, Visit Duration,
-/// Web Browser, User Profile, Browser Profile, URL Length, Typed Count, History File, Record ID
-/// </summary>
-public class ForensicWebHistoryParser : IArtifactParser
+public class BrowsingHistoryViewParser : IArtifactParser
 {
     public List<TimelineRow> Parse(string inputDir, string baseDir, ArtifactDefinition artifact, ParsedArgs args)
     {
         var rows = new List<TimelineRow>();
 
-        Logger.PrintAndLog($"[>] - [{artifact.Artifact}] Scanning for relevant CSVs under: [{inputDir}]", "SCAN");
+        Logger.PrintAndLog($"[>] - [{artifact.Artifact}] Scanning for relevant CSVs under: [{inputDir}", "SCAN");
 
         var files = Discovery.FindArtifactFiles(inputDir, baseDir, artifact.Artifact);
         if (!files.Any())
@@ -32,20 +27,6 @@ public class ForensicWebHistoryParser : IArtifactParser
         foreach (var file in files)
         {
             int timelineCount = 0;
-
-            // Skip carved CSVs — they use a different 6-column format handled by ForensicWebHistoryCarvedParser
-            try
-            {
-                using var headerReader = new StreamReader(file);
-                var headerLine = headerReader.ReadLine();
-                if (headerLine != null && !headerLine.Contains("Web Browser", StringComparison.OrdinalIgnoreCase))
-                {
-                    Logger.PrintAndLog($"[-] - [{artifact.Artifact}] Skipping {Path.GetFileName(file)} (missing 'Web Browser' header — likely carved format)", "SKIP");
-                    continue;
-                }
-            }
-            catch { /* fall through to normal processing */ }
-
             Logger.PrintAndLog($"[+] - [{artifact.Artifact}] Processing: {Path.GetRelativePath(baseDir, file)}", "PROCESS");
 
             try
@@ -67,21 +48,10 @@ public class ForensicWebHistoryParser : IArtifactParser
                     string dtStr = parsedDt.Value.ToString("o").Replace("+00:00", "Z");
 
                     string url = dict.GetString("URL").Trim().ToLower();
-                    if (string.IsNullOrWhiteSpace(url)) continue;
-
                     string title = dict.GetString("Title");
                     string browser = dict.GetString("Web Browser");
-                    string visitType = dict.GetString("Visit Type");
-                    string visitCount = dict.GetString("Visit Count");
-                    string typedCount = dict.GetString("Typed Count");
-
-                    // Build rich description: browser + visit type + activity detection
                     string description = browser;
 
-                    if (!string.IsNullOrWhiteSpace(visitType))
-                        description += $" ({visitType})";
-
-                    // Detect activity type from URL patterns
                     if (url.StartsWith("file:///"))
                         description += " + File Open Access";
                     else if (url.Contains("search") || url.Contains("query") || url.Contains("q=") || url.Contains("p=") ||
@@ -105,7 +75,6 @@ public class ForensicWebHistoryParser : IArtifactParser
                         DataPath = url,
                         DataDetails = title,
                         User = dict.GetString("User Profile"),
-                        Count = visitCount,
                         EvidencePath = Path.GetRelativePath(baseDir, file)
                     });
 

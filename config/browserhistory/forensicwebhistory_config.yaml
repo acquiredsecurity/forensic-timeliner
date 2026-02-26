@@ -36,5 +36,5 @@ discovery:
     - Record ID
   strict_filename_match: false
   strict_folder_match: false
-  strict_header_match: false
+  strict_header_match: true
 enabled: true

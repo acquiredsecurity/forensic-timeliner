@@ -147,6 +147,8 @@ class Program
 
             // Browser History (forensic-webhistory cross-platform extractor)
             DiscoveryConfig.RegisterParser("ForensicWebHistory", new ForensicWebHistoryParser());
+            DiscoveryConfig.RegisterParser("ForensicWebHistoryCarved", new ForensicWebHistoryCarvedParser());
+
 
             // Print banner unless --NoBanner is set
             if (!parsedArgs.NoBanner)

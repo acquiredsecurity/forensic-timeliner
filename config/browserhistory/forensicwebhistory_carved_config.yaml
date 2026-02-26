@@ -1,0 +1,27 @@
+artifact: ForensicWebHistoryCarved
+tool: BrowserHistory
+description: Recovered/Deleted Web History (forensic-webhistory SQLite carver)
+discovery:
+  filename_patterns:
+    - carved
+    - recovered
+    - deleted
+  foldername_patterns:
+    - carved
+    - recovered
+    - deleted
+    - browser
+    - webhistory
+    - web-history
+    - browser-test
+  required_headers:
+    - URL
+    - Title
+    - Visit Time
+    - Browser Hint
+    - Recovery Source
+    - Source File
+  strict_filename_match: false
+  strict_folder_match: false
+  strict_header_match: true
+enabled: true

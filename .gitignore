@@ -30,3 +30,7 @@ ForensicTimeliner.Web/
 forensic-timeliner-client/
 Scripts/
 sample_data/
+
+# Private tool parsers (kept local only)
+ForensicTimeliner.Core/Tools/EvtxForensic/
+config/evtxforensic/

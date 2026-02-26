@@ -3,7 +3,6 @@ using System.Drawing;
 using Spectre.Console;
 using System.Threading;
 using Color = Spectre.Console.Color;
-using ForensicTimeliner.CLI;
 using ForensicTimeliner.Models;
 
 namespace ForensicTimeliner.Utils;

@@ -9,18 +9,20 @@ using System.Globalization;
 namespace ForensicTimeliner.Tools.BrowserHistory;
 
 /// <summary>
-/// Parser for forensic-webhistory CSV output (cross-platform Rust browser history extractor).
-/// CSV format is NirSoft BrowsingHistoryView-compatible with 14 columns:
-/// URL, Title, Visit Time, Visit Count, Visited From, Visit Type, Visit Duration,
-/// Web Browser, User Profile, Browser Profile, URL Length, Typed Count, History File, Record ID
+/// Parser for forensic-webhistory carved (deleted/recovered) CSV output.
+/// CSV format has 6 columns:
+/// URL, Title, Visit Time, Browser Hint, Recovery Source, Source File
+///
+/// Only rows with a valid timestamp are included in the timeline.
+/// Entries are marked as "Web History (Recovered)" to distinguish from live browser history.
 /// </summary>
-public class ForensicWebHistoryParser : IArtifactParser
+public class ForensicWebHistoryCarvedParser : IArtifactParser
 {
     public List<TimelineRow> Parse(string inputDir, string baseDir, ArtifactDefinition artifact, ParsedArgs args)
     {
         var rows = new List<TimelineRow>();
 
-        Logger.PrintAndLog($"[>] - [{artifact.Artifact}] Scanning for relevant CSVs under: [{inputDir}]", "SCAN");
+        Logger.PrintAndLog($"[>] - [{artifact.Artifact}] Scanning for carved browser history CSVs under: [{inputDir}]", "SCAN");
 
         var files = Discovery.FindArtifactFiles(inputDir, baseDir, artifact.Artifact);
         if (!files.Any())
@@ -32,19 +34,17 @@ public class ForensicWebHistoryParser : IArtifactParser
         foreach (var file in files)
         {
             int timelineCount = 0;
+            int skippedNoTimestamp = 0;
 
-            // Skip carved CSVs — they use a different 6-column format handled by ForensicWebHistoryCarvedParser
+            // Only process files with the carved CSV header (must have "Recovery Source")
             try
             {
                 using var headerReader = new StreamReader(file);
                 var headerLine = headerReader.ReadLine();
-                if (headerLine != null && !headerLine.Contains("Web Browser", StringComparison.OrdinalIgnoreCase))
-                {
-                    Logger.PrintAndLog($"[-] - [{artifact.Artifact}] Skipping {Path.GetFileName(file)} (missing 'Web Browser' header — likely carved format)", "SKIP");
+                if (headerLine != null && !headerLine.Contains("Recovery Source", StringComparison.OrdinalIgnoreCase))
                     continue;
-                }
             }
-            catch { /* fall through to normal processing */ }
+            catch { continue; }
 
             Logger.PrintAndLog($"[+] - [{artifact.Artifact}] Processing: {Path.GetRelativePath(baseDir, file)}", "PROCESS");
 
@@ -62,7 +62,11 @@ public class ForensicWebHistoryParser : IArtifactParser
                 {
                     var dict = (IDictionary<string, object>)record;
                     var parsedDt = dict.GetDateTime("Visit Time");
-                    if (parsedDt == null) continue;
+                    if (parsedDt == null)
+                    {
+                        skippedNoTimestamp++;
+                        continue;
+                    }
 
                     string dtStr = parsedDt.Value.ToString("o").Replace("+00:00", "Z");
 
@@ -70,16 +74,12 @@ public class ForensicWebHistoryParser : IArtifactParser
                     if (string.IsNullOrWhiteSpace(url)) continue;
 
                     string title = dict.GetString("Title");
-                    string browser = dict.GetString("Web Browser");
-                    string visitType = dict.GetString("Visit Type");
-                    string visitCount = dict.GetString("Visit Count");
-                    string typedCount = dict.GetString("Typed Count");
+                    string browser = dict.GetString("Browser Hint");
+                    string recoverySource = dict.GetString("Recovery Source");
+                    string sourceFile = dict.GetString("Source File");
 
-                    // Build rich description: browser + visit type + activity detection
-                    string description = browser;
-
-                    if (!string.IsNullOrWhiteSpace(visitType))
-                        description += $" ({visitType})";
+                    // Build description: browser + recovery method + activity detection
+                    string description = $"{browser} (Deleted — {recoverySource})";
 
                     // Detect activity type from URL patterns
                     if (url.StartsWith("file:///"))
@@ -98,21 +98,21 @@ public class ForensicWebHistoryParser : IArtifactParser
                     rows.Add(new TimelineRow
                     {
                         DateTime = dtStr,
-                        TimestampInfo = "Last Visited",
-                        ArtifactName = "Web History",
+                        TimestampInfo = "Last Visited (Recovered)",
+                        ArtifactName = "Web History (Recovered)",
                         Tool = artifact.Tool,
                         Description = description,
                         DataPath = url,
                         DataDetails = title,
-                        User = dict.GetString("User Profile"),
-                        Count = visitCount,
+                        User = "",
+                        Count = "",
                         EvidencePath = Path.GetRelativePath(baseDir, file)
                     });
 
                     timelineCount++;
                 }
 
-                Logger.PrintAndLog($"[✓] - [{artifact.Artifact}] Parsed {timelineCount} timeline rows from: {Path.GetFileName(file)}", "SUCCESS");
+                Logger.PrintAndLog($"[✓] - [{artifact.Artifact}] Parsed {timelineCount} recovered timeline rows from: {Path.GetFileName(file)} (skipped {skippedNoTimestamp} without timestamps)", "SUCCESS");
                 LoggerSummary.TrackSummary(artifact.Tool, artifact.Artifact, timelineCount);
             }
             catch (Exception ex)

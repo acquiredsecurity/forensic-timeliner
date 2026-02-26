@@ -1,26 +1,67 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net9.0</TargetFramework>
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-		<SelfContained>true</SelfContained>
-			<Nullable>enable</Nullable>
+		<Nullable>enable</Nullable>
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<!-- Windows publish profile: dotnet publish -c Release -r win-x64 -->
+	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+		<SelfContained>true</SelfContained>
 	</PropertyGroup>
 
 	<ItemGroup>
 	  <Compile Remove="config\**" />
 	  <EmbeddedResource Remove="config\**" />
 	  <None Remove="config\**" />
+	  <Compile Remove="ForensicTimeliner.Tests\**" />
+	  <EmbeddedResource Remove="ForensicTimeliner.Tests\**" />
+	  <None Remove="ForensicTimeliner.Tests\**" />
+	  <Compile Remove="ForensicTimeliner.Core\**" />
+	  <EmbeddedResource Remove="ForensicTimeliner.Core\**" />
+	  <None Remove="ForensicTimeliner.Core\**" />
+	  <Compile Remove="ForensicTimeliner.Web\**" />
+	  <EmbeddedResource Remove="ForensicTimeliner.Web\**" />
+	  <None Remove="ForensicTimeliner.Web\**" />
+	  <Compile Remove="forensic-timeliner-client\**" />
+	  <EmbeddedResource Remove="forensic-timeliner-client\**" />
+	  <None Remove="forensic-timeliner-client\**" />
+	  <Compile Remove="sample_data\**" />
+	  <EmbeddedResource Remove="sample_data\**" />
+	  <None Remove="sample_data\**" />
+	  <!-- Exclude files that now live in ForensicTimeliner.Core -->
+	  <Compile Remove="Models\**" />
+	  <Compile Remove="Interfaces\**" />
+	  <Compile Remove="Tools\**" />
+	  <Compile Remove="Collector\**" />
+	  <Compile Remove="Utils\Logger.cs" />
+	  <Compile Remove="Utils\ProgressUtils.cs" />
+	  <Compile Remove="Utils\Discovery.cs" />
+	  <Compile Remove="Utils\DiscoveryConfig.cs" />
+	  <Compile Remove="Utils\DateFilter.cs" />
+	  <Compile Remove="Utils\Deduplicator.cs" />
+	  <Compile Remove="Utils\Exporter.cs" />
+	  <Compile Remove="Utils\CsvRowHelpers.cs" />
+	  <Compile Remove="Utils\KeywordTagger.cs" />
+	  <Compile Remove="Utils\TimelineRowJsonContext.cs" />
+	  <Compile Remove="Utils\TimelineState.cs" />
+	  <Compile Remove="Utils\LoggerSummary.cs" />
+	  <Compile Remove="Utils\YamlConfigLogger.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CsvHelper" Version="33.0.1" />
+	  <Content Include="config\**" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="ForensicTimeliner.Core\ForensicTimeliner.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Spectre.Console" Version="0.50.0" />
-		<PackageReference Include="YamlDotNet" Version="16.3.0" />
 	</ItemGroup>
 
 </Project>
-
